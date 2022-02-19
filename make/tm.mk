@@ -79,10 +79,10 @@ $(2)_LDFLAGS   = $$($(1)_LDFLAGS)
 $(2)_LIBS      = $$($(1)_LIBS)
 $(2)_SRCS      = $$($(1)_SRCS)
 
-$(2)_C_DEP      = $$($(2)_C_DEP)
-$(2)_LD_DEP     = $$($(2)_LD_DEP)
-$(2)_CLEAN_DEP  = $$($(2)_CLEAN_DEP)
-$(2)_FCLEAN_DEP = $$($(2)_FCLEAN_DEP)
+$(2)_C_DEP      = $$($(1)_C_DEP)
+$(2)_LD_DEP     = $$($(1)_LD_DEP)
+$(2)_CLEAN_DEP  = $$($(1)_CLEAN_DEP)
+$(2)_FCLEAN_DEP = $$($(1)_FCLEAN_DEP)
 endef
 
 # auto build directories
