@@ -25,7 +25,7 @@ ${call add/exe,release,${NAME}}
 ${NAME}: debug/exe
 	cp ${debug_BDIR}${NAME} ./${NAME}
 all: ${NAME}
-debug_FCLEAN += ${NAME}
+${PROJECT_NAME}_FCLEAN += ${NAME}
 
 clean: debug/clean
 fclean: debug/fclean
