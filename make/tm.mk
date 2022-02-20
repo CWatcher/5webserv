@@ -44,6 +44,7 @@ $(1)_CXX        = $(CXX)
 $(1)_CFLAGS     = $(CFLAGS)
 $(1)_CXXFLAGS   = $(CXXFLAGS)
 $(1)_INC        =
+$(1)_FINC       = $${$(1)_INC:%=-I%}
 $(1)_LD         = $(LD)
 $(1)_LDFLAGS    = $(LDFLAGS)
 $(1)_LIBS       = $(LIBS)
@@ -56,10 +57,10 @@ $(1)_FCLEAN_DEP =
 $(1)_SRCS       =
 $(1)_BDIR       = .$(1)/
 $(1)_OBJS       = $${$(1)_SRCS:%.cpp=$${$(1)_BDIR}%.o}
-$(1)_DFILES     = $${$(1)_SRCS:%.cpp=$${$(1)_BDIR}%.o}
+$(1)_DFILES     = $${$(1)_SRCS:%.cpp=$${$(1)_BDIR}%.d}
 -include $${$(1)_DFILES}
 
-$(1)_CLEAN      = $$($(1)_OBJS) $$($(1)_DFILES)
+$(1)_CLEAN      = 
 $(1)_FCLEAN     = $$($(1)_CLEAN)
 
 $(call __add/build_dir,${1})
@@ -83,6 +84,9 @@ $(2)_C_DEP      = $$($(1)_C_DEP)
 $(2)_LD_DEP     = $$($(1)_LD_DEP)
 $(2)_CLEAN_DEP  = $$($(1)_CLEAN_DEP)
 $(2)_FCLEAN_DEP = $$($(1)_FCLEAN_DEP)
+
+$(2)_CLEAN      = $$($(1)_CLEAN)
+$(2)_FCLEAN     = $$($(1)_FCLEAN)
 endef
 
 # auto build directories
@@ -97,7 +101,7 @@ endef
 
 define __add/objrule =
 $$($(1)_BDIR)%.o:	%.cpp $$($(1)_C_DEP) | $$$${@D}/.
-	$$($(1)_CXX) $$($(1)_CXXFLAGS) $$($(1)_INC)  -c $$< -o $$@ -MD
+	$$($(1)_CXX) $$($(1)_CXXFLAGS) $$($(1)_FINC)  -c $$< -o $$@ -MD
 endef
 
 #! @1 - project name
@@ -139,11 +143,11 @@ endef
 define __add/baserules =
 .PHONY: $(1)/clean
 $(1)/clean: $$($(1)_CLEAN_DEP)
-	-${RM} $$($(1)_CLEAN)
+	-${RM} $$($(1)_CLEAN) $$($(1)_OBJS) $$($(1)_DFILES)
 
 .PHONY: $(1)/fclean
 $(1)/fclean: $$($(1)_FCLEAN_DEP)
-	-${RM} $$($(1)_FCLEAN)
+	-${RM} $$($(1)_FCLEAN) $$($(1)_OBJS) $$($(1)_DFILES)
 endef
 
 #! @1 - project name
