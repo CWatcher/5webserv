@@ -107,37 +107,43 @@ endef
 #! @1 - project name
 #! @2 - out name
 define __add/exe =
-$$($(1)_BDIR)/$(2): $$($(1)_OBJS) $$($(1)_DEPEND)$$($(1)_LD_DEP)
-	$$($(1)_LD) $$($(1)_LDFLAGS) $$($(1)_OBJS) -o $$($(1)_BDIR)/$(2) $$($(1)_LIBS)
+$(1)_EXE = $$($(1)_BDIR)/$(2)
+
+$$($(1)_EXE): $$($(1)_OBJS) $$($(1)_DEPEND)$$($(1)_LD_DEP)
+	$$($(1)_LD) $$($(1)_LDFLAGS) $$($(1)_OBJS) -o $$($(1)_EXE) $$($(1)_LIBS)
 
 .PHONY: $(1)/exe
-$(1)/exe: $$($(1)_BDIR)/$(2)
+$(1)/exe: $$($(1)_EXE)
 
-$(1)_FCLEAN  += $$($(1)_BDIR)/$(2)
+$(1)_FCLEAN  += $$($(1)_EXE)
 endef
 
 #! @1 - project name
 #! @2 - out name
 define __add/lib =
-$$($(1)_BDIR)/$(2): $$($(1)_OBJS) $$($(1)_DEPEND) $$($(1)_LD_DEP)
-	$(AR) $(2) $$($(1)_OBJS)
+$(1)_LIB = $$($(1)_BDIR)/$(2)
+
+$$($(1)_LIB): $$($(1)_OBJS) $$($(1)_DEPEND) $$($(1)_LD_DEP)
+	$(AR) $$($(1)_LIB) $$($(1)_OBJS)
 
 .PHONY: $(1)/lib
-$(1)/lib: $$($(1)_BDIR)/$(2)
+$(1)/lib: $$($(1)_LIB)
 
-$(1)_FCLEAN  += $$($(1)_BDIR)/$(2)
+$(1)_FCLEAN  += $$($(1)_LIB)
 endef
 
 #! @1 - project name
 #! @2 - out name
 define __add/shlib =
-$$($(1)_BDIR)/$(2): $$($(1)_OBJS) $$($(1)_DEPEND)) $$($(1)_LD_DEP)
-	$$($(1)_LD) $$($(1)_LDFLAGS) -shared -Wl,-soname,$(2) -o $$($(1)_BDIR)/$(2) $$($(1)_OBJS) $$($(1)_LIBS)
+$(1)_SHLIB = $$($(1)_BDIR)/$(2)
+
+$$($(1)_SHLIB): $$($(1)_OBJS) $$($(1)_DEPEND)) $$($(1)_LD_DEP)
+	$$($(1)_LD) $$($(1)_LDFLAGS) -shared -Wl,-soname,$(2) -o $$($(1)_SHLIB) $$($(1)_OBJS) $$($(1)_LIBS)
 
 .PHONY: $(1)/shlib
-$(1)/shlib: $$($(1)_BDIR)/$(2)
+$(1)/shlib: $$($(1)_SHLIB)
 
-$(1)_FCLEAN       += $$($(1)_BDIR)/$(2)
+$(1)_FCLEAN       += $$($(1)_SHLIB)
 endef
 
 define __add/baserules =
