@@ -39,8 +39,8 @@ ${call add/exe,release,${NAME}}
 
 .PHONY: all clean fclean re
 
-${NAME}: debug/exe
-	cp ${debug_BDIR}${NAME} ./${NAME}
+${NAME}: ${debug_EXE}
+	cp ${debug_EXE} ./${NAME}
 all: ${NAME}
 ${PROJECT_NAME}_FCLEAN += ${NAME}
 
