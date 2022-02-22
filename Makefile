@@ -3,8 +3,8 @@ include make/tm.mk
 PROJECT_NAME  = webserv
 NAME          = webserv
 
-CXX           = clang++
-LD            = clang++
+CXX           = c++
+LD            = c++
 CXXFLAGS      = -Wall -Wextra -Werror
 
 ${call add/project,${PROJECT_NAME}}
