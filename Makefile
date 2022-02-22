@@ -23,6 +23,12 @@ $(PROJECT_NAME)_CXXFLAGS += --std=c++98
 $(PROJECT_NAME)_C_DEP    += ./Makefile
 $(PROJECT_NAME)_LD_DEP   += ./Makefile
 
+$(call add/project,$(PROJECT_NAME))
+$(PROJECT_NAME)_SRCS     += srcs/main.cpp
+$(PROJECT_NAME)_INC      += ./
+$(PROJECT_NAME)_CXXFLAGS += --std=c++98
+$(PROJECT_NAME)_C_DEP    += ./Makefile
+$(PROJECT_NAME)_LD_DEP   += ./Makefile
 
 $(call add/subproj,$(PROJECT_NAME),debugbase)
 debugbase_CXXFLAGS       += -O0 -g3
