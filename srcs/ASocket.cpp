@@ -3,24 +3,21 @@
 
 #include <unistd.h>
 
-ASocket::ASocket(int fd, enum TriggerEvent::_ trigger)
+ASocket::ASocket(int fd, enum TriggerType::_ trigger)
 	: fd(fd)
-	, _trigger(trigger) {}
+	, trigger(trigger) {}
 
 ASocket::ASocket(const ASocket &src)
 	: fd(src.fd)
-	, _trigger(src._trigger) {}
+	, trigger(src.trigger) {}
 
-ASocket::~ASocket()
+ASocket::~ASocket() {}
+
+void	ASocket::disconnect() const
 {
-    close(fd);
-    log::info("Disconnected socket", fd);
+	close(fd);
+	log::info("Disconnected socket", fd);
 }
 
-TriggerEvent::_ ASocket::getTrigger() const
-{
-    return _trigger;
-}
-
-ASocket::ASocket() : fd(0), _trigger(TriggerEvent::Read) {}
+ASocket::ASocket() : fd(0), trigger(TriggerType::Read) {}
 ASocket	&ASocket::operator=(const ASocket &_) {(void)_; return *this;}

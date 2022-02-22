@@ -2,7 +2,7 @@
 #ifndef HTTPMESSAGE_HPP
 # define HTTPMESSAGE_HPP
 
-# include "Logger.hpp"
+# include "Logging.hpp"
 # include "utils.hpp"
 
 # include <map>
@@ -24,7 +24,6 @@ private:
 	void								getHeader();
 	std::map<std::string, std::string>	getHeaderMapFromRaw();
 	std::pair<std::string, std::string>	getHeaderPairFromLine(const std::string &line);
-
 
 public:
 	std::string							raw_data;

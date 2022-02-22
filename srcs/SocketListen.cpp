@@ -5,7 +5,7 @@
 #include <sstream>
 
 SocketListen::SocketListen(in_port_t port, int connections_limit)
-	: ASocket(socket(AF_INET, SOCK_STREAM, IPPROTO_IP), TriggerEvent::Read)
+	: ASocket(socket(AF_INET, SOCK_STREAM, IPPROTO_IP), TriggerType::Read)
 {
 	const int	sockopt_value = 1;
 	sockaddr_in	socket_address;
