@@ -105,12 +105,15 @@ size_t eventArrayPrepare(std::map<int, ASocket *> &sockets, std::vector<pollfd> 
             delete socket;
             continue ;
         }
-        poll_array[poll_array_len].fd = socket->fd;
 
         if (socket->getTrigger() == TriggerEvent::Read)
             poll_array[poll_array_len].events = POLLIN;
         else if (socket->getTrigger() == TriggerEvent::Write)
             poll_array[poll_array_len].events = POLLOUT;
+        else
+            continue ;
+
+        poll_array[poll_array_len].fd = socket->fd;
 
         ++poll_array_len;
     }

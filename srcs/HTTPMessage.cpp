@@ -43,8 +43,7 @@ bool	HTTPMessage::hasEndOfMessage()
 	long int	content_length;
 	bool		end_found;
 
-	if (raw_data.compare(0, 3, "GET")
-		|| raw_data.compare(0, 6, "DELETE"))
+	if (raw_data.compare(0, 3, "GET") || raw_data.compare(0, 6, "DELETE"))
 		end_found = hasHeader;
 	else if (hasHeader && (raw_data.compare(0, 4, "POST") || raw_data.compare(0, 3, "PUT")))
 	{
