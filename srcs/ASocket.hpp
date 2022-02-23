@@ -4,7 +4,8 @@
 
 # include "Logger.hpp"
 
-namespace TriggerType { enum _ {
+namespace TriggerEvent { enum _ {
+    None,
 	Read,
 	Write
 }; }
@@ -12,7 +13,7 @@ namespace TriggerType { enum _ {
 class ASocket
 {
 public:
-	ASocket(int fd, enum TriggerType::_ trigger);
+	ASocket(int fd, enum TriggerEvent::_ trigger);
 	ASocket(const ASocket &src);
 	virtual	~ASocket();
 
@@ -20,12 +21,11 @@ public:
 		NoAction,
 		Add,
 		Process,
-		Read,
 		Disconnect
 	};
 
-	virtual int	action(enum PostAction &post_action) = 0;
-	void		disconnect() const;
+	virtual int     action(enum PostAction &post_action) = 0;
+    TriggerEvent::_ getTrigger() const;
 
 
 private:
@@ -33,8 +33,10 @@ private:
 	ASocket	&operator=(const ASocket &rhs);
 
 public:
-	const int				fd;
-	const TriggerType::_	trigger;
+	const int		fd;
+
+protected:
+	TriggerEvent::_	_trigger;
 };
 
 #endif
