@@ -4,9 +4,9 @@
 #include <cerrno>
 #include <cstring>
 #include <ctime>
-#include <sys/time.h>
 #include <iostream>
 #include <string>
+#include <sys/time.h>
 
 enum Logger::LoggingLevel	Logger::_logging_level = Logger::Debug;
 
@@ -20,13 +20,13 @@ void	Logger::setLevel(const std::string &level)
 	std::string level_lowercase = strLowerCaseCopy(level);
 
 	if (level_lowercase == "debug")
-		_logging_level = Debug;
+		setLevel(Debug);
 	else if (level_lowercase == "info")
-		_logging_level = Info;
+		setLevel(Info);
 	else if (level_lowercase == "warning")
-		_logging_level = Warning;
+		setLevel(Warning);
 	else if (level_lowercase == "error")
-		_logging_level = Error;
+		setLevel(Error);
 	else
 		std::cerr << "ERROR: Unknown Logging Level (Debug/Info/Warning/Error)" << std::endl;
 }
