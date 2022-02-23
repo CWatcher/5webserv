@@ -10,7 +10,14 @@ CXXFLAGS      = -Wall -Wextra -Werror
 BUILD ?= debug
 
 $(call add/project,$(PROJECT_NAME))
-$(PROJECT_NAME)_SRCS     += srcs/main.cpp
+$(PROJECT_NAME)_SRCS     += srcs/main.cpp			\
+							srcs/HTTPMessage.cpp	\
+							srcs/ASocket.cpp		\
+							srcs/SocketListen.cpp	\
+							srcs/SocketRead.cpp		\
+							srcs/SocketWrite.cpp	\
+							srcs/Logging.cpp		\
+							srcs/utils.cpp
 $(PROJECT_NAME)_INC      += ./
 $(PROJECT_NAME)_CXXFLAGS += --std=c++98
 $(PROJECT_NAME)_C_DEP    += ./Makefile
