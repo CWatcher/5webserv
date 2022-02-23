@@ -27,8 +27,8 @@ public:
 
 private:
 	Logger();
-	Logger(const Logger &src);
-	Logger &operator=(const Logger &src);
+	Logger(const Logger &_);
+	Logger &operator=(const Logger &_);
 	~Logger();
 
 	static char	*timestamp();

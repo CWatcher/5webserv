@@ -11,11 +11,12 @@ BUILD ?= debug
 
 $(call add/project,$(PROJECT_NAME))
 $(PROJECT_NAME)_SRCS     += srcs/main.cpp			\
-							srcs/HTTPMessage.cpp	\
+							srcs/Logger.cpp			\
+							srcs/Server.cpp			\
 							srcs/ASocket.cpp		\
 							srcs/SocketListen.cpp	\
 							srcs/SocketSession.cpp	\
-							srcs/Logger.cpp			\
+							srcs/HTTPMessage.cpp	\
 							srcs/utils.cpp
 
 $(PROJECT_NAME)_INC      += ./

@@ -25,6 +25,7 @@ private:
 	std::map<std::string, std::string>	getHeaderMapFromRaw();
 	std::pair<std::string, std::string>	getHeaderPairFromLine(const std::string &line);
 
+
 public:
 	std::string							raw_data;
 	std::map<std::string, std::string>	header;
