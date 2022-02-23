@@ -16,7 +16,7 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp			\
 							srcs/SocketListen.cpp	\
 							srcs/SocketRead.cpp		\
 							srcs/SocketWrite.cpp	\
-							srcs/Logging.cpp		\
+							srcs/Logger.cpp			\
 							srcs/utils.cpp
 $(PROJECT_NAME)_INC      += ./
 $(PROJECT_NAME)_CXXFLAGS += --std=c++98

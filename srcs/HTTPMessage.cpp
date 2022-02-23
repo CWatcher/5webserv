@@ -56,7 +56,7 @@ bool	HTTPMessage::hasEndOfMessage()
 			content_length = std::strtol(content_length_str->c_str(), NULL, 10);
 			if (errno || content_length < 0)
 			{
-				log::errno_error();
+				log::cerrno();
 				end_found = true;
 			}
 			else

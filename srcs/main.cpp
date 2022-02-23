@@ -2,7 +2,7 @@
 #include "SocketListen.hpp"
 #include "SocketRead.hpp"
 #include "SocketWrite.hpp"
-#include "Logging.hpp"
+#include "Logger.hpp"
 
 #include <sys/poll.h>
 #include <netinet/in.h>
@@ -23,7 +23,7 @@ int main()
 	ASocket						*socket_listen;
 	std::map<int, ASocket *>	sockets_array;
 
-	log::setLevel("debug");
+	log::setLevel(Logger::Debug);
 
 	try
 	{
@@ -31,7 +31,7 @@ int main()
 	}
 	catch (std::exception &e)
 	{
-		log::errno_error();
+		log::cerrno();
 		return EXIT_FAILURE;
 	}
 	sockets_array[socket_listen->fd] = socket_listen;
@@ -85,7 +85,7 @@ void	socketManagerRun(std::map<int, ASocket *> sockets_array)
 
 		if (new_events == -1)
 		{
-			log::errno_error();
+			log::cerrno();
 			continue ;
 		}
 		else if (new_events == 0)
@@ -115,7 +115,7 @@ void	socketManagerRun(std::map<int, ASocket *> sockets_array)
 				action_value = socket->action(post_action);
 
 				if (action_value == -1)
-					log::errno_error();
+					log::cerrno();
 
 				switch (post_action)
 				{

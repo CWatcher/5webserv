@@ -2,7 +2,7 @@
 #ifndef ASOCKET_HPP
 # define ASOCKET_HPP
 
-# include "Logging.hpp"
+# include "Logger.hpp"
 
 namespace TriggerType { enum _ {
 	Read,
