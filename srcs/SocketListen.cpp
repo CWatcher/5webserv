@@ -13,13 +13,13 @@ SocketListen::SocketListen(in_port_t port, int connections_limit)
 	if (fd == -1)
 		throw std::exception();
 
-	log::debug("Created listen socket", fd);
+	logger::debug("Created listen socket", fd);
 
 	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR,
 				   &sockopt_value, sizeof(sockopt_value)))
 		throw std::exception();
 
-	log::debug("Enabled SO_REUSEADDR for socket", fd);
+	logger::debug("Enabled SO_REUSEADDR for socket", fd);
 
 	socket_address.sin_family = AF_INET;
 	socket_address.sin_addr.s_addr = inet_addr("0.0.0.0");
@@ -27,12 +27,12 @@ SocketListen::SocketListen(in_port_t port, int connections_limit)
 	if (bind(fd, (sockaddr *)&socket_address, sizeof(socket_address)))
 		throw std::exception();
 
-	log::debug("Bound socket to network interface with port", port);
+	logger::debug("Bound socket to network interface with port", port);
 
 	if (listen(fd, connections_limit))
 		throw std::exception();
 
-	log::debug("Enabled listen on port", port);
+	logger::debug("Enabled listen on port", port);
 }
 
 int	SocketListen::action(enum PostAction &post_action)
@@ -41,7 +41,7 @@ int	SocketListen::action(enum PostAction &post_action)
 	socklen_t	address_len = sizeof(client_address);
 	int			new_socket;
 
-	log::debug("Trying to accept socket", fd);
+	logger::debug("Trying to accept socket", fd);
 	new_socket = accept(fd, (sockaddr *)&client_address, &address_len);
 
 	if (new_socket == -1)
@@ -52,7 +52,7 @@ int	SocketListen::action(enum PostAction &post_action)
 		logstream << "Connected new client on socket " << new_socket
 				  << " (" << inet_ntoa(client_address.sin_addr)
 				  << ":" << ntohs(client_address.sin_port) << ")";
-		log::info(logstream.str());
+		logger::info(logstream.str());
 
 		post_action = Add;
 	}

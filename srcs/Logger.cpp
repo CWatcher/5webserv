@@ -51,9 +51,9 @@ void	Logger::error(const std::string &message, ssize_t num)
 	printLogLine(Error, message, num);
 }
 
-void	Logger::cerrno()
+void	Logger::cerrno(ssize_t num)
 {
-	printLogLine(Error, strerror(errno), errno);
+	printLogLine(Error, strerror(errno), num);
 	errno = 0;
 }
 

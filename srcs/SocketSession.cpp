@@ -31,10 +31,10 @@ int	    SocketSession::actionRead(enum PostAction &post_action)
     char	temp_buffer[8192];
     ssize_t	bytes_read;
 
-    log::debug("Trying to read from socket", fd);
+    logger::debug("Trying to read from socket", fd);
     bytes_read = recv(fd, temp_buffer, sizeof(temp_buffer) - 1, 0);
     if (bytes_read)
-        log::debug("Read from socket (bytes):", bytes_read);
+        logger::debug("Read from socket (bytes):", bytes_read);
 
     if (bytes_read == -1)
         post_action = NoAction;
@@ -48,7 +48,7 @@ int	    SocketSession::actionRead(enum PostAction &post_action)
         {
             post_action = Process;
             _trigger = TriggerEvent::None;
-            log::info("Got end of HTTP message from socket", fd);
+            logger::info("Got end of HTTP message from socket", fd);
         }
         else
             post_action = NoAction;
@@ -62,20 +62,20 @@ int	    SocketSession::actionWrite(enum PostAction &post_action)
     const size_t	left_to_write = _message.raw_data.size() - _written_total;
     ssize_t			bytes_written;
 
-    log::debug("Trying to write to socket", fd);
+    logger::debug("Trying to write to socket", fd);
     bytes_written = send(fd, start, left_to_write, MSG_NOSIGNAL | MSG_DONTWAIT);
-    log::debug("Written to socket (bytes):", bytes_written);
+    logger::debug("Written to socket (bytes):", bytes_written);
 
     if (bytes_written > 0)
     {
         _written_total += bytes_written;
         if (_written_total == _message.raw_data.size())
         {
-            log::info("HTTP response sent. Switching to read socket", fd);
+            logger::info("HTTP response sent. Switching to read socket", fd);
             _trigger = TriggerEvent::Read;
         }
         else
-            log::debug("Left to write (bytes):", left_to_write - bytes_written);
+            logger::debug("Left to write (bytes):", left_to_write - bytes_written);
     }
     post_action = NoAction;
     return static_cast<int>(bytes_written);

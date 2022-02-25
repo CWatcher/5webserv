@@ -43,8 +43,7 @@ bool	HTTPMessage::hasEndOfMessage()
 	long int	content_length;
 	bool		end_found;
 
-	if (raw_data.compare(0, 3, "GET")
-		|| raw_data.compare(0, 6, "DELETE"))
+	if (raw_data.compare(0, 3, "GET") || raw_data.compare(0, 6, "DELETE"))
 		end_found = hasHeader;
 	else if (hasHeader && (raw_data.compare(0, 4, "POST") || raw_data.compare(0, 3, "PUT")))
 	{
@@ -56,7 +55,7 @@ bool	HTTPMessage::hasEndOfMessage()
 			content_length = std::strtol(content_length_str->c_str(), NULL, 10);
 			if (errno || content_length < 0)
 			{
-				log::errno_error();
+				logger::cerrno();
 				end_found = true;
 			}
 			else
@@ -87,10 +86,10 @@ void	HTTPMessage::getHeader()
 	{
 		_header_size = header_end + 4;
 		header = getHeaderMapFromRaw();
-		log::debug("HTTP request header found");
+		logger::debug("HTTP request header found");
 	}
 	else
-		log::debug("HTTP request header not found yet");
+		logger::debug("HTTP request header not found yet");
 }
 
 std::map<std::string, std::string>	HTTPMessage::getHeaderMapFromRaw()

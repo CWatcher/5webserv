@@ -5,19 +5,21 @@ NAME          = webserv
 
 CXX           = c++
 LD            = c++
-CXXFLAGS      = -Wall -Wextra -Werror
+CXXFLAGS      = -Wall -Wextra -Werror -pthread
 
 BUILD ?= debug
 
 $(call add/project,$(PROJECT_NAME))
 $(PROJECT_NAME)_SRCS     += srcs/main.cpp			\
-							srcs/HTTPMessage.cpp	\
+							srcs/Logger.cpp			\
+							srcs/Server.cpp			\
 							srcs/ASocket.cpp		\
 							srcs/SocketListen.cpp	\
-							srcs/SocketRead.cpp		\
-							srcs/SocketWrite.cpp	\
-							srcs/Logging.cpp		\
+							srcs/SocketSession.cpp	\
+							srcs/ThreadPool.cpp		\
+							srcs/HTTPMessage.cpp	\
 							srcs/utils.cpp
+
 $(PROJECT_NAME)_INC      += ./
 $(PROJECT_NAME)_CXXFLAGS += --std=c++98
 $(PROJECT_NAME)_C_DEP    += ./Makefile

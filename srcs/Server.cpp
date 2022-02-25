@@ -23,14 +23,14 @@ Server::Server(const std::map<int, ASocket *> &sockets_to_listen)
 
 Server::~Server()
 {
-    log::info("Shutting down Server...");
+    logger::info("Shutting down Server...");
 
     for (std::map<int, ASocket *>::const_iterator it = _sockets.begin(); it != _sockets.end(); ++it)
         delete it->second;
 
     _sockets.clear();
 
-    log::info("Bye!");
+    logger::info("Bye!");
 }
 
 void Server::mainLoopRun()
@@ -39,7 +39,7 @@ void Server::mainLoopRun()
     size_t				poll_array_len;
     int					new_events;
 
-    log::info("Entering main Server loop...");
+    logger::info("Entering main Server loop...");
 
     while (!_sockets.empty())
     {
@@ -50,9 +50,9 @@ void Server::mainLoopRun()
         if (new_events <= 0)
         {
             if (errno)
-                log::cerrno();
+                logger::cerrno();
             else
-                log::debug("No new events. Reached poll timeout (seconds):", poll_timeout / 1000);
+                logger::debug("No new events. Reached poll timeout (seconds):", poll_timeout / 1000);
             continue ;
         }
 
@@ -70,7 +70,7 @@ size_t Server::eventArrayPrepare(std::vector<pollfd> &poll_array)
         poll_array.reserve(_sockets.size());
     }
     catch (std::bad_alloc &e) {
-        log::error(e.what());
+        logger::error(e.what());
     }
 
     for (std::map<int, ASocket *>::const_iterator it = _sockets.begin(); it != _sockets.end(); ++it)
@@ -79,7 +79,7 @@ size_t Server::eventArrayPrepare(std::vector<pollfd> &poll_array)
 
         if (poll_array_len >= poll_array.capacity())
         {
-            log::warning("Not enough memory to add socket", socket->fd);
+            logger::warning("Not enough memory to add socket", socket->fd);
             _sockets.erase(socket->fd);
             delete socket;
             continue ;
@@ -103,7 +103,7 @@ bool Server::eventCheck(const pollfd *poll_fd)
 {
     if (poll_fd->revents & (POLLERR | POLLHUP | POLLNVAL))
     {
-        log::info("Got terminating event on socket", poll_fd->fd);
+        logger::info("Got terminating event on socket", poll_fd->fd);
         delete _sockets[poll_fd->fd];
         _sockets.erase(poll_fd->fd);
     }
@@ -118,7 +118,7 @@ void Server::eventAction(ASocket *socket)
 
     action_value = socket->action(post_action);
     if (action_value == -1)
-        log::cerrno();
+        logger::cerrno(socket->fd);
 
     HTTPMessage DUMMY_RESPONSE; // TODO: delete after response implementation
     DUMMY_RESPONSE.raw_data = DefaultResponse;
@@ -130,10 +130,10 @@ void Server::eventAction(ASocket *socket)
             break ;
 
         case ASocket::Process:
-            log::info("Sent to process queue socket", socket->fd);
+            logger::info("Sent to process queue socket", socket->fd);
             // put to real Process queue later
 
-            log::info("HTTP response is ready for socket", socket->fd);
+            logger::info("HTTP response is ready for socket", socket->fd);
             dynamic_cast<SocketSession *>(socket)->prepareForWrite(DUMMY_RESPONSE);
             break ;
 

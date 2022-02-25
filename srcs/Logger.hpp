@@ -20,7 +20,7 @@ public:
 	static void	info(const std::string &message, ssize_t num = 0);
 	static void	warning(const std::string &message, ssize_t num = 0);
 	static void	error(const std::string &message, ssize_t num = 0);
-	static void cerrno();
+	static void cerrno(ssize_t num = 0);
 
 	static void setLevel(enum LoggingLevel level);
 	static void setLevel(const std::string &level);
@@ -40,6 +40,6 @@ private:
 	static const char*			_level_to_str[4];
 };
 
-typedef Logger	log;
+typedef Logger	logger;
 
 #endif
