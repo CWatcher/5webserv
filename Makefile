@@ -17,23 +17,15 @@ $(PROJECT_NAME)_C_DEP    += ./Makefile
 $(PROJECT_NAME)_LD_DEP   += ./Makefile
 
 
+$(call add/subproj,$(PROJECT_NAME),debugbase)
+debugbase_CXXFLAGS       += -O0 -g3
+
 $(call add/subproj,$(PROJECT_NAME),debug)
 DEBUG_SANS =    -fsanitize=address \
-                -fsanitize=undefined \
-                -fstack-protector-all \
-                -fstack-check
-debug_CXXFLAGS       += -O0 -g3 $(DEBUG_SANS)
-debug_LDFLAGS        +=         $(DEBUG_SANS)
+                -fsanitize=undefined
+debug_CXXFLAGS       += $(DEBUG_SANS)
+debug_LDFLAGS        += $(DEBUG_SANS)
 $(call add/exe,debug,$(NAME))
-
-$(call add/subproj,$(PROJECT_NAME),thread)
-THREAD_SANS =   -fsanitize=thread \
-                -fsanitize=undefined \
-                -fstack-protector-all \
-                -fstack-check
-thread_CXXFLAGS       += -O0 -g3 $(THREAD_SANS)
-thread_LDFLAGS        +=         $(THREAD_SANS)
-$(call add/exe,thread,$(NAME))
 
 $(call add/subproj,$(PROJECT_NAME),release)
 release_CXXFLAGS     += -O2
