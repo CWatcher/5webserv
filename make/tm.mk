@@ -59,7 +59,6 @@ $(1)_SRCS       =
 $(1)_BDIR       = .$(1)/
 $(1)_OBJS       = $$($(1)_SRCS:%.cpp=$$($(1)_BDIR)%.o)
 $(1)_DFILES     = $$($(1)_SRCS:%.cpp=$$($(1)_BDIR)%.d)
--include $$($(1)_DFILES)
 
 $(1)_CLEAN      = 
 $(1)_FCLEAN     = $$($(1)_CLEAN)
@@ -110,6 +109,7 @@ endef
 define __add/exe =
 $(1)_EXE = $$($(1)_BDIR)/$(2)
 $(1)_BUILD += $$($(1)_EXE)
+-include $$($(1)_DFILES)
 
 $$($(1)_EXE): $$($(1)_OBJS) $$($(1)_DEPEND)$$($(1)_LD_DEP)
 	$$($(1)_LD) $$($(1)_LDFLAGS) $$($(1)_OBJS) -o $$($(1)_EXE) $$($(1)_LIBS)
@@ -125,6 +125,7 @@ endef
 define __add/lib =
 $(1)_LIB = $$($(1)_BDIR)/$(2)
 $(1)_BUILD += $$($(1)_LIB)
+-include $$($(1)_DFILES)
 
 $$($(1)_LIB): $$($(1)_OBJS) $$($(1)_DEPEND) $$($(1)_LD_DEP)
 	$(AR) $$($(1)_LIB) $$($(1)_OBJS)
@@ -140,6 +141,7 @@ endef
 define __add/shlib =
 $(1)_SHLIB = $$($(1)_BDIR)/$(2)
 $(1)_BUILD += $$($(1)_SHLIB)
+-include $$($(1)_DFILES)
 
 $$($(1)_SHLIB): $$($(1)_OBJS) $$($(1)_DEPEND)) $$($(1)_LD_DEP)
 	$$($(1)_LD) $$($(1)_LDFLAGS) -shared -Wl,-soname,$(2) -o $$($(1)_SHLIB) $$($(1)_OBJS) $$($(1)_LIBS)
