@@ -28,9 +28,6 @@
 # External programms
 PYTHON         ?= python3
 NORMINETTE     ?= norminette
-RM              = rm -rf
-AR             ?= ar
-ARFLAGS        ?= rcs
 MKDIR          ?= mkdir -p
 LD             ?= $(CC)
 
@@ -77,12 +74,12 @@ $(1)_ARFLAGS    = $(ARFLAGS)
 
 $(1)_BUILD      =
 $(1)_SRCS       =
-$(1)_BDIR       = $(1)/
+$(1)_BDIR       = .$(1)/
 $(1)_OBJS       = $$($(1)_SRCS:%=$$($(1)_BDIR)%.o)
 $(1)_DFILES     = $$($(1)_SRCS:%=$$($(1)_BDIR)%.d)
 
-$(1)_CLEAN      = $$($(1)_OBJS) $$($(1)_DFILES)
-$(1)_FCLEAN     = $$($(1)_BUILD) $$($(1)_BDIR)
+$(1)_CLEAN      =
+$(1)_FCLEAN     =
 
 $(1)_DEP        = $(DEP)
 $(1)_C_DEP      = $$($(1)_DEP)
@@ -102,17 +99,19 @@ define __add/subproj =
 $(call __add/project,$(2))
 $(2)_CC         = $$($(1)_CC)
 $(2)_CXX        = $$($(1)_CXX)
-$(2)_CFLAGS     = $$($(1)_CFLAGS)
-$(2)_CXXFLAGS   = $$($(1)_CXXFLAGS)
 $(2)_INC        = $$($(1)_INC)
 $(2)_LD         = $$($(1)_LD)
-$(2)_LDFLAGS    = $$($(1)_LDFLAGS)
 $(2)_LIBS       = $$($(1)_LIBS)
 $(2)_AR         = $$($(1)_AR)
+
+$(2)_CFLAGS     = $$($(1)_CFLAGS)
+$(2)_CXXFLAGS   = $$($(1)_CXXFLAGS)
+$(2)_LDFLAGS    = $$($(1)_LDFLAGS)
 $(2)_ARFLAGS    = $$($(1)_ARFLAGS)
 
 $(2)_SRCS       = $$($(1)_SRCS)
 
+$(2)_DEP        = $$($(1)_DEP)
 $(2)_C_DEP      = $$($(1)_C_DEP)
 $(2)_CXX_DEP    = $$($(1)_CXX_DEP)
 $(2)_LD_DEP     = $$($(1)_LD_DEP)
@@ -134,21 +133,21 @@ $$($(1)_BDIR)%.cpp.o:	%.cpp $$($(1)_CXX_DEP) | $$$$(@D)/.
 	$$($(1)_CXX) $$($(1)_CXXFLAGS) $$($(1)_FINC)  -c $$< -o $$@ -MD
 
 $$($(1)_BDIR)%.c.o:	%.c $$($(1)_C_DEP) | $$$$(@D)/.
-	$$($(1)_CC) $$($(1)_CCFLAGS) $$($(1)_FINC)  -c $$< -o $$@ -MD
+	$$($(1)_CC) $$($(1)_CFLAGS) $$($(1)_FINC)  -c $$< -o $$@ -MD
 endef
 
 define __add/baserules =
 .PHONY: $(1)/clean
 $(1)/clean: $$($(1)_CLEAN_DEP)
-	-$(RM) $$($(1)_CLEAN)
+	-$(RM) $$($(1)_CLEAN) $$($(1)_OBJS) $$($(1)_DFILES)
 
 .PHONY: $(1)/fclean
 $(1)/fclean: $$($(1)_FCLEAN_DEP)
-	-$(RM) $$($(1)_FCLEAN)
+	-$(RM) $$($(1)_FCLEAN) $$($(1)_BUILD)
+	-find $$($(1)_BDIR) -type d -empty -delete
 
 .PHONY: $(1)/re
-$(1)/re:
-	+$(MAKE) $(1)/fclean
+$(1)/re: $(1)/fclean
 	+$(MAKE) $$($(1)_BUILD)
 endef
 
@@ -179,7 +178,7 @@ $(1)_LIB = $$($(1)_BDIR)/$(2)
 $(1)_BUILD += $$($(1)_LIB)
 
 $$($(1)_LIB): $$($(1)_OBJS) $$($(1)_AR_DEP)
-	$$($(1)_AR) $$($(1)_LIB) $$($(1)_OBJS)
+	$$($(1)_AR) $$($(1)_ARFLAGS) $$($(1)_LIB) $$($(1)_OBJS)
 
 .PHONY: $(1)/lib
 $(1)/lib: $$($(1)_LIB)

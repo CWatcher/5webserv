@@ -8,6 +8,8 @@ LD            = c++
 CXXFLAGS      = -Wall -Wextra -Werror --std=c++98
 DEP           = ./Makefile
 
+BUILD ?= debug
+
 $(call add/project,$(PROJECT_NAME))
 $(PROJECT_NAME)_SRCS     += srcs/main.cpp
 
@@ -27,12 +29,12 @@ $(call add/exe,release,$(NAME))
 
 .PHONY: all clean fclean re
 
-#$(NAME): $($(BUILD)_EXE)
-#	cp $($(BUILD)_EXE) $(NAME)
-#all: $(NAME)
-#$(BUILD)_BUILD  += $(NAME)
-#$(BUILD)_FCLEAN += $(NAME)
+$(NAME): $($(BUILD)_EXE)
+	cp $($(BUILD)_EXE) $(NAME)
+all: $(NAME)
+$(BUILD)_BUILD  += $(NAME)
+$(BUILD)_FCLEAN += $(NAME)
 
-#clean: $(BUILD)/clean
-#fclean: $(BUILD)/fclean
-#re: $(BUILD)/re
+clean: debug/clean release/clean
+fclean: debug/fclean release/fclean
+re: $(BUILD)/re
