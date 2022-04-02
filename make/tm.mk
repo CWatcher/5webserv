@@ -28,8 +28,6 @@
 # External programms
 PYTHON         ?= python3
 NORMINETTE     ?= norminette
-MKDIR          ?= mkdir -p
-LD             ?= $(CC)
 
 # Pretty print
 colored        = 1

@@ -8,7 +8,7 @@ LD            = c++
 CXXFLAGS      = -Wall -Wextra -Werror --std=c++98
 DEP           = ./Makefile
 
-BUILD ?= debug
+BUILD        ?= debug
 
 $(call add/project,$(PROJECT_NAME))
 $(PROJECT_NAME)_SRCS     += srcs/main.cpp
