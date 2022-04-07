@@ -30,7 +30,7 @@ $(call add/exe,release,$(NAME))
 .PHONY: all clean fclean re
 
 $(NAME): $($(BUILD)_EXE)
-	cp $($(BUILD)_EXE) $(NAME)
+	$(silent)cp $($(BUILD)_EXE) $(NAME)
 all: $(NAME)
 $(BUILD)_BUILD  += $(NAME)
 $(BUILD)_FCLEAN += $(NAME)

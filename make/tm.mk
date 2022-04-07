@@ -30,8 +30,8 @@ PYTHON         ?= python3
 NORMINETTE     ?= norminette
 
 # Pretty print
-colored        = 1
-ifeq ($(colored), 1)
+COLORED       ?= 1
+ifeq ($(COLORED), 1)
 color_RED      = \x1b[31m
 color_GREEN    = \x1b[32m
 color_YELLOW   = \x1b[33m
@@ -42,12 +42,28 @@ color_RESET    = \x1b[0m
 reset_line     = \033[A\033[2K
 endif
 
-pretty_done     = [$(color_GREEN)✓$(color_RESET)]
-pretty_fail     = [$(color_RED)✕$(color_RESET)]
+pretty_work     = $(color_YELLOW)⟳$(color_RESET)
+pretty_done     = $(color_GREEN)✓$(color_RESET)
+pretty_fail     = $(color_RED)✕$(color_RESET)
+pretty_file     = $(color_CYAN)%s$(color_RESET)
+
+define __in_work = 
+@printf "[$(pretty_work)][$(pretty_file)] %s\n"  $(1) $(2)
+endef
+
+define __done = 
+@printf "[$(pretty_done)][$(pretty_file)] %s\n"  $(1) $(2)
+endef
 
 empty           =
 space           = $(empty) $(empty)
 comma           = $(empty),$(empty)
+silent          = $(empty)@$(empty)
+force_ignore_error = 2>/dev/null || true
+
+ifeq ($(VERBOSE),1)
+silent          = $(empty)
+endif
 
 #######################################################
 #
@@ -121,32 +137,38 @@ endef
 define __add/build_dir =
 .PRECIOUS: $$($(1)_BDIR)/. $$($(1)_BDIR)%/.
 $$($(1)_BDIR)/.:
-	mkdir -p $$@
+	$(silent)mkdir -p $$@
 $$($(1)_BDIR)%/.:
-	mkdir -p $$@
+	$(silent)mkdir -p $$@
 endef
 
 define __add/objrule =
 $$($(1)_BDIR)%.cpp.o:	%.cpp $$($(1)_CXX_DEP) | $$$$(@D)/.
-	$$($(1)_CXX) $$($(1)_CXXFLAGS) $$($(1)_FINC)  -c $$< -o $$@ -MD
+	$(call __in_work,$$@,compile)
+	$(silent)$$($(1)_CXX) $$($(1)_CXXFLAGS) $$($(1)_FINC)  -c $$< -o $$@ -MD
+	$(call __done,$$@,compile)
 
 $$($(1)_BDIR)%.c.o:	%.c $$($(1)_C_DEP) | $$$$(@D)/.
-	$$($(1)_CC) $$($(1)_CFLAGS) $$($(1)_FINC)  -c $$< -o $$@ -MD
+	$(call __in_work,$$@,compile)
+	$(silent)$$($(1)_CC) $$($(1)_CFLAGS) $$($(1)_FINC)  -c $$< -o $$@ -MD
+	$(call __done,$$@,compile)
 endef
 
 define __add/baserules =
 .PHONY: $(1)/clean
 $(1)/clean: $$($(1)_CLEAN_DEP)
-	-$(RM) $$($(1)_CLEAN) $$($(1)_OBJS) $$($(1)_DFILES)
+	-$(silent)$(RM) $$($(1)_CLEAN) $$($(1)_OBJS) $$($(1)_DFILES)
+	$(call __done,$$@)
 
 .PHONY: $(1)/fclean
 $(1)/fclean: $$($(1)_FCLEAN_DEP)
-	-$(RM) $$($(1)_FCLEAN) $$($(1)_BUILD)
-	-find $$($(1)_BDIR) -type d -empty -delete
+	-$(silent)$(RM) $$($(1)_FCLEAN) $$($(1)_BUILD)
+	-$(silent)find $$($(1)_BDIR) -type d -empty -delete $(force_ignore_error)
+	$(call __done,$$@)
 
 .PHONY: $(1)/re
 $(1)/re: $(1)/fclean
-	+$(MAKE) $$($(1)_BUILD)
+	+$(silent)$(MAKE) $$($(1)_BUILD)
 endef
 
 
@@ -158,11 +180,13 @@ endef
 #! @1 - project name
 #! @2 - out name
 define __add/exe =
-$(1)_EXE = $$($(1)_BDIR)/$(2)
+$(1)_EXE = $$($(1)_BDIR)$(2)
 $(1)_BUILD += $$($(1)_EXE)
 
 $$($(1)_EXE): $$($(1)_OBJS) $$($(1)_LD_DEP)
-	$$($(1)_LD) $$($(1)_LDFLAGS) $$($(1)_OBJS) -o $$($(1)_EXE) $$($(1)_LIBS)
+	$(call __in_work,$$@,linking)
+	$(silent)$$($(1)_LD) $$($(1)_LDFLAGS) $$($(1)_OBJS) -o $$($(1)_EXE) $$($(1)_LIBS)
+	$(call __done,$$@,linking)
 
 .PHONY: $(1)/exe
 $(1)/exe: $$($(1)_EXE)
@@ -176,7 +200,9 @@ $(1)_LIB = $$($(1)_BDIR)/$(2)
 $(1)_BUILD += $$($(1)_LIB)
 
 $$($(1)_LIB): $$($(1)_OBJS) $$($(1)_AR_DEP)
-	$$($(1)_AR) $$($(1)_ARFLAGS) $$($(1)_LIB) $$($(1)_OBJS)
+	$(call __in_work,$$@,archiving)
+	$(silent)$$($(1)_AR) $$($(1)_ARFLAGS) $$($(1)_LIB) $$($(1)_OBJS)
+	$(call __done,$$@,archiving)
 
 .PHONY: $(1)/lib
 $(1)/lib: $$($(1)_LIB)
@@ -190,7 +216,9 @@ $(1)_SHLIB = $$($(1)_BDIR)/$(2)
 $(1)_BUILD += $$($(1)_SHLIB)
 
 $$($(1)_SHLIB): $$($(1)_OBJS) $$($(1)_LD_DEP)
-	$$($(1)_LD) $$($(1)_LDFLAGS) -shared -Wl,-soname,$(2) -o $$($(1)_SHLIB) $$($(1)_OBJS) $$($(1)_LIBS)
+	$(call __in_work,$$@,linking)
+	$(silent)$$($(1)_LD) $$($(1)_LDFLAGS) -shared -Wl,-soname,$(2) -o $$($(1)_SHLIB) $$($(1)_OBJS) $$($(1)_LIBS)
+	$(call __in_work,$$@,linking)
 
 .PHONY: $(1)/shlib
 $(1)/shlib: $$($(1)_SHLIB)
