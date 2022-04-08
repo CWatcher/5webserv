@@ -12,6 +12,7 @@ BUILD        ?= debug
 
 $(call add/project,$(PROJECT_NAME))
 $(PROJECT_NAME)_SRCS     += srcs/main.cpp
+$(PROJECT_NAME)_LIBS     += -pthread
 
 $(call add/subproj,$(PROJECT_NAME),debugbase)
 debugbase_CXXFLAGS       += -O0 -g3
