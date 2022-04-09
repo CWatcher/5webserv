@@ -26,11 +26,6 @@ public:
 	static void setLevel(const std::string &level);
 
 private:
-	Logger();
-	Logger(const Logger &_);
-	Logger &operator=(const Logger &_);
-	~Logger();
-
 	static char	*timestamp();
 	static void	printLogLine(
 		enum LoggingLevel msg_level, const std::string &message, ssize_t num = 0

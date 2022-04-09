@@ -5,16 +5,16 @@
 
 #include <cerrno>
 
-const char      *DefaultResponse =	  "HTTP/1.1 200 OK\n"
-                                      "Date: Wed, 18 Feb 2021 11:20:59 GMT\n"
-                                      "Server: Apache\n"
-                                      "X-Powered-By: webserv\n"
-                                      "Last-Modified: Wed, 11 Feb 2009 11:20:59 GMT\n"
-                                      "Content-Type: text/html; charset=utf-8\n"
-                                      "Content-Length: 14\n"
-                                      "Connection: close\n"
-                                      "\n"
-                                      "<h1>HELLO WORLD</h1>\n";
+//const char      *DefaultResponse =	  "HTTP/1.1 200 OK\n"
+//                                      "Date: Wed, 18 Feb 2021 11:20:59 GMT\n"
+//                                      "Server: Apache\n"
+//                                      "X-Powered-By: webserv\n"
+//                                      "Last-Modified: Wed, 11 Feb 2009 11:20:59 GMT\n"
+//                                      "Content-Type: text/html; charset=utf-8\n"
+//                                      "Content-Length: 14\n"
+//                                      "Connection: close\n"
+//                                      "\n"
+//                                      "<h1>HELLO WORLD</h1>\n";
 
 int Server::poll_timeout = 30 * 1000;
 
@@ -27,8 +27,6 @@ Server::~Server()
 
     for (std::map<int, ASocket *>::const_iterator it = _sockets.begin(); it != _sockets.end(); ++it)
         delete it->second;
-
-    _sockets.clear();
 
     logger::info("Bye!");
 }
@@ -85,9 +83,9 @@ size_t Server::eventArrayPrepare(std::vector<pollfd> &poll_array)
             continue ;
         }
 
-        if (socket->getTrigger() == TriggerEvent::Read)
+        if (socket->getTrigger() == TriggerType::Read)
             poll_array[poll_array_len].events = POLLIN;
-        else if (socket->getTrigger() == TriggerEvent::Write)
+        else if (socket->getTrigger() == TriggerType::Write)
             poll_array[poll_array_len].events = POLLOUT;
         else
             continue ;
@@ -120,8 +118,8 @@ void Server::eventAction(ASocket *socket)
     if (action_value == -1)
         logger::cerrno(socket->fd);
 
-    HTTPMessage DUMMY_RESPONSE; // TODO: delete after response implementation
-    DUMMY_RESPONSE.raw_data = DefaultResponse;
+//    HTTPMessage DUMMY_RESPONSE; // TODO: delete after response implementation
+//    DUMMY_RESPONSE.raw_data = DefaultResponse;
 
     switch (post_action)
     {
@@ -134,7 +132,7 @@ void Server::eventAction(ASocket *socket)
             // put to real Process queue later
 
             logger::info("HTTP response is ready for socket", socket->fd);
-            dynamic_cast<SocketSession *>(socket)->prepareForWrite(DUMMY_RESPONSE);
+//            dynamic_cast<SocketSession *>(socket)->prepareForWrite(DUMMY_RESPONSE);
             break ;
 
         case ASocket::Disconnect:
@@ -146,7 +144,3 @@ void Server::eventAction(ASocket *socket)
             break ;
     }
 }
-
-Server::Server() {}
-Server::Server(const Server &_) {(void)_;}
-Server &Server::operator=(const Server &_) {(void)_; return *this;}

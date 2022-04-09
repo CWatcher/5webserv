@@ -30,6 +30,7 @@ public:
     ThreadPool()
         : _threads_run(true)
         , _tasks_lock((pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER)
+        , _tasks_event((pthread_cond_t)PTHREAD_COND_INITIALIZER)
         , _completed_lock((pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER)
     {
         const long int  threads_count = sysconf(_SC_NPROCESSORS_ONLN);
@@ -46,12 +47,18 @@ public:
 
     ~ThreadPool()
     {
+        void *null;
+
         _threads_run = false;
 
         std::for_each(_threads.begin(), _threads.end(), pthread_cancel);
         if (errno)
             logger::cerrno();
 
+        for (std::vector<pthread_t>::const_iterator it = _threads.begin(); it != _threads.end(); ++it)
+            pthread_join(*it, &null);
+
+        pthread_cond_destroy(&_tasks_event);
         pthread_mutex_destroy(&_tasks_lock);
         pthread_mutex_destroy(&_completed_lock);
     }
@@ -76,11 +83,6 @@ private:
                 logger::error("Insufficient resources to create thread #", i);
                 continue ;
             }
-            if (pthread_detach(thread))
-            {
-                logger::cerrno(i);
-                logger::error("Error while trying to detach thread #", i);
-            }
             _threads.push_back(thread);
         }
         if (_threads.empty())
@@ -91,10 +93,10 @@ private:
 
     static void *threadLoop(void *thread_pool_void)
     {
-        std::pair<int, HTTPMessage &> task;
+        std::pair<int, HTTPMessage> task;
         ThreadPool        *thread_pool     = reinterpret_cast<ThreadPool *>(thread_pool_void);
         pthread_mutex_t   *task_lock       = &thread_pool->_tasks_lock;
-        pthread_cond_t    *task_event      = &thread_pool->_task_event;
+        pthread_cond_t    *task_event      = &thread_pool->_tasks_event;
         pthread_mutex_t   *completed_lock  = &thread_pool->_completed_lock;
 
         while (thread_pool->_threads_run)
@@ -104,7 +106,8 @@ private:
                 while (thread_pool->_tasks.empty())
                     pthread_cond_wait(task_event, task_lock);
 
-                task = thread_pool->_tasks.front();
+//                task = thread_pool->_tasks.front();
+                task = std::make_pair(thread_pool->_tasks.front().first, thread_pool->_tasks.front().second);
                 thread_pool->_tasks.pop();
             }
             pthread_mutex_unlock(task_lock);
@@ -118,14 +121,15 @@ private:
             pthread_mutex_unlock(completed_lock);
         }
         logger::debug("Worker stopped");
+        return NULL;
     }
 
     bool                                        _threads_run;
     std::vector<pthread_t>                      _threads;
-    std::queue<std::pair<int, HTTPMessage &> >  _tasks;
+    std::queue<std::pair<int, HTTPMessage> >  _tasks;
     pthread_mutex_t                             _tasks_lock;
-    pthread_cond_t                              _task_event;
-    std::queue<std::pair<int, HTTPMessage &> >  _completed;
+    pthread_cond_t                              _tasks_event;
+    std::queue<std::pair<int, HTTPMessage> >  _completed;
     pthread_mutex_t                             _completed_lock;
 };
 

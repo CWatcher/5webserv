@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 
 SocketSession::SocketSession(int fd)
-	: ASocket(fd, TriggerEvent::Read)
+	: ASocket(fd, TriggerType::Read)
     , _written_total(0) {}
 
 SocketSession::SocketSession(const SocketSession &src)
@@ -13,7 +13,7 @@ SocketSession::SocketSession(const SocketSession &src)
 
 int     SocketSession::action(enum PostAction &post_action)
 {
-    if (_trigger == TriggerEvent::Read)
+    if (_trigger == TriggerType::Read)
         return actionRead(post_action);
     else
         return actionWrite(post_action);
@@ -22,7 +22,7 @@ int     SocketSession::action(enum PostAction &post_action)
 void    SocketSession::prepareForWrite(HTTPMessage &response)
 {
     _message = response;
-    _trigger = TriggerEvent::Write;
+    _trigger = TriggerType::Write;
 }
 
 
@@ -47,7 +47,7 @@ int	    SocketSession::actionRead(enum PostAction &post_action)
         if (_message.hasEndOfMessage())
         {
             post_action = Process;
-            _trigger = TriggerEvent::None;
+            _trigger = TriggerType::None;
             logger::info("Got end of HTTP message from socket", fd);
         }
         else
@@ -72,7 +72,7 @@ int	    SocketSession::actionWrite(enum PostAction &post_action)
         if (_written_total == _message.raw_data.size())
         {
             logger::info("HTTP response sent. Switching to read socket", fd);
-            _trigger = TriggerEvent::Read;
+            _trigger = TriggerType::Read;
         }
         else
             logger::debug("Left to write (bytes):", left_to_write - bytes_written);

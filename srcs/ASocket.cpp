@@ -3,7 +3,7 @@
 
 #include <unistd.h>
 
-ASocket::ASocket(int fd, enum TriggerEvent::_ trigger)
+ASocket::ASocket(int fd, enum TriggerType::_ trigger)
 	: fd(fd)
 	, _trigger(trigger) {}
 
@@ -17,10 +17,7 @@ ASocket::~ASocket()
     logger::info("Disconnected socket", fd);
 }
 
-TriggerEvent::_ ASocket::getTrigger() const
+TriggerType::_ ASocket::getTrigger() const
 {
     return _trigger;
 }
-
-ASocket::ASocket() : fd(0), _trigger(TriggerEvent::Read) {}
-ASocket	&ASocket::operator=(const ASocket &_) {(void)_; return *this;}

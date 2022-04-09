@@ -85,11 +85,6 @@ char	*Logger::timestamp()
 	return time_str;
 }
 
-Logger::Logger() {}
-Logger::Logger(const Logger &_) {(void)_;}
-Logger &Logger::operator=(const Logger &_) {(void)_; return *this;}
-Logger::~Logger() {}
-
 # define COLOR_WHITE	"\033[1;37m"
 # define COLOR_YELLOW	"\033[0;33m"
 # define COLOR_RED		"\033[0;31m"

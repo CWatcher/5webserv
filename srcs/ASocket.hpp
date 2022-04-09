@@ -2,9 +2,10 @@
 #ifndef ASOCKET_HPP
 # define ASOCKET_HPP
 
-# include "Logging.hpp"
+# include "Logger.hpp"
 
 namespace TriggerType { enum _ {
+    None,
 	Read,
 	Write
 }; }
@@ -27,14 +28,18 @@ public:
 	virtual int	action(enum PostAction &post_action) = 0;
 	void		disconnect() const;
 
+    TriggerType::_ getTrigger() const;
+
 
 private:
 	ASocket();
 	ASocket	&operator=(const ASocket &rhs);
 
 public:
-	const int				fd;
-	const TriggerType::_	trigger;
+	const int		fd;
+
+protected:
+	TriggerType::_	_trigger;
 };
 
 #endif
