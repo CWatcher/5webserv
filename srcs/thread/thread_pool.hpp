@@ -1,12 +1,12 @@
 #pragma once
 
-#include <array>
 #include <queue>
 
 #include "thread/thread.hpp"
 #include "thread/semaphore.hpp"
 #include "thread/mutex.hpp"
 #include "thread/atomic.hpp"
+#include "utils/array.hpp"
 
 namespace ft
 {
@@ -72,7 +72,7 @@ private:
 
 
 private:
-    typedef std::array<ft::thread, NThread> thread_pool_type;
+    typedef ft::array<ft::thread, NThread>  thread_pool_type;
     typedef sem_queue<task>                 task_pool_type;
 
     struct thread_data
