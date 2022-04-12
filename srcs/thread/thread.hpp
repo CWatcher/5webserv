@@ -29,15 +29,9 @@ public:
     thread()  : _joinable(false), _id(0) { }
     ~thread() { }
 
-    bool joinable() const
-    {
-        return _joinable;
-    }
+    bool joinable() const { return _joinable; }
 
-    id get_id() const
-    {
-        return _id;
-    }
+    id get_id() const { return _id; }
 
     void cancel()
     {
@@ -67,15 +61,8 @@ private:
 namespace this_thread
 {
 
-inline ft::thread::id get_id()
-{
-    return pthread_self();
-}
-
-inline void exit(void *data = NULL)
-{
-    pthread_exit(data);
-}
+inline ft::thread::id get_id() { return pthread_self(); }
+inline void exit(void *data = NULL) { pthread_exit(data); }
 
 }
 

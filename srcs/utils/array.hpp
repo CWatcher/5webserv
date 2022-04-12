@@ -93,6 +93,8 @@ public:
 
     array(array const& other)
     {
+        for (size_t i = 0; i < Size; i++)
+            operator[](i) = other[i];
     }
 
     ~array()
@@ -101,6 +103,8 @@ public:
 
     array& operator=(array const& other)
     {
+        for (size_t i = 0; i < Size; i++)
+            operator[](i) = other[i];
     }
 
     reference operator[](size_type pos) { return _array[pos]; }
