@@ -10,38 +10,17 @@ class mutex
 public:
     typedef pthread_mutex_t native_handle_type;
 
-    mutex()
-    {
-        pthread_mutexattr_init(&_mutexattr);
-        pthread_mutex_init(&_mutex, &_mutexattr);
-    }
+    mutex() { pthread_mutex_init(&_mutex, NULL); }
+    ~mutex() { pthread_mutex_destroy(&_mutex); }
 
-    ~mutex()
-    {
-        pthread_mutex_destroy(&_mutex);
-        pthread_mutexattr_destroy(&_mutexattr);
-    }
-
-    void lock()
-    {
-        pthread_mutex_lock(&_mutex);
-    }
-
-    void unlock()
-    {
-        pthread_mutex_unlock(&_mutex);
-    }
-
-    bool try_lock()
-    {
-        return pthread_mutex_trylock(&_mutex);
-    }
+    void lock() { pthread_mutex_lock(&_mutex); }
+    void unlock() { pthread_mutex_unlock(&_mutex); }
+    bool try_lock() { return pthread_mutex_trylock(&_mutex); }
 
     native_handle_type native_handle() { return _mutex; }
 
 private:
     pthread_mutex_t _mutex;
-    pthread_mutexattr_t _mutexattr;
 };
 
 class spin_lock
@@ -49,30 +28,11 @@ class spin_lock
 public:
     typedef pthread_spinlock_t native_handle_type;
 
-    spin_lock()
-    {
-        pthread_spin_init(&_spin_lock, 0);
-    }
-
-    ~spin_lock()
-    {
-        pthread_spin_destroy(&_spin_lock);
-    }
-
-    void lock()
-    {
-        pthread_spin_lock(&_spin_lock);
-    }
-
-    void unlock()
-    {
-        pthread_spin_unlock(&_spin_lock);
-    }
-
-    bool try_lock()
-    {
-        return pthread_spin_trylock(&_spin_lock);
-    }
+    spin_lock() { pthread_spin_init(&_spin_lock, 0); }
+    ~spin_lock() { pthread_spin_destroy(&_spin_lock); }
+    void lock() { pthread_spin_lock(&_spin_lock); }
+    void unlock() { pthread_spin_unlock(&_spin_lock); }
+    bool try_lock() { return pthread_spin_trylock(&_spin_lock); }
 
     native_handle_type native_handle() { return _spin_lock; }
 

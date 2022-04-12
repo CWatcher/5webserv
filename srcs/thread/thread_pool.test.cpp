@@ -12,11 +12,13 @@ size_t fact(size_t ii)
 
 static ft::spin_lock output;
 
+size_t n;
+
 void *work(void *data)
 {
     size_t i = fact((size_t)data);
     std::stringstream s;
-    s << (size_t)data << ' ' << i << '\n';
+    s << n++ << ' ' << (size_t)data << ' ' << i << '\n';
     {
         ft::lock_guard<ft::spin_lock> lock(output);
         std::cout << s.str();
@@ -27,7 +29,7 @@ void *work(void *data)
 int main()
 {
     ft::thread_pool<8> pool;
-    for (size_t i = 0; i < 40; i++)
+    for (size_t i = 0; i < 160; i++)
         pool.push_task(work, (void*)40);
     pool.soft_stop();
 }

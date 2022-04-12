@@ -77,19 +77,24 @@ private:
 
     struct thread_data
     {
-        thread_data(task_pool_type& task_pool, ft::fake_atomic<bool> const& wait_exit)
-            : task_pool(task_pool), wait_exit(wait_exit) {}
+        thread_data(task_pool_type& task_pool)
+            : task_pool(task_pool) {}
         task_pool_type&                 task_pool;
-        ft::fake_atomic<bool> const&    wait_exit;
     };
 
     static void* thread_loop(thread_data* d)
     {
-        while (d->wait_exit.get() == false || d->task_pool.empty() == false)
+        while (true)
         {
             task t = d->task_pool.pull();
             (*t.routine)(t.data);
         }
+        return NULL;
+    }
+
+    static void* exit_task(void*)
+    {
+        ft::this_thread::exit();
         return NULL;
     }
 
@@ -102,7 +107,7 @@ private:
 
 public:
     thread_pool()
-        : _wait_exit(false), _thread_data(_task_pool, _wait_exit)
+        : _thread_data(_task_pool)
     {
         for (typename thread_pool_type::iterator it = _thread_pool.begin();
                 it != _thread_pool.end(); ++it)
@@ -121,7 +126,8 @@ public:
 
     void soft_stop()
     {
-        _wait_exit.set(true);
+        for (size_t i = 0; i < NThread; i++)
+            _task_pool.push(task(exit_task, NULL));
         for (typename thread_pool_type::iterator it = _thread_pool.begin();
                 it != _thread_pool.end(); ++it)
         {
@@ -143,7 +149,6 @@ public:
 private:
     thread_pool_type        _thread_pool;
     task_pool_type          _task_pool;
-    ft::fake_atomic<bool>   _wait_exit;
     thread_data             _thread_data;
 };
 
