@@ -20,10 +20,13 @@ public:
     typedef void*(*routine_type)(void*);
     typedef void* data_type;
 
-    thread(routine_type routine, data_type data = NULL)
+    template<typename Routine, typename Data>
+    thread(Routine routine, Data* data = NULL)
         : _joinable(true)
     {
-        pthread_create(&_id._id, NULL, routine, data);
+        pthread_create(&_id._id, NULL,
+                        reinterpret_cast<ft::thread::routine_type>(routine),
+                        reinterpret_cast<ft::thread::data_type>(data));
     }
 
     thread()  : _joinable(false), _id(0) { }

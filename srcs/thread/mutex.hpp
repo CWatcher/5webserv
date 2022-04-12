@@ -34,7 +34,7 @@ public:
     void unlock() { pthread_spin_unlock(&_spin_lock); }
     bool try_lock() { return pthread_spin_trylock(&_spin_lock); }
 
-    native_handle_type native_handle() { return _spin_lock; }
+    int native_handle() { return _spin_lock; }
 
 private:
     pthread_spinlock_t _spin_lock;

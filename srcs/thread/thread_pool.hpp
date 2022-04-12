@@ -119,6 +119,13 @@ public:
         this->cancel();
     }
 
+    template<typename Routine, typename Data>
+    void push_task(Routine routine, Data data)
+    {
+        _task_pool.push(task(reinterpret_cast<ft::thread::routine_type>(routine),
+                             reinterpret_cast<ft::thread::data_type>(data)));
+    }
+
     void push_task(ft::thread::routine_type routine, ft::thread::data_type data)
     {
         _task_pool.push(task(routine, data));
