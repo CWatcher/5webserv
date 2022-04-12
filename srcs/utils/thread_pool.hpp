@@ -2,10 +2,10 @@
 
 #include <queue>
 
-#include "thread/thread.hpp"
-#include "thread/semaphore.hpp"
-#include "thread/mutex.hpp"
-#include "thread/atomic.hpp"
+#include "utils/thread.hpp"
+#include "utils/semaphore.hpp"
+#include "utils/mutex.hpp"
+#include "utils/atomic.hpp"
 #include "utils/array.hpp"
 
 namespace ft

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "thread/thread_pool.hpp"
+#include "utils/thread_pool.hpp"
 
 size_t fact(size_t ii)
 {

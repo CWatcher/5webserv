@@ -1,6 +1,6 @@
 #pragma once
 
-#include "thread/mutex.hpp"
+#include "utils/mutex.hpp"
 
 namespace ft
 {
