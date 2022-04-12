@@ -29,7 +29,7 @@ public:
     operator T() const { return get(); }
 
 private:
-    ft::spin_lock   _mutex;
+    mutable ft::spin_lock   _mutex;
     value_type      _data;
 };
 

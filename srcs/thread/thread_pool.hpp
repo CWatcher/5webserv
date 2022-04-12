@@ -15,9 +15,15 @@ template<typename T>
 class sem_queue
 {
 public:
+    typedef  std::queue<T>                                      container_type;
+    typedef  typename container_type::value_type                value_type;
+    typedef  typename container_type::size_type                 size_type;
+    typedef  typename container_type::reference                 reference;
+    typedef  typename container_type::const_reference           const_reference;
+public:
     void push(T const& task)
     {
-        ft::lock_guard<ft::spin_lock>(_mutex);
+        ft::lock_guard<ft::spin_lock> lock(_mutex);
         _queue.push(task);
         _sem.post();
     }
@@ -25,8 +31,8 @@ public:
     T pull()
     {
         _sem.wait();
-        ft::lock_guard<ft::spin_lock>(_mutex);
-        T tmp = _queue.back();
+        ft::lock_guard<ft::spin_lock> lock(_mutex);
+        T tmp = _queue.front();
         _queue.pop();
         return tmp;
         
@@ -34,20 +40,20 @@ public:
 
     bool empty() const
     {
-        ft::lock_guard<ft::spin_lock>(_mutex);
-        bool empty = _queue.empty()
+        ft::lock_guard<ft::spin_lock> lock(_mutex);
+        bool empty = _queue.empty();
         return empty;
     }
 
-    std::queue<T>::size_type size() const
+    size_type size() const
     {
-        ft::lock_guard<ft::spin_lock>(_mutex);
-        std::queue<T>::size_type size = _queue.size();
+        ft::lock_guard<ft::spin_lock> lock(_mutex);
+        size_type size = _queue.size();
         return size;
     }
 private:
-    ft::semaphore _sem;
-    ft::spin_lock _mutex;
+    mutable ft::semaphore _sem;
+    mutable ft::spin_lock _mutex;
     std::queue<T> _queue;
 };
 
@@ -77,25 +83,28 @@ private:
         ft::fake_atomic<bool> const&    wait_exit;
     };
 
-    static void thread_loop(thread_data* d)
+    static void* thread_loop(thread_data* d)
     {
-        while (d->wait_exit == false || d->task_pool.empty() == true)
+        while (d->wait_exit.get() == false || d->task_pool.empty() == false)
         {
-            task t = task_pool->pull();
+            task t = d->task_pool.pull();
             (*t.routine)(t.data);
         }
+        return NULL;
     }
 
     static void start_thread(ft::thread& runner, thread_data& thread_data)
     {
-        runner = ft::thread(thread_loop, &thread_data);
+        runner = ft::thread(
+                (ft::thread::routine_type)thread_loop,
+                (ft::thread::data_type)&thread_data);
     }
 
 public:
     thread_pool()
         : _wait_exit(false), _thread_data(_task_pool, _wait_exit)
     {
-        for (thread_pool_type::iterator it = _thread_pool.begin();
+        for (typename thread_pool_type::iterator it = _thread_pool.begin();
                 it != _thread_pool.end(); ++it)
             start_thread(*it, _thread_data);
     }
@@ -113,16 +122,22 @@ public:
     void soft_stop()
     {
         _wait_exit.set(true);
-        for (thread_pool_type::iterator it = _thread_pool.begin();
+        for (typename thread_pool_type::iterator it = _thread_pool.begin();
                 it != _thread_pool.end(); ++it)
-            it->join();
+        {
+            if (it->joinable())
+                it->join();
+        }
     }
 
     void cancel()
     {
-        for (thread_pool_type::iterator it = _thread_pool.begin();
+        for (typename thread_pool_type::iterator it = _thread_pool.begin();
                 it != _thread_pool.end(); ++it)
-            it->cancel();
+        {
+            if (it->joinable())
+                it->cancel();
+        }
     }
 
 private:

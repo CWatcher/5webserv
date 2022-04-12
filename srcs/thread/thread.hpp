@@ -10,7 +10,7 @@ class thread
 public:
     struct id
     {
-        id(pthread_t id = 0) : _id(_id) {}
+        id(pthread_t id = 0) : _id(id) {}
         operator pthread_t () { return _id; }
     private:
         pthread_t _id;
@@ -21,16 +21,17 @@ public:
     typedef void* data_type;
 
     thread(routine_type routine, data_type data = NULL)
+        : _joinable(true)
     {
         pthread_create(&_id._id, NULL, routine, data);
     }
 
-    thread()  { }
+    thread()  : _joinable(false), _id(0) { }
     ~thread() { }
 
     bool joinable() const
     {
-        
+        return _joinable;
     }
 
     id get_id() const
@@ -40,23 +41,27 @@ public:
 
     void cancel()
     {
-        pthread_cancel(_id._id);
+        pthread_cancel(_id);
+        _joinable = false;
     }
 
     void join()
     {
-        pthread_join(_id._id, NULL);
+        pthread_join(_id, NULL);
+        _joinable = false;
     }
 
     void detach()
     {
-        pthread_detach(_id._id);
+        pthread_detach(_id);
+        _joinable = false;
     }
 
 public:
     typedef pthread_t native_handle_type;
 private:
-    id _id;
+    bool _joinable;
+    id   _id;
 };
 
 namespace this_thread
