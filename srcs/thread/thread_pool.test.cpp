@@ -29,7 +29,7 @@ void *work(void *data)
 int main()
 {
     ft::thread_pool<8> pool;
-    for (size_t i = 0; i < 160; i++)
+    for (size_t i = 0; i < 2; i++)
         pool.push_task(work, (void*)40);
-    pool.soft_stop();
+    pool.cancel();
 }

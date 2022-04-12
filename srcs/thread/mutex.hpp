@@ -17,7 +17,7 @@ public:
     void unlock() { pthread_mutex_unlock(&_mutex); }
     bool try_lock() { return pthread_mutex_trylock(&_mutex); }
 
-    native_handle_type native_handle() { return _mutex; }
+    native_handle_type& native_handle() { return _mutex; }
 
 private:
     pthread_mutex_t _mutex;
@@ -34,17 +34,11 @@ public:
     void unlock() { pthread_spin_unlock(&_spin_lock); }
     bool try_lock() { return pthread_spin_trylock(&_spin_lock); }
 
-    int native_handle() { return _spin_lock; }
+    native_handle_type& native_handle() { return _spin_lock; }
 
 private:
     pthread_spinlock_t _spin_lock;
 };
-
-//class recursive_mutex
-//{
-//private:
-//    mutex _m;
-//};
 
 template<class Mutex>
 class lock_guard
@@ -58,6 +52,20 @@ public:
     ~lock_guard() { m.unlock(); }
 protected:
     mutex_type& m;
+};
+
+class cond_var
+{
+public:
+    cond_var() { pthread_cond_init(&_cond, NULL); }
+    ~cond_var() { pthread_cond_destroy(&_cond); }
+
+    void broadcast() { pthread_cond_broadcast(&_cond); }
+    void wait(ft::mutex& mut) { pthread_cond_wait(&_cond, &mut.native_handle()); }
+    void signal() { pthread_cond_signal(&_cond); }
+
+private:
+    pthread_cond_t  _cond;
 };
 
 }

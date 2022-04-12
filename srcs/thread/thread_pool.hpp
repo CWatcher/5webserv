@@ -14,6 +14,7 @@ namespace ft
 template<typename T>
 class sem_queue
 {
+    typedef  ft::mutex  mutex;
 public:
     typedef  std::queue<T>                                      container_type;
     typedef  typename container_type::value_type                value_type;
@@ -23,38 +24,38 @@ public:
 public:
     void push(T const& task)
     {
-        ft::lock_guard<ft::spin_lock> lock(_mutex);
-        _queue.push(task);
-        _sem.post();
+        {
+            ft::lock_guard<mutex> lock(_mutex);
+            _queue.push(task);
+        }
+        _cond.signal();
     }
 
     T pull()
     {
-        _sem.wait();
-        ft::lock_guard<ft::spin_lock> lock(_mutex);
+        ft::lock_guard<mutex> lock(_mutex);
+        while (empty() == true)
+            _cond.wait(_mutex);
         T tmp = _queue.front();
         _queue.pop();
         return tmp;
-        
     }
 
     bool empty() const
     {
-        ft::lock_guard<ft::spin_lock> lock(_mutex);
         bool empty = _queue.empty();
         return empty;
     }
 
     size_type size() const
     {
-        ft::lock_guard<ft::spin_lock> lock(_mutex);
         size_type size = _queue.size();
         return size;
     }
 private:
-    mutable ft::semaphore _sem;
-    mutable ft::spin_lock _mutex;
-    std::queue<T> _queue;
+    mutable ft::cond_var    _cond;
+    mutable mutex           _mutex;
+    std::queue<T>           _queue;
 };
 
 
