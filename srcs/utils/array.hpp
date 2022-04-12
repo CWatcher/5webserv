@@ -146,7 +146,8 @@ public:
 
     void swap(array<T,Size>& other)
     {
-        //
+        for (size_t i = 0; i < Size; i++)
+            std::swap(operator[](i), other[i]);
     }
 
     template<typename U, size_t USize>
