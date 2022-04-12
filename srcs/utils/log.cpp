@@ -12,7 +12,7 @@ namespace logger
 class DevNull : public std::ostream
 {
     template<typename T>
-    basic_ostream& operator<<(T value) { return *this; }
+    basic_ostream& operator<<(T value) { (void)value; return *this; }
 };
 
 static logger::Level  level   = logger::Level::kDebug;
@@ -89,17 +89,19 @@ const char* lvlToStr[4] = {
     COLOR_RED    "ERROR!"  COLOR_RESET
 };
 
-std::ostream&    put(logger::Level level, const std::string &msg)
+std::ostream&    put(logger::Level level)
 {
     if (logger::level > level)
         return dev_null;
     
-    (*logger::ostream) << logger::_time()
-        << " - " << logger::lvlToStr[level] << " - "
-        << msg << '\n';
+    (*logger::ostream) << '\n' << logger::_time()
+        << " - " << logger::lvlToStr[level] << " - ";
     return *logger::ostream;
 }
 
-std::ostream& puterrno(Level level) { return put(level, strerror(errno)); }
+std::ostream& puterrno(Level level)
+{
+    return put(level) << strerror(errno);
+}
 
 }

@@ -26,7 +26,6 @@ public:
 	};
 
 	virtual int	action(enum PostAction &post_action) = 0;
-	void		disconnect() const;
 
     TriggerType::_ getTrigger() const;
 

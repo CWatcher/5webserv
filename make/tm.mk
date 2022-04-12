@@ -32,13 +32,13 @@ NORMINETTE     ?= norminette
 # Pretty print
 COLORED       ?= 1
 ifeq ($(COLORED), 1)
-color_RED      = \x1b[31m
-color_GREEN    = \x1b[32m
-color_YELLOW   = \x1b[33m
-color_BLUE     = \x1b[34m
-color_MAGENTA  = \x1b[35m
-color_CYAN     = \x1b[36m
-color_RESET    = \x1b[0m
+color_RED      = \033[31m
+color_GREEN    = \033[32m
+color_YELLOW   = \033[33m
+color_BLUE     = \033[34m
+color_MAGENTA  = \033[35m
+color_CYAN     = \033[36m
+color_RESET    = \033[0m
 reset_line     = \033[A\033[2K
 endif
 

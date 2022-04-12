@@ -19,9 +19,10 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp			\
 							srcs/ThreadPool.cpp		\
 							srcs/HTTPMessage.cpp	\
 							srcs/utils.cpp			\
-							srcs/utils/log.cpp
+							srcs/Logger.cpp
+#							srcs/utils/log.cpp
 
-$(PROJECT_NAME)_INC      += ./
+$(PROJECT_NAME)_INC      += ./srcs
 $(PROJECT_NAME)_CXXFLAGS += --std=c++98
 $(PROJECT_NAME)_C_DEP    += ./Makefile
 $(PROJECT_NAME)_LD_DEP   += ./Makefile

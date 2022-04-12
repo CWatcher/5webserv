@@ -1,6 +1,7 @@
 
 #include "SocketSession.hpp"
 
+#include <csignal>
 #include <sys/socket.h>
 
 SocketSession::SocketSession(int fd)
@@ -9,7 +10,9 @@ SocketSession::SocketSession(int fd)
 
 SocketSession::SocketSession(const SocketSession &src)
 	: ASocket(src.fd, src._trigger)
-    , _written_total(src._written_total) {}
+    , input(src.input)
+    , output(src.output)
+    , _written_total(src._written_total){}
 
 int     SocketSession::action(enum PostAction &post_action)
 {
@@ -19,10 +22,22 @@ int     SocketSession::action(enum PostAction &post_action)
         return actionWrite(post_action);
 }
 
-void    SocketSession::prepareForWrite(HTTPMessage &response)
+void    SocketSession::prepareForRead()
 {
-    _message = response;
+    input = HTTPMessage();
+    _trigger = TriggerType::Read;
+}
+
+void    SocketSession::prepareForProcess()
+{
+    _trigger = TriggerType::None;
+}
+
+void    SocketSession::prepareForWrite()
+{
+    _written_total = 0;
     _trigger = TriggerType::Write;
+//    raise(SIGUSR1); TODO
 }
 
 
@@ -43,11 +58,11 @@ int	    SocketSession::actionRead(enum PostAction &post_action)
     else
     {
         temp_buffer[bytes_read] = '\0';
-        _message += temp_buffer;
-        if (_message.hasEndOfMessage())
+        input += temp_buffer;
+        if (input.hasEndOfMessage())
         {
             post_action = Process;
-            _trigger = TriggerType::None;
+            prepareForProcess();
             logger::info("Got end of HTTP message from socket", fd);
         }
         else
@@ -58,8 +73,8 @@ int	    SocketSession::actionRead(enum PostAction &post_action)
 
 int	    SocketSession::actionWrite(enum PostAction &post_action)
 {
-    const char		*start = _message.raw_data.c_str() + _written_total;
-    const size_t	left_to_write = _message.raw_data.size() - _written_total;
+    const char		*start = output.raw_data.c_str() + _written_total;
+    const size_t	left_to_write = output.raw_data.size() - _written_total;
     ssize_t			bytes_written;
 
     logger::debug("Trying to write to socket", fd);
@@ -69,10 +84,10 @@ int	    SocketSession::actionWrite(enum PostAction &post_action)
     if (bytes_written > 0)
     {
         _written_total += bytes_written;
-        if (_written_total == _message.raw_data.size())
+        if (_written_total == output.raw_data.size())
         {
             logger::info("HTTP response sent. Switching to read socket", fd);
-            _trigger = TriggerType::Read;
+            prepareForRead();
         }
         else
             logger::debug("Left to write (bytes):", left_to_write - bytes_written);

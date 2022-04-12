@@ -12,15 +12,19 @@ public:
 	SocketSession(const SocketSession &src);
 
 	virtual int action(enum PostAction &post_action);
-    void        prepareForWrite(HTTPMessage &response);
+    void        prepareForRead();
+    void        prepareForProcess();
+    void        prepareForWrite();
 
 private:
 	int         actionRead(enum PostAction &post_action);
 	int         actionWrite(enum PostAction &post_action);
 
+public:
+    HTTPMessage	input;
+    HTTPMessage	output;
 
 private:
-	HTTPMessage	_message;
     size_t		_written_total;
 };
 

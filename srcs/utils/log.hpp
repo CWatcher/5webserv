@@ -22,13 +22,13 @@ void    setLevel(std::string const& level);
 void    setOut(std::ostream& ostream);
 void    setOut(std::string const& ostream_name);
 
-std::ostream& put(Level level, std::string const& msg);
+std::ostream& put(Level level);
 std::ostream& puterrno(Level level = Level::kError);
 
-inline std::ostream& debug(std::string const& msg) { return put(Level::kDebug, msg); }
-inline std::ostream& info(std::string const& msg) { return put(Level::kInfo, msg); }
-inline std::ostream& warning(std::string const& msg) { return put(Level::kWarning, msg); }
-inline std::ostream& error(std::string const& msg) { return put(Level::kError, msg); }
+inline std::ostream& debug() { return put(Level::kDebug); }
+inline std::ostream& info() { return put(Level::kInfo); }
+inline std::ostream& warning() { return put(Level::kWarning); }
+inline std::ostream& error() { return put(Level::kError); }
 
 }
 

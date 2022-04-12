@@ -1,20 +1,9 @@
 
-#include "Server.hpp"
 #include "HTTPMessage.hpp"
+#include "Server.hpp"
 #include "SocketSession.hpp"
 
 #include <cerrno>
-
-//const char      *DefaultResponse =	  "HTTP/1.1 200 OK\n"
-//                                      "Date: Wed, 18 Feb 2021 11:20:59 GMT\n"
-//                                      "Server: Apache\n"
-//                                      "X-Powered-By: webserv\n"
-//                                      "Last-Modified: Wed, 11 Feb 2009 11:20:59 GMT\n"
-//                                      "Content-Type: text/html; charset=utf-8\n"
-//                                      "Content-Length: 14\n"
-//                                      "Connection: close\n"
-//                                      "\n"
-//                                      "<h1>HELLO WORLD</h1>\n";
 
 int Server::poll_timeout = 30 * 1000;
 
@@ -43,7 +32,9 @@ void Server::mainLoopRun()
     {
         poll_array_len = eventArrayPrepare(poll_array);
 
+        logger::debug("Polling...");
         new_events = poll(&poll_array[0], poll_array_len, poll_timeout);
+        logger::debug("Polling done!");
 
         if (new_events <= 0)
         {
@@ -111,28 +102,22 @@ bool Server::eventCheck(const pollfd *poll_fd)
 
 void Server::eventAction(ASocket *socket)
 {
-    enum ASocket::PostAction	post_action;
-    int		        		    action_value;
+    enum ASocket::PostAction    post_action;
+    int                         return_value;
 
-    action_value = socket->action(post_action);
-    if (action_value == -1)
+    return_value = socket->action(post_action);
+    if (return_value == -1)
         logger::cerrno(socket->fd);
-
-//    HTTPMessage DUMMY_RESPONSE; // TODO: delete after response implementation
-//    DUMMY_RESPONSE.raw_data = DefaultResponse;
 
     switch (post_action)
     {
         case ASocket::Add:
-            _sockets[action_value] = new SocketSession(action_value);
+            _sockets[return_value] = new SocketSession(return_value);
             break ;
 
         case ASocket::Process:
-            logger::info("Sent to process queue socket", socket->fd);
-            // put to real Process queue later
-
-            logger::info("HTTP response is ready for socket", socket->fd);
-//            dynamic_cast<SocketSession *>(socket)->prepareForWrite(DUMMY_RESPONSE);
+            _thread_pool.pushTaskToQueue(reinterpret_cast<SocketSession *>(socket));
+            logger::info("Sent to Task queue, socket", socket->fd);
             break ;
 
         case ASocket::Disconnect:

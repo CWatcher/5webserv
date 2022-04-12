@@ -3,6 +3,7 @@
 # define SERVER_HPP
 
 # include "ASocket.hpp"
+# include "ThreadPool.hpp"
 
 # include <map>
 # include <sys/poll.h>
@@ -29,6 +30,7 @@ private:
     void    eventAction(ASocket *socket);
 
     std::map<int, ASocket *> _sockets;
+    ThreadPool               _thread_pool;
 };
 
 #endif
