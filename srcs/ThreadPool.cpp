@@ -54,7 +54,30 @@ void    ThreadPool::pushTaskToQueue(SocketSession *task)
     }
     pthread_mutex_unlock(&_tasks_lock);
     pthread_cond_signal(&_tasks_event);
-};
+}
+
+SocketSession   *ThreadPool::popTaskFromQueue()
+{
+    SocketSession   *task;
+
+    pthread_mutex_lock(&_tasks_lock);
+    {
+        pthread_cleanup_push((void (*)(void *))pthread_mutex_unlock, &_tasks_lock);
+
+            logger::debug("Thread: task wait...");
+            while (_tasks.empty())
+                pthread_cond_wait(&_tasks_event, &_tasks_lock);
+
+            task = _tasks.front();
+            _tasks.pop();
+            logger::debug("Thread: task got");
+
+        pthread_cleanup_pop(1);
+    }
+    pthread_mutex_unlock(&_tasks_lock);
+
+    return task;
+}
 
 void    ThreadPool::threadsStart(long int threads_count)
 {
@@ -85,26 +108,10 @@ void    *ThreadPool::threadLoop(void *thread_pool_void)
 {
     SocketSession   *task;
     ThreadPool      *thread_pool = reinterpret_cast<ThreadPool *>(thread_pool_void);
-    pthread_mutex_t *task_lock   = &thread_pool->_tasks_lock;
-    pthread_cond_t  *task_event  = &thread_pool->_tasks_event;
 
     while (thread_pool->_is_running)
     {
-        pthread_mutex_lock(task_lock);
-        {
-            pthread_cleanup_push((void (*)(void *))pthread_mutex_unlock, task_lock);
-
-            logger::debug("Thread: task wait...");
-            while (thread_pool->_tasks.empty())
-                pthread_cond_wait(task_event, task_lock);
-
-            task = thread_pool->_tasks.front();
-            thread_pool->_tasks.pop();
-            logger::debug("Thread: task got");
-
-            pthread_cleanup_pop(1);
-        }
-        pthread_mutex_unlock(task_lock);
+        task = thread_pool->popTaskFromQueue();
 
         // TODO: process task input here
         const char      *DefaultResponse =	  "HTTP/1.1 200 OK\n"

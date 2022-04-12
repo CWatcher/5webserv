@@ -14,7 +14,8 @@ public:
     ThreadPool();
     ~ThreadPool();
 
-    void        pushTaskToQueue(SocketSession *task);
+    void            pushTaskToQueue(SocketSession *task);
+    SocketSession   *popTaskFromQueue();
 
 private:
     void        threadsStart(long int threads_count);
