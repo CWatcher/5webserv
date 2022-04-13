@@ -5,19 +5,22 @@ NAME          = webserv
 
 CXX           = c++
 LD            = c++
-CXXFLAGS      = -Wall -Wextra -Werror --std=c++98
-DEP           = ./Makefile
+CXXFLAGS      = -Wall -Wextra -Werror
 
-BUILD        ?= debug
+BUILD ?= debug
 
 $(call add/project,$(PROJECT_NAME))
 $(PROJECT_NAME)_SRCS     += srcs/main.cpp
-$(PROJECT_NAME)_LIBS     += -pthread
+$(PROJECT_NAME)_INC      += ./
+$(PROJECT_NAME)_CXXFLAGS += --std=c++98
+$(PROJECT_NAME)_C_DEP    += ./Makefile
+$(PROJECT_NAME)_LD_DEP   += ./Makefile
+
 
 $(call add/subproj,$(PROJECT_NAME),debugbase)
 debugbase_CXXFLAGS       += -O0 -g3
 
-$(call add/subproj,debugbase,debug)
+$(call add/subproj,$(PROJECT_NAME),debug)
 DEBUG_SANS =    -fsanitize=address \
                 -fsanitize=undefined
 debug_CXXFLAGS       += $(DEBUG_SANS)
@@ -31,11 +34,11 @@ $(call add/exe,release,$(NAME))
 .PHONY: all clean fclean re
 
 $(NAME): $($(BUILD)_EXE)
-	$(silent)cp $($(BUILD)_EXE) $(NAME)
+	cp $($(BUILD)_EXE) $(NAME)
 all: $(NAME)
 $(BUILD)_BUILD  += $(NAME)
 $(BUILD)_FCLEAN += $(NAME)
 
-clean: debug/clean release/clean
-fclean: debug/fclean release/fclean
+clean: $(BUILD)/clean
+fclean: $(BUILD)/fclean
 re: $(BUILD)/re
