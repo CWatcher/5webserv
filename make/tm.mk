@@ -45,14 +45,23 @@ endif
 pretty_work     = $(color_YELLOW)⟳$(color_RESET)
 pretty_done     = $(color_GREEN)✓$(color_RESET)
 pretty_fail     = $(color_RED)✕$(color_RESET)
+pretty_clean    = $(color_YELLOW)♻$(color_RESET)
 pretty_file     = $(color_CYAN)%s$(color_RESET)
 
+define __print =
+@printf "[$(1)][$(pretty_file)] %s\n"  $(2) $(3)
+endef
+
 define __in_work =
-@printf "[$(pretty_work)][$(pretty_file)] %s\n"  $(1) $(2)
+$(call __print,$(pretty_work),$(1),$(2))
 endef
 
 define __done =
-@printf "[$(pretty_done)][$(pretty_file)] %s\n"  $(1) $(2)
+$(call __print,$(pretty_done),$(1),$(2))
+endef
+
+define __clean =
+$(call __print,$(pretty_clean),$(1),$(2))
 endef
 
 empty           =
@@ -161,13 +170,13 @@ define __add/baserules =
 .PHONY: $(1)/clean
 $(1)/clean: $$($(1)_CLEAN_DEP)
 	-$(silent)$(RM) $$($(1)_CLEAN) $$($(1)_OBJS) $$($(1)_DFILES)
-	$(call __done,$$@)
+	$(call __clean,$$@)
 
 .PHONY: $(1)/fclean
 $(1)/fclean: $$($(1)_FCLEAN_DEP)
 	-$(silent)$(RM) $$($(1)_FCLEAN) $$($(1)_BUILD)
 	-$(silent)find $$($(1)_BDIR) -type d -empty -delete $(force_ignore_error)
-	$(call __done,$$@)
+	$(call __clean,$$@)
 
 .PHONY: $(1)/re
 $(1)/re: $(1)/fclean
