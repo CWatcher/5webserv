@@ -3,6 +3,6 @@
 int main()
 {
     logger::setLevel("info");
-    logger::debug("Message") << "\taddtion data: " << 1 << '@' << " go on\n";
-    logger::info("Message") << "\taddtion data: " << 1 << '@' << " go on\n";
+    logger::debug << "addtion data: " << 1 << '@' << " go on\n";
+    logger::info << "addtion data: " << 1 << '@' << " go on\n";
 }

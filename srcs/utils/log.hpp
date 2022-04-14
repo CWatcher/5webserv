@@ -21,14 +21,61 @@ void    setLevel(Level level);
 void    setLevel(std::string const& level);
 void    setOut(std::ostream& ostream);
 void    setOut(std::string const& ostream_name);
+Level   getLevel();
 
-std::ostream& put(Level level, std::string const& msg);
-std::ostream& puterrno(Level level = Level::kError);
+template<logger::Level::_ Lvl>
+class LogStream : public std::ostream
+{
+public:
+    bool isLogging() const;
 
-inline std::ostream& debug(std::string const& msg) { return put(Level::kDebug, msg); }
-inline std::ostream& info(std::string const& msg) { return put(Level::kInfo, msg); }
-inline std::ostream& warning(std::string const& msg) { return put(Level::kWarning, msg); }
-inline std::ostream& error(std::string const& msg) { return put(Level::kError, msg); }
+    std::ostream& base() const;
+    std::ostream& devnull() const;
+
+    template<typename Any>
+    basic_ostream&    operator<<(Any);
+};
+
+class DevnullStream : public std::ostream { };
+
+std::ostream&   baseStream();
+std::ostream&   devnullStream();
+
+extern LogStream<logger::Level::kInfo>     info;
+extern LogStream<logger::Level::kDebug>    debug;
+extern LogStream<logger::Level::kWarning>  warning;
+extern LogStream<logger::Level::kError>    error;
+
+template<logger::Level::_ Lvl>
+bool    LogStream<Lvl>::isLogging() const
+{
+    return logger::getLevel() <= Lvl;
+}
+
+template<logger::Level::_ Lvl>
+std::ostream& LogStream<Lvl>::base() const
+{
+    return logger::baseStream();
+}
+
+template<logger::Level::_ Lvl>
+std::ostream& LogStream<Lvl>::devnull() const
+{
+    return logger::devnullStream();
+}
+
+void printLoggerInfo(logger::Level lvl);
+
+template<logger::Level::_ Lvl>
+template<typename Any>
+typename LogStream<Lvl>::basic_ostream&    LogStream<Lvl>::operator<<(Any data)
+{
+    if (isLogging() == false)
+        return devnull();
+    printLoggerInfo(Lvl);
+    base() << data;
+    return base();
+}
 
 }
 

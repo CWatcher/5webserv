@@ -9,17 +9,31 @@
 namespace logger
 {
 
-class DevNull : public std::ostream
+LogStream<logger::Level::kInfo>     info;
+LogStream<logger::Level::kDebug>    debug;
+LogStream<logger::Level::kWarning>  warning;
+LogStream<logger::Level::kError>    error;
+
+DevnullStream                       dev_null;
+std::ostream*                       ostream = &std::clog;
+logger::Level                       level = logger::Level::kDebug;
+
+Level   getLevel()
 {
-    template<typename T>
-    basic_ostream& operator<<(T value) { return *this; }
-};
+    return level;
+}
 
-static logger::Level  level   = logger::Level::kDebug;
-static std::ostream*  ostream = &std::cerr;
-static DevNull        dev_null;
+std::ostream&   baseStream()
+{
+    return *ostream;
+}
 
-void    setLevel(logger::Level level)
+std::ostream&   devnullStream()
+{
+    return dev_null;
+}
+
+void    setLevel(logger::Level::_ level)
 {
     logger::level = level;
 }
@@ -49,6 +63,8 @@ void    setOut(std::string const& ostream_name)
         logger::setOut(std::cout);
     else if (ostream_name == "cerr")
         logger::setOut(std::cerr);
+    else if (ostream_name == "clog")
+        logger::setOut(std::clog);
     else
     {
         static std::ofstream fout;
@@ -59,10 +75,12 @@ void    setOut(std::string const& ostream_name)
     }
 }
 
-char*   _time()
+namespace {
+
+std::string   timestamp()
 {
-    struct timeval  time_now;
-    static char     time_str[16];
+    timeval         time_now;
+    char            time_str[16];
     char            msec[3];
 
     gettimeofday(&time_now, NULL);
@@ -89,17 +107,12 @@ const char* lvlToStr[4] = {
     COLOR_RED    "ERROR!"  COLOR_RESET
 };
 
-std::ostream&    put(logger::Level level, const std::string &msg)
-{
-    if (logger::level > level)
-        return dev_null;
-    
-    (*logger::ostream) << logger::_time()
-        << " - " << logger::lvlToStr[level] << " - "
-        << msg << '\n';
-    return *logger::ostream;
 }
 
-std::ostream& puterrno(Level level) { return put(level, strerror(errno)); }
+void printLoggerInfo(logger::Level lvl)
+{
+    (*logger::ostream) << '[' << logger::timestamp() << ']'
+        << " - " << lvlToStr[lvl] << " - ";
+}
 
 }
