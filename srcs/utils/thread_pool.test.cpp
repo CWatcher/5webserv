@@ -26,9 +26,9 @@ void *work(void *data)
     return NULL;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-    ft::thread_pool<8> pool;
+    ft::thread_pool pool;
     for (size_t i = 0; i < 2; i++)
         pool.push_task(work, (void*)40);
     pool.cancel();
