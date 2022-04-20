@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ATOMIC_HPP
+# define ATOMIC_HPP
 
 #include "utils/mutex.hpp"
 
@@ -34,3 +35,5 @@ private:
 };
 
 }
+
+#endif

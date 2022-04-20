@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SEMAPHORE_HPP
+#define SEMAPHORE_HPP
 
 #include <semaphore.h>
 
@@ -21,3 +22,5 @@ private:
 };
 
 }
+
+#endif

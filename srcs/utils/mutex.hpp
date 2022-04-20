@@ -1,5 +1,6 @@
-#pragma once
-
+#ifndef MUTEX_HPP
+#define MUTEX_HPP
+ 
 #include <pthread.h>
 
 namespace ft
@@ -69,3 +70,5 @@ private:
 };
 
 }
+
+#endif

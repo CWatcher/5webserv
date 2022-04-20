@@ -1,4 +1,5 @@
-#pragma once
+#ifndef THREAD_HPP
+#define THREAD_HPP
 
 #include <pthread.h>
 
@@ -70,3 +71,5 @@ inline void exit(void *data = NULL) { pthread_exit(data); }
 }
 
 }
+
+#endif
