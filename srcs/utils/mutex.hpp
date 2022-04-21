@@ -2,6 +2,7 @@
 #define MUTEX_HPP
  
 #include <pthread.h>
+#include "utils/syntax.hpp"
 
 namespace ft
 {
@@ -11,12 +12,20 @@ class mutex
 public:
     typedef pthread_mutex_t native_handle_type;
 
-    mutex() { pthread_mutex_init(&_mutex, NULL); }
+    mutex() { EPROTECT_R(pthread_mutex_init(&_mutex, NULL)); }
+
+    //! [UB] if called while mutex is locked or referenced or by another thread
     ~mutex() { pthread_mutex_destroy(&_mutex); }
 
-    void lock() { pthread_mutex_lock(&_mutex); }
-    void unlock() { pthread_mutex_unlock(&_mutex); }
-    bool try_lock() { return pthread_mutex_trylock(&_mutex); }
+    void lock() { EPROTECT_R(pthread_mutex_lock(&_mutex)); }
+    void unlock() { EPROTECT_R(pthread_mutex_unlock(&_mutex)); }
+    bool try_lock()
+    {
+        int status = pthread_mutex_trylock(&_mutex);
+        if (status != EBUSY)
+            EPROTECT_R(status);
+        return status == 0;
+    }
 
     native_handle_type& native_handle() { return _mutex; }
 
@@ -29,11 +38,21 @@ class spin_lock
 public:
     typedef pthread_spinlock_t native_handle_type;
 
-    spin_lock() { pthread_spin_init(&_spin_lock, 0); }
+    spin_lock() { EPROTECT_R(pthread_spin_init(&_spin_lock, 0)); }
+
+    //! [UB] if called while mutex is locked or referenced or by another thread
     ~spin_lock() { pthread_spin_destroy(&_spin_lock); }
-    void lock() { pthread_spin_lock(&_spin_lock); }
-    void unlock() { pthread_spin_unlock(&_spin_lock); }
-    bool try_lock() { return pthread_spin_trylock(&_spin_lock); }
+
+    void lock() { EPROTECT_R(pthread_spin_lock(&_spin_lock)); }
+    void unlock() { EPROTECT_R(pthread_spin_unlock(&_spin_lock)); }
+
+    bool try_lock()
+    {
+        int status = pthread_spin_trylock(&_spin_lock);
+        if (status != EBUSY)
+            EPROTECT_R(status);
+        return status == 0;
+    }
 
     native_handle_type& native_handle() { return _spin_lock; }
 
@@ -58,12 +77,12 @@ protected:
 class cond_var
 {
 public:
-    cond_var() { pthread_cond_init(&_cond, NULL); }
+    cond_var() { EPROTECT_R(pthread_cond_init(&_cond, NULL)); }
     ~cond_var() { pthread_cond_destroy(&_cond); }
 
-    void broadcast() { pthread_cond_broadcast(&_cond); }
-    void wait(ft::mutex& mut) { pthread_cond_wait(&_cond, &mut.native_handle()); }
-    void signal() { pthread_cond_signal(&_cond); }
+    void broadcast() { EPROTECT_R(pthread_cond_broadcast(&_cond)); }
+    void wait(ft::mutex& mut) { EPROTECT_R(pthread_cond_wait(&_cond, &mut.native_handle())); }
+    void signal() { EPROTECT_R(pthread_cond_signal(&_cond)); }
 
 private:
     pthread_cond_t  _cond;
