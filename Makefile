@@ -5,7 +5,7 @@ NAME          = webserv
 
 CXX           = c++
 LD            = c++
-CXXFLAGS      = -Wall -Wextra -Werror --std=c++98
+CXXFLAGS      = -Wall -Wextra -Werror -pedantic --std=c++98
 DEP           = ./Makefile
 INC           = ./srcs
 
@@ -14,7 +14,8 @@ BUILD        ?= debug
 $(call add/project,$(PROJECT_NAME))
 $(PROJECT_NAME)_SRCS     += $(addprefix srcs/, \
 							main.cpp \
-							utils/log.cpp)
+							utils/log.cpp \
+							Server.cpp)
 
 $(call add/subproj,$(PROJECT_NAME),debugbase)
 debugbase_CXXFLAGS       += -O0 -g3
