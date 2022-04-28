@@ -5,7 +5,8 @@ NAME          = webserv
 
 CXX           = c++
 LD            = c++
-CXXFLAGS      = -Wall -Wextra -Werror --std=c++98 -pthread -Isrcs
+CXXFLAGS      = -Wall -Wextra -Werror --std=c++98 -Isrcs
+LDFLAGS       = -pthread
 DEP           = ./Makefile
 
 BUILD        ?= debug

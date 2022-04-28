@@ -56,13 +56,17 @@ void    ThreadPool::pushTaskToQueue(SocketSession *task)
     pthread_cond_signal(&_tasks_event);
 }
 
+void unlock(void *lock) {
+    pthread_mutex_unlock(reinterpret_cast<pthread_mutex_t *>(lock));
+}
+
 SocketSession   *ThreadPool::popTaskFromQueue()
 {
     SocketSession   *task;
 
     pthread_mutex_lock(&_tasks_lock);
     {
-        pthread_cleanup_push((void (*)(void *))pthread_mutex_unlock, &_tasks_lock);
+        pthread_cleanup_push(unlock, &_tasks_lock);
 
             logger::debug("Thread: task wait...");
             while (_tasks.empty())
