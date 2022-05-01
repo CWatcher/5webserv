@@ -5,7 +5,7 @@ NAME          = webserv
 
 CXX           = c++
 LD            = c++
-CXXFLAGS      = -Wall -Wextra -Werror --std=c++98 -pthread
+CXXFLAGS      = -Wall -Wextra -Werror --std=c++98 -pthread -Isrcs
 DEP           = ./Makefile
 
 BUILD        ?= debug
@@ -19,7 +19,15 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp			\
 							srcs/ThreadPool.cpp		\
 							srcs/HTTPMessage.cpp	\
 							srcs/utils.cpp			\
-							srcs/Logger.cpp
+							srcs/Logger.cpp			\
+																\
+							srcs/handlers/starter.cpp			\
+							srcs/handlers/base/Handler.cpp		\
+							srcs/handlers/CGIReader.cpp			\
+							srcs/handlers/FileReader.cpp		\
+							srcs/handlers/HeaderGenerator.cpp	\
+							srcs/handlers/HeaderParser.cpp		\
+							srcs/handlers/HeaderValidator.cpp
 #							srcs/utils/log.cpp
 
 $(call add/subproj,$(PROJECT_NAME),debugbase)

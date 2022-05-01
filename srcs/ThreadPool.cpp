@@ -1,12 +1,12 @@
 
 #include "ThreadPool.hpp"
+#include "handlers/starter.hpp"
 #include "Logger.hpp"
 
 #include <pthread.h>
 #include <unistd.h>
 #include <algorithm>
 #include <cerrno>
-#include <utility>
 
 ThreadPool::ThreadPool()
     : _is_running(true)
@@ -113,20 +113,10 @@ void    *ThreadPool::threadLoop(void *thread_pool_void)
     {
         task = thread_pool->popTaskFromQueue();
 
-        // TODO: process task input here
-        const char      *DefaultResponse =	  "HTTP/1.1 200 OK\n"
-                                                "Date: Wed, 18 Feb 2021 11:20:59 GMT\n"
-                                                "Server: Apache\n"
-                                                "X-Powered-By: webserv\n"
-                                                "Last-Modified: Wed, 11 Feb 2009 11:20:59 GMT\n"
-                                                "Content-Type: text/html; charset=utf-8\n"
-                                                "Content-Length: 14\n"
-                                                "Connection: close\n"
-                                                "\n"
-                                                "<h1>HELLO WORLD</h1>\n";
-        task->output.raw_data = DefaultResponse;
+        handlers::starter->handle(task->input, task->output);
 
         task->prepareForWrite();
+
         logger::debug("Thread: task completed");
     }
     logger::debug("Thread: stopped");
