@@ -6,9 +6,8 @@ CGIReader::CGIReader(IHandler *next_handler)
 
 void CGIReader::handle(HTTPMessage &input, HTTPMessage &output)
 {
-    _success = runScript(input, output);
-
-    Handler::handle(input, output);
+    if (runScript(input, output))
+        Handler::handle(input, output);
 }
 
 bool CGIReader::runScript(const HTTPMessage &input, HTTPMessage &output) const

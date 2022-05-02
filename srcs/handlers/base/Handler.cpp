@@ -8,6 +8,6 @@ Handler::~Handler() {}
 
 void Handler::handle(HTTPMessage &input, HTTPMessage &output)
 {
-    if (_success && _next)
+    if (_next)
         _next->handle(input, output);
 }

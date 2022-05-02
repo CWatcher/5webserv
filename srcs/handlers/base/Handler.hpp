@@ -15,10 +15,6 @@ public:
 protected:
     Handler(IHandler *next_handler);
 
-
-protected:
-    bool     _success;
-
 private:
     IHandler *_next;
 

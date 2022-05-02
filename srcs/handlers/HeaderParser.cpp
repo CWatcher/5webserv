@@ -6,9 +6,8 @@ HeaderParser::HeaderParser(IHandler *next_handler)
 
 void HeaderParser::handle(HTTPMessage &input, HTTPMessage &output)
 {
-    _success = parseHeader(input);
-
-    Handler::handle(input, output);
+    if (parseHeader(input))
+        Handler::handle(input, output);
 }
 
 bool HeaderParser::parseHeader(const HTTPMessage &input) const

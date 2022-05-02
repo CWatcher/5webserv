@@ -6,9 +6,8 @@ HeaderGenerator::HeaderGenerator(IHandler *next_handler)
 
 void HeaderGenerator::handle(HTTPMessage &input, HTTPMessage &output)
 {
-    _success = generateHeader(input, output);
-
-    Handler::handle(input, output);
+    if (generateHeader(input, output))
+        Handler::handle(input, output);
 }
 
 bool HeaderGenerator::generateHeader(const HTTPMessage &input, HTTPMessage &output) const
