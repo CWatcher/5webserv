@@ -1,0 +1,13 @@
+server {
+	listen 333:2 ;			
+
+	server_name example.com;
+
+	root /var/www/example.com;
+	index s  d index.html sss  aaa  ;
+
+#	location / {
+#		try_files $uri $uri/ =404;
+#	}
+	
+}

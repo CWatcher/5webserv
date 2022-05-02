@@ -1,5 +1,7 @@
 #include "utils/log.hpp"
+#include "Webserver.hpp"
 #include "Server.hpp"
+#include "parser_utils.hpp"
 
 #include <fstream>
 #include <exception>
@@ -8,39 +10,17 @@
 // 
 #include <iostream>
 #include <sstream>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 using std::cout;
 using std::endl;
+
 int main(int, char* argv[])
 {
-    // logger::setLevel("debug");
-
+    Webserver webserver;
+    
     if (argv[1])
-    {
-        std::ifstream       file(argv[1]);
-        std::string         token;
-        std::stringstream   ss;
-
-        if (file.fail())
-        {
-            logger::error << logger::cerror << logger::end;
-            throw std::runtime_error(strerror(errno));
-        }
-        else
-            logger::info << "configuration file opened \"" << argv[1] << "\"" << logger::end;
-        
-        std::getline(file >> std::ws, token);
-        cout << "|" << token << "|" << endl;
-        std::getline(file >> std::ws, token);
-        cout << "|" << token << "|" << endl;
-        // while (file >> token)
-        // {
-        //     if (token == "server")
-        //     {
-        //         Server  server;
-        //         server.readConfig(file);
-        //     }
-        // }
-    }
+        webserver.parseConfig(argv[1]);
 
     return 0;
 }
