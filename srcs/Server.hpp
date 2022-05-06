@@ -1,10 +1,9 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-# include <string> //
-# include <vector> //
-# include <fstream> //
-# include <map> //
+# include <AConfig.hpp>
+
+# include <fstream>
 # include <netinet/in.h>
 # include <arpa/inet.h>
 
@@ -17,58 +16,37 @@ struct  Location
     // cgi?
 };
 
-
-struct  Cgi
+struct Listen
 {
-    /* data */
-    // Location ??
+    Listen() : host(INADDR_NONE), port(0) {}
+    in_addr_t   host;
+    in_port_t   port;
+    // bool        operator<(const Listen& other) {return host < other.host || (!(other.host < host) && port < other.port);}
 };
 
-class   Server 
+// bool    operator<(const Listen& x, const Listen& y) {return x.host < y.host || (!(y.host < x.host) && x.port < y.port);}
+
+class Server : public AConfig
 {
 public:
-    Server();
+    Server(const AConfig& config, std::ifstream& file);
 
-    void                                    parseConfig(std::ifstream& file);
-
-    const std::string&                      host() const  {return host_;}
-    const std::string&                      port() const  {return port_;}
-    const sockaddr_in&                      host_port() const {return host_port_;}
-    const std::string&                      server_name() const  {return server_name_;}
-    const std::string&                      root() const  {return root_;}
-    const std::vector<std::string>          index() const  {return index_;}
-    const std::string&                      error_page() const  {return error_page_;}
-    unsigned                                body_size() const  {return body_size_;}
-    bool                                    autoindex() const {return autoindex_;}
+    const Listen&                           listen() const {return listen_;}
+    const std::set<std::string>&            server_name() const  {return server_name_;}
     const std::map<std::string, Location>&  location() const {return location_;}
-    // const std::map<std::string, Cgi>&       cgi() const {return cgi_;}
 private:
-    void                                    parseListen(std::ifstream& f);
     void                                    parseServerName(std::ifstream& f);
-    void                                    parseRoot(std::ifstream& f);
-    void                                    parseIndex(std::ifstream& f);
-    void                                    parseErrorPage(std::ifstream& f);
-    void                                    parseBodySize(std::ifstream& f);
-    // void                                    parseMethods();
-    // void                                    parseLocation(std::ifstream& f);
-    // void                                    parseCgi(std::ifstream& f, Server* s);
-private:
-    std::string                             host_;
-    std::string                             port_;
-    sockaddr_in                             host_port_;
-    std::string                             server_name_;
-    std::string                             root_;
-    std::vector<std::string>                index_;
-    std::string                             error_page_;
-    unsigned                                body_size_;
-    bool                                    autoindex_;
-    //char                                  methods_;
-    std::map<std::string, Location>         location_;
-    // std::map<std::string, Cgi>                      cgi_; ??
+    void                                    parseHost(std::ifstream& f);
+    void                                    parsePort(std::ifstream& f);
+    void                                    parseLocation(std::ifstream& f);
 
-    typedef void                            (Server::*f)(std::ifstream& file);
-    static const std::pair<std::string, f>  parser_init_list_[]; 
-    static const std::map<std::string, f>   parser;
+    void                                    completeConfig(const AConfig& config);
+private:
+    Listen                                  listen_;
+    std::set<std::string>                   server_name_;
+    std::map<std::string, Location>         location_;
 };
+
+std::ostream&   operator<<(std::ostream& o, const Server& s);
 
 #endif

@@ -1,113 +1,130 @@
 #include "Server.hpp"
-#include "parser_utils.hpp"
+#include "utils/syntax.hpp"
 
-
-#include "utils/log.hpp"//
-#include <exception>//
-#include <sstream>//
+#include <exception>
+#include <sstream>
 #include <cstdlib>
+#include <iterator>
 
-const std::pair<std::string, Server::f>	Server::parser_init_list_[] = {
-	std::make_pair("listen", &Server::parseListen),
-	std::make_pair("server_name", &Server::parseServerName),
-	std::make_pair("root", &Server::parseRoot),
-	std::make_pair("index", &Server::parseIndex),
-	std::make_pair("error_page", &Server::parseErrorPage),
-	std::make_pair("body_size", &Server::parseBodySize)
-};
-
-const std::map<std::string, Server::f>	Server::parser(parser_init_list_, parser_init_list_ + 6);
-
-Server::Server() :
-    host_("0.0.0.0"),
-    port_("8080"),
-    error_page_(), //??
-    body_size_(0)
+Server::Server(const AConfig& config, std::ifstream& f)
 {
-	host_port_.sin_addr.s_addr = inet_addr("0.0.0.0");
-	host_port_.sin_port = htons(8080);
+    std::string str;
+
+    f >> str;
+    if (str != "{")
+        throw std::logic_error("server: unexpected \"" + str + "\"");
+    while (true)
+    {
+        if ((f >> std::ws).peek() == '#')
+        {
+            getline(f, str);
+            continue;
+        }
+        f >> str;
+        if (str == "}")
+            break;
+        else if (str == "root")
+            parseRoot(f);
+        else if (str == "index")
+            parseIndex(f);
+        else if (str == "autoindex")
+            parseAutoindex(f);
+        else if (str == "error_page")
+            parseErrorPage(f);
+        else if (str == "body_size")
+            parseBodySize(f);
+        else if (str == "methods")
+            parseMethods(f);
+        else if (str == "server_name")
+            parseServerName(f);
+        else if (str == "host")
+            parseHost(f);
+        else if (str == "port")
+            parsePort(f);
+        else if (str == "location")
+            parseLocation(f);
+        else
+            throw std::logic_error("server: undefined directive \"" + str + "\"");
+    }
+    completeConfig(config);
 }
 
-void	Server::parseConfig(std::ifstream& file)
+void    Server::completeConfig(const AConfig& config)
 {
-	std::string											token;
-	std::map<std::string, Server::f>::const_iterator	it;
-
-	file >> token;
-	if (token != "{")
-		throw std::logic_error("server block error");
-	while (true)
-	{
-		file >> std::ws;
-		if (static_cast<char>(file.peek()) == '#')
-		{
-			std::getline(file, token);
-			continue;
-		}
-		file >> token;
-		if (token == "}")
-			return;
-		it = parser.find(token);
-		if (it == parser.end())
-			throw std::logic_error( "unknown server directive");
-		else
-			(this->*it->second)(file);
-	}
+    AConfig::completeConfig(config);
+    if (listen_.host == INADDR_NONE)
+        listen_.host = INADDR_ANY;
+    if (listen_.port == 0)
+        listen_.port = htons(80);
 }
 
-void Server::parseListen(std::ifstream &f)
+void    Server::parseServerName(std::ifstream& f)
 {
-	std::string			line;
-	std::stringstream	ss;
+    std::string         str;
+    std::getline(f >> std::ws, str, ';');
+    std::stringstream   ss(str);
 
-	std::getline(f >> std::ws, line, ';');
-	if (line.empty())
-		throw std::logic_error("listen empty host:port");
-	ss.str(line);
-
-	host_.clear();
-	std::getline(ss, host_, ':');
-	if (host_.empty())
-		throw std::logic_error("listen empty host");
-	if (host_.find_first_not_of("0123456789.") != std::string::npos)
-		throw std::logic_error("listen bad host");
-	host_port_.sin_addr.s_addr = inet_addr(host_.c_str());
-	if (host_port_.sin_addr.s_addr == INADDR_NONE)
-		throw std::logic_error("listen bad host");
-
-	port_.clear();
-	std::getline(ss, port_);
-	size_t	size = port_.find_last_not_of(" \f\n\r\t\v") + 1;
-	if (size != std::string::npos)
-		port_.resize(size);
-	if (port_.empty())
-		throw std::logic_error("listen empty port");
-	if (port_.find_first_not_of("0123456789") != std::string::npos)
-		throw std::logic_error("listen bad port");
-	host_port_.sin_port = htons(strtoul(port_.c_str(), NULL ,10));
+    if (str.empty())
+        throw std::logic_error("server_name: empty value");
+    if (!server_name_.empty())
+        throw std::logic_error("server_name: duplicated");
+    server_name_.insert(std::istream_iterator<std::string>(ss), std::istream_iterator<std::string>());
 }
 
-void	Server::parseServerName(std::ifstream& f)
+void    Server::parseHost(std::ifstream& f)
 {
-	parse_single_str_value(f, server_name_);
+    std::string                 str;
+    std::getline(f >> std::ws, str, ';');
+    std::stringstream           ss(str);
+
+    if (str.empty())
+        throw std::logic_error("host: empty value");
+    if (listen_.host != INADDR_NONE)
+        throw std::logic_error("host: duplicated");
+    ss >> str;
+    listen_.host = inet_addr(str.c_str());
+    if (listen_.host == INADDR_NONE)
+        throw std::logic_error("host: bad host \"" + str + "\"");
+    ss >> std::ws;
+    if (!ss.eof())
+        throw std::logic_error("host: too many values");
 }
 
-void	Server::parseIndex(std::ifstream& f)
+void    Server::parsePort(std::ifstream& f)
 {
-	parse_index(f, index_);
+    std::string         str;
+    std::getline(f >> std::ws, str, ';');
+    std::stringstream   ss(str);
+
+    if (str.empty())
+        throw std::logic_error("port: empty value");
+    if (listen_.port != 0)
+        throw std::logic_error("port: duplicated");
+    int p;
+    ss >> p;
+    if (!isdigit(str[0]) || (!ss.eof() && !std::isspace(ss.peek())) || p < 1 || p > 65535)
+        throw std::logic_error("port: bad port \"" + str + "\"");
+    ss >> std::ws;
+    if (!ss.eof())
+        throw std::logic_error("port: too many values");
+    listen_.port = htons(p);
 }
 
-void	Server::parseRoot(std::ifstream& f)
+void    Server::parseLocation(std::ifstream& f)
 {
-	parse_single_str_value(f, root_);
+    (void)f;
 }
 
-void	Server::parseErrorPage(std::ifstream& f)
+std::ostream&   operator<<(std::ostream& o, const Server& s)
 {
-	parse_single_str_value(f, error_page_);
-}
-
-void	Server::parseBodySize(std::ifstream& f)
-{
-	parse_uint_value(f, body_size_);
+    o << static_cast<const AConfig&>(s);
+    o << "sever_name: ";
+    cforeach(std::set<std::string>, s.server_name(), it)
+        o << *it << ' ';
+    in_addr tmp;
+    tmp.s_addr = s.listen().host;
+    o << std::endl << "host: " << inet_ntoa(tmp);
+    o << std::endl << "port: " << ntohs(s.listen().port) << std::endl;
+    //location;
+    return o;
 }
