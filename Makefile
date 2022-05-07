@@ -17,7 +17,8 @@ $(PROJECT_NAME)_SRCS     += $(addprefix srcs/, \
 							utils/log.cpp \
 							AConfig.cpp \
 							Parser.cpp \
-							Server.cpp )
+							Server.cpp \
+							Location.cpp)
 
 $(call add/subproj,$(PROJECT_NAME),debugbase)
 debugbase_CXXFLAGS       += -O0 -g3

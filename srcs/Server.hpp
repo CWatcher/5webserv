@@ -1,20 +1,10 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-# include <AConfig.hpp>
+# include <Location.hpp>
 
-# include <fstream>
 # include <netinet/in.h>
 # include <arpa/inet.h>
-
-struct  Location
-{
-    char    metods;
-    //redirect?
-    bool    autoindex;
-    //default file if directory?
-    // cgi?
-};
 
 struct Listen
 {

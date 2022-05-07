@@ -1,27 +1,22 @@
 #include "Parser.hpp"
 
-#include <iostream>
 Parser::Parser(const char* filename)
-    // parser_(parser_init_list_, parser_init_list_ + 5)
 {
     std::ifstream   f;
     std::string     str;
 
     if (filename == NULL)
         filename = "config";
-    // f.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    f.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     f.open(filename);
-    while (true)
+    while (!(f >> std::ws).eof())
     {
-        if ((f >> std::ws).peek() == '#')
+        if (f.peek() == '#')
         {
-            std::cout << "skip" << std::endl;
             std::getline(f, str);
             continue;
         }
         f >> str;
-        if (f.eof())
-            break;
         f.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
         if (str == "root")
             parseRoot(f);
@@ -38,7 +33,7 @@ Parser::Parser(const char* filename)
         else if (str == "server")
             servers_.push_back(Server(*this, f));
         else
-            throw std::logic_error("undefined directive \"" + str + "\"");
+            throw std::logic_error("unknown directive \"" + str + "\"");
         f.exceptions(std::ifstream::goodbit);
     }
     f.close();
@@ -53,11 +48,3 @@ std::ostream&   operator<<(std::ostream& o, const Parser& p)
     }
     return o;
 }
-
-// void    Parser::addServer(std::ifstream& f)
-// {
-//     Server  server(*this, f);
-
-//     // listen_.insert(server.listen());
-//     servers_.push_back(server);
-// }

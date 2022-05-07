@@ -1,7 +1,6 @@
 #ifndef PARSER_HPP
 # define PARSER_HPP
 
-# include "AConfig.hpp"
 # include "Server.hpp"
 
 class Parser : public AConfig
@@ -13,8 +12,8 @@ public:
 private:
     void                        addServer(std::ifstream& f);
 private:
-    std::set<Listen>      listen_;
-    std::vector<Server>   servers_;
+    std::set<Listen>            listen_;
+    std::vector<Server>         servers_;
 };
 
 std::ostream&   operator<<(std::ostream& o, const Parser& p);

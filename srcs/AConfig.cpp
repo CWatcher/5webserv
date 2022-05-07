@@ -58,7 +58,7 @@ void    AConfig::parseRoot(std::ifstream& f)
     if (str.empty())
         throw std::logic_error("root: empty value");
     if (!root_.empty())
-        throw std::logic_error("root: duplicated");
+        throw std::logic_error("root: duplicate");
     ss >> root_;
     ss >> std::ws;
     if (!ss.eof())
@@ -74,8 +74,8 @@ void    AConfig::parseIndex(std::ifstream& f)
     if (str.empty())
         throw std::logic_error("index: empty value");
     if (!index_.empty())
-        throw std::logic_error("index: duplicated");
-    index_.assign(std::istream_iterator<std::string>(ss), std::istream_iterator<std::string>());
+        throw std::logic_error("index: duplicate");
+    index_.insert(index_.end(), std::istream_iterator<std::string>(ss), std::istream_iterator<std::string>());
 }
 
 void    AConfig::parseAutoindex(std::ifstream& f)
@@ -87,7 +87,7 @@ void    AConfig::parseAutoindex(std::ifstream& f)
     if (str.empty())
         throw std::logic_error("autoindex: empty value");
     if (autoindex_ != -1)
-        throw std::logic_error("autoindex: duplicated");
+        throw std::logic_error("autoindex: duplicate");
     ss >> str;
     if (str == "on")
         autoindex_ = true;
@@ -130,7 +130,7 @@ void    AConfig::parseBodySize(std::ifstream& f)
     if (str.empty())
         throw std::logic_error("body_size: empty value");
     if (body_size_ != std::numeric_limits<unsigned>::max())
-        throw std::logic_error("body_size: duplicated");
+        throw std::logic_error("body_size: duplicate");
     ss >> body_size_;
     if (!isdigit(str[0]) || (!ss.eof() && !std::isspace(ss.peek())))
         throw std::logic_error("body_size: bad value \"" + str + "\"");
@@ -148,7 +148,7 @@ void    AConfig::parseMethods(std::ifstream& f)
     if (str.empty())
         throw std::logic_error("methods: empty value");
     if (!methods_.empty())
-        throw std::logic_error("methods: duplicated");
+        throw std::logic_error("methods: duplicate");
     while (ss >> str)
     {
         if (str != "GET" && str != "POST" && str != "DELETE")
@@ -167,8 +167,8 @@ std::ostream&   operator<<(std::ostream& o, const AConfig& c)
     o << std::endl << "error_page: ";
     for (std::map<int, std::string>::const_iterator it = c.error_page().begin(); it != c.error_page().end(); ++it)
         o << it->first << ':' << it->second << ' ';
-    // cforeach(std::map<int,std::string>, c.error_page(), it)
-    //     o << it->first << ':' << it->second << ' ';
+    // cforeach((std::map<int, std::string>), c.error_page(), it)
+        // o << it->first << ':' << it->second << ' ';
     o << std::endl << "body_size: " << c.body_size();
     o << std::endl << "methods: ";
     cforeach(std::set<std::string>, c.methods(), it)

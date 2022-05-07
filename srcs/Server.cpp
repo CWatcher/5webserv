@@ -1,17 +1,15 @@
 #include "Server.hpp"
 #include "utils/syntax.hpp"
 
-#include <exception>
-#include <sstream>
-#include <cstdlib>
 #include <iterator>
+#include <sstream>
 
 Server::Server(const AConfig& config, std::ifstream& f)
 {
     std::string str;
 
-    f >> str;
-    if (str != "{")
+    std::getline(f >> std::ws, str, '{');
+    if (!str.empty())
         throw std::logic_error("server: unexpected \"" + str + "\"");
     while (true)
     {
@@ -44,7 +42,7 @@ Server::Server(const AConfig& config, std::ifstream& f)
         else if (str == "location")
             parseLocation(f);
         else
-            throw std::logic_error("server: undefined directive \"" + str + "\"");
+            throw std::logic_error("server: unknown directive \"" + str + "\"");
     }
     completeConfig(config);
 }
@@ -67,7 +65,7 @@ void    Server::parseServerName(std::ifstream& f)
     if (str.empty())
         throw std::logic_error("server_name: empty value");
     if (!server_name_.empty())
-        throw std::logic_error("server_name: duplicated");
+        throw std::logic_error("server_name: duplicate");
     server_name_.insert(std::istream_iterator<std::string>(ss), std::istream_iterator<std::string>());
 }
 
@@ -80,7 +78,7 @@ void    Server::parseHost(std::ifstream& f)
     if (str.empty())
         throw std::logic_error("host: empty value");
     if (listen_.host != INADDR_NONE)
-        throw std::logic_error("host: duplicated");
+        throw std::logic_error("host: duplicate");
     ss >> str;
     listen_.host = inet_addr(str.c_str());
     if (listen_.host == INADDR_NONE)
@@ -99,7 +97,7 @@ void    Server::parsePort(std::ifstream& f)
     if (str.empty())
         throw std::logic_error("port: empty value");
     if (listen_.port != 0)
-        throw std::logic_error("port: duplicated");
+        throw std::logic_error("port: duplicate");
     int p;
     ss >> p;
     if (!isdigit(str[0]) || (!ss.eof() && !std::isspace(ss.peek())) || p < 1 || p > 65535)
@@ -112,7 +110,13 @@ void    Server::parsePort(std::ifstream& f)
 
 void    Server::parseLocation(std::ifstream& f)
 {
-    (void)f;
+    Location    new_location(*this, f);
+
+    if (location_.find(new_location.path()) == location_.end())
+        location_[new_location.path()] = new_location;
+        // location_.insert(std::make_pair(new_location.path(),new_location));
+    else
+        throw std::logic_error("location: \"" + new_location.path() + "\"duplicate");
 }
 
 std::ostream&   operator<<(std::ostream& o, const Server& s)
@@ -124,7 +128,10 @@ std::ostream&   operator<<(std::ostream& o, const Server& s)
     in_addr tmp;
     tmp.s_addr = s.listen().host;
     o << std::endl << "host: " << inet_ntoa(tmp);
-    o << std::endl << "port: " << ntohs(s.listen().port) << std::endl;
-    //location;
+    o << std::endl << "port: " << ntohs(s.listen().port);
+    o << std::endl << "location: ";
+    for (std::map<std::string, Location>::const_iterator it = s.location().begin(); it != s.location().end(); ++it)
+        o << it->second << ' ';
+    o << std::endl;
     return o;
 }
