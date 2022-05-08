@@ -1,23 +1,34 @@
-// #include "utils/log.hpp"
-#include "Parser.hpp"
-// #include "parser_utils.hpp"
+#include "utils/log.hpp"
+#include "utils/syntax.hpp"
+#include "config/Config.hpp"
 
-// #include <fstream>
-// #include <exception>
-// #include <cstring>
-// #include <cerrno>
-//
 #include <iostream>
-// #include <sstream>
-// #include <arpa/inet.h>
-// #include <netinet/in.h>
 using std::cout;
 using std::endl;
 
 int main(int, char* argv[])
 {
-    Parser  p(argv[1]);
-    cout << p.root() << endl;
-    cout << p;
+    try
+    {
+        // этот блок нужно будет поместить в условный initWebserver()
+        Config              config(argv[1]);
+        std::set<Listen>    listened;
+        // config.getServers() возвращает вектор всех серверов в конфиге, нужно будет его сохранить
+        // в listened будут уникальные пары host:port в формате который можно отдавать в socket и bind
+        cforeach(std::vector<Server>, config.getServers(), server)
+            listened.insert(server->listen());
+        cout << config;
+        // oбъект config больше не нужен
+    }
+    //ошибки, которые я обнаружил при парсинге (неизвестная опция, слишком много значений для опции ...)
+    catch(const std::logic_error& e)
+    {
+        logger::error << "configuration file error: " << e.what() << logger::end;
+    }
+    // все остальные системные ошибки (не удалось открыть файл ...), в том числе неожиданный конец файла
+    catch(const std::exception& e)
+    {
+        logger::error << "configuration file error: " << logger::cerror <<logger::end;
+    }
     return 0;
 }

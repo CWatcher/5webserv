@@ -167,8 +167,6 @@ std::ostream&   operator<<(std::ostream& o, const AConfig& c)
     o << std::endl << "error_page: ";
     for (std::map<int, std::string>::const_iterator it = c.error_page().begin(); it != c.error_page().end(); ++it)
         o << it->first << ':' << it->second << ' ';
-    // cforeach((std::map<int, std::string>), c.error_page(), it)
-        // o << it->first << ':' << it->second << ' ';
     o << std::endl << "body_size: " << c.body_size();
     o << std::endl << "methods: ";
     cforeach(std::set<std::string>, c.methods(), it)

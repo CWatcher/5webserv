@@ -1,7 +1,7 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-# include <Location.hpp>
+# include "Location.hpp"
 
 # include <netinet/in.h>
 # include <arpa/inet.h>
@@ -11,10 +11,8 @@ struct Listen
     Listen() : host(INADDR_NONE), port(0) {}
     in_addr_t   host;
     in_port_t   port;
-    // bool        operator<(const Listen& other) {return host < other.host || (!(other.host < host) && port < other.port);}
+    bool        operator<(const Listen& other) const {return host < other.host || (!(other.host < host) && port < other.port);}
 };
-
-// bool    operator<(const Listen& x, const Listen& y) {return x.host < y.host || (!(y.host < x.host) && x.port < y.port);}
 
 class Server : public AConfig
 {

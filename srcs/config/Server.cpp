@@ -114,9 +114,8 @@ void    Server::parseLocation(std::ifstream& f)
 
     if (location_.find(new_location.path()) == location_.end())
         location_[new_location.path()] = new_location;
-        // location_.insert(std::make_pair(new_location.path(),new_location));
     else
-        throw std::logic_error("location: \"" + new_location.path() + "\"duplicate");
+        throw std::logic_error("location: \"" + new_location.path() + "\" duplicate");
 }
 
 std::ostream&   operator<<(std::ostream& o, const Server& s)

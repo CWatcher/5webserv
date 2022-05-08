@@ -73,9 +73,9 @@ void    Location::parseLocation(std::ifstream& f)
     Location    new_location(*this, f);
 
     if (location_.find(new_location.path()) == location_.end())
-        location_.insert(std::make_pair(new_location.path(),new_location));
+        location_[new_location.path()] = new_location;
     else
-        throw std::logic_error("location: \"" + new_location.path() + "\"duplicate");
+        throw std::logic_error("location: \"" + new_location.path() + "\" duplicate");
 }
 
 std::ostream&   operator<<(std::ostream& o, const Location& l)

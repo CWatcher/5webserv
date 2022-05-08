@@ -1,6 +1,7 @@
-#include "Parser.hpp"
+#include "Config.hpp"
+#include "utils/log.hpp"
 
-Parser::Parser(const char* filename)
+Config::Config(const char* filename)
 {
     std::ifstream   f;
     std::string     str;
@@ -37,9 +38,10 @@ Parser::Parser(const char* filename)
         f.exceptions(std::ifstream::goodbit);
     }
     f.close();
+    logger::info << "configuration file \"" << filename << "\" loaded" << logger::end;
 }
 
-std::ostream&   operator<<(std::ostream& o, const Parser& p)
+std::ostream&   operator<<(std::ostream& o, const Config& p)
 {
     for (size_t i = 0; i < p.getServers().size(); i++)
     {
