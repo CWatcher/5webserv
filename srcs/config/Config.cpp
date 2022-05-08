@@ -45,7 +45,7 @@ std::ostream&   operator<<(std::ostream& o, const Config& p)
 {
     for (size_t i = 0; i < p.getServers().size(); i++)
     {
-        o << std::string(10, '-') << "Server " << i << std::string(10, '-') << std::endl;
+        o << "\033[0;32m" << std::string(10, '-') << "Server " << i << std::string(10, '-') << "\033[0m" << std::endl;
         o << p.getServers()[i];
     }
     return o;
