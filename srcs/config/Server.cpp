@@ -1,136 +1,48 @@
 #include "Server.hpp"
 #include "utils/syntax.hpp"
 
-#include <iterator>
-#include <sstream>
+#include <iostream>
+#include <arpa/inet.h>
 
-Server::Server(const AConfig& config, std::ifstream& f)
+static std::ostream&	operator<<(std::ostream& o, const BaseConfig& c)
 {
-    std::string str;
-
-    std::getline(f >> std::ws, str, '{');
-    if (!str.empty())
-        throw std::logic_error("server: unexpected \"" + str + "\"");
-    while (true)
-    {
-        if ((f >> std::ws).peek() == '#')
-        {
-            getline(f, str);
-            continue;
-        }
-        f >> str;
-        if (str == "}")
-            break;
-        else if (str == "root")
-            parseRoot(f);
-        else if (str == "index")
-            parseIndex(f);
-        else if (str == "autoindex")
-            parseAutoindex(f);
-        else if (str == "error_page")
-            parseErrorPage(f);
-        else if (str == "body_size")
-            parseBodySize(f);
-        else if (str == "methods")
-            parseMethods(f);
-        else if (str == "server_name")
-            parseServerName(f);
-        else if (str == "host")
-            parseHost(f);
-        else if (str == "port")
-            parsePort(f);
-        else if (str == "location")
-            parseLocation(f);
-        else
-            throw std::logic_error("server: unknown directive \"" + str + "\"");
-    }
-    completeConfig(config);
-}
-
-void    Server::completeConfig(const AConfig& config)
-{
-    AConfig::completeConfig(config);
-    if (listen_.host == INADDR_NONE)
-        listen_.host = INADDR_ANY;
-    if (listen_.port == 0)
-        listen_.port = htons(80);
-}
-
-void    Server::parseServerName(std::ifstream& f)
-{
-    std::string         str;
-    std::getline(f >> std::ws, str, ';');
-    std::stringstream   ss(str);
-
-    if (str.empty())
-        throw std::logic_error("server_name: empty value");
-    if (!server_name_.empty())
-        throw std::logic_error("server_name: duplicate");
-    server_name_.insert(std::istream_iterator<std::string>(ss), std::istream_iterator<std::string>());
-}
-
-void    Server::parseHost(std::ifstream& f)
-{
-    std::string                 str;
-    std::getline(f >> std::ws, str, ';');
-    std::stringstream           ss(str);
-
-    if (str.empty())
-        throw std::logic_error("host: empty value");
-    if (listen_.host != INADDR_NONE)
-        throw std::logic_error("host: duplicate");
-    ss >> str;
-    listen_.host = inet_addr(str.c_str());
-    if (listen_.host == INADDR_NONE)
-        throw std::logic_error("host: bad host \"" + str + "\"");
-    ss >> std::ws;
-    if (!ss.eof())
-        throw std::logic_error("host: too many values");
-}
-
-void    Server::parsePort(std::ifstream& f)
-{
-    std::string         str;
-    std::getline(f >> std::ws, str, ';');
-    std::stringstream   ss(str);
-
-    if (str.empty())
-        throw std::logic_error("port: empty value");
-    if (listen_.port != 0)
-        throw std::logic_error("port: duplicate");
-    int p;
-    ss >> p;
-    if (!isdigit(str[0]) || (!ss.eof() && !std::isspace(ss.peek())) || p < 1 || p > 65535)
-        throw std::logic_error("port: bad port \"" + str + "\"");
-    ss >> std::ws;
-    if (!ss.eof())
-        throw std::logic_error("port: too many values");
-    listen_.port = htons(p);
-}
-
-void    Server::parseLocation(std::ifstream& f)
-{
-    Location    new_location(*this, f);
-
-    if (location_.find(new_location.path()) == location_.end())
-        location_[new_location.path()] = new_location;
-    else
-        throw std::logic_error("location: \"" + new_location.path() + "\" duplicate");
+    o << "root: " << c.root;
+    o << std::endl << "index: ";
+    cforeach(std::vector<std::string>, c.index, it)
+        o << *it << ' ';
+    o << std::endl << "autoindex: " << std::boolalpha << c.autoindex;
+    o << std::endl << "error_page: ";
+    for (std::map<unsigned, std::string>::const_iterator it = c.error_page.begin(); it != c.error_page.end(); ++it)
+        o << it->first << ':' << it->second << ' ';
+    o << std::endl << "body_size: " << c.body_size;
+    o << std::endl << "methods: ";
+    cforeach(std::set<std::string>, c.methods, it)
+        o << *it << ' ';
+    if (!c.redirect.second.empty())
+        o << std::endl << "redirect: " << c.redirect.first << ' ' << c.redirect.second;
+    o << std::endl << "location: ";
+    // o << c.location.size();
+    // for (std::map<std::string, Location>::const_iterator it = s.location().begin(); it != s.location().end(); ++it)
+    //     o << it->second << ' ';
+    o << std::endl;
+    return o;
 }
 
 std::ostream&   operator<<(std::ostream& o, const Server& s)
 {
-    o << static_cast<const AConfig&>(s);
+    o << static_cast<const BaseConfig&>(s);
     o << "sever_name: ";
-    cforeach(std::set<std::string>, s.server_name(), it)
+    cforeach(std::vector<std::string>, s.server_name, it)
         o << *it << ' ';
+    o << std::endl << "listen: " << std::endl;
     in_addr tmp;
-    tmp.s_addr = s.listen().host;
-    o << std::endl << "host: " << inet_ntoa(tmp);
-    o << std::endl << "port: " << ntohs(s.listen().port);
-    o << std::endl << "location: ";
-    for (std::map<std::string, Location>::const_iterator it = s.location().begin(); it != s.location().end(); ++it)
-        o << it->second << ' ';
-    o << std::endl;
+    for (std::map<in_addr_t, std::set<in_port_t> >::const_iterator it = s.listen.begin(); it != s.listen.end(); ++it)
+    {
+        tmp.s_addr = it->first;
+        o << "- " << inet_ntoa(tmp) << ": ";
+        for (std::set<in_port_t>::const_iterator port = it->second.begin(); port != it->second.end(); ++port)
+            o << ntohs(*port) << ' ';
+        o << std::endl;
+    }
     return o;
 }
