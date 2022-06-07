@@ -1,52 +1,63 @@
-	#глобальные параметры, в следующих блока у них будут такие значения, если они не определены
 
-		   autoindex on ;
-
-		 index i1   i2;
-
-
-body_size
-		123465 ;
-methods GET;
-error_page   213 113 111
-		 222 332 334  e_page1;
-
-
-server
-		 {
-	 host 123.11.11.1   ;
-	#host 123.11..11.1   ;
-	port 345;
-	server_name aa bb cc;
-	# port 3333;
-	methods DELETE POST;
-	error_page 213 511 e_page2; #перепишется страницв для 213 ошибки и добавится для 511
-}
-
-
-#у этого сервера host и порт будут по умолчанию (0.0.0.0 и 80)
-	server {
-	root rrrrrrrr ;
-	server_name dd ;
-	#server_name ee;
-	host 192.168.1.1  ;
-
-	methods POST;}
+# сервер со всеми параметрами по умолчанию
 
 server {}
 
-#вложенные location'ы
+
+ server
+		  {
+#будем слушать несколько хостов и портов
+	 listen 1.2.3.4 345;listen 1.2.3.4 365
+	  ;
+
+listen 1.2.3.5 243;listen 1.2.3.6 243;
+
+server_name name1 name2 name3;
+
+	index aaa bbb ccc;
+	methods GET;
+	autoindex on;
+	root new/rooot;
+
+	body_size 5646654;
+#несколько страниц ошибок
+	error_page 412 523 500 er1.html;
+	error_page 503 er2.html;
+#редирект с одним параметром, будет 302 код
+	return www.ya.ru;
+#ещё один, не должен переписать предыдущий
+	return 303 www.google.com;
+#в этом location переопределяются параметры
+	location aaa {
+		methods DELETE;
+		root a/rooot;
+		autoindex off;
+		body_size 1234;
+		#дополнение списка ошибок блока родителя
+		error_page 505 506 er3.html;
+		return 303 www.google.com;
+
+
+		#все параметры кроме return и methods будут как у aaa
+		location ccc{
+			methods POST;
+		}
+
+	}
+
+# a в этом нет
+	location bbb {}
+}
+
+
+# много вложенных location
 server {
-	location a{
-		root ra;
-		location b{}
-		location c{
-			autoindex off;
-			location d{
-				location e{}
-			}
+	location aaa{
+		location bbb{
+			location ccc{body_size 777;}
 		}
-		}
-#	location a{}
-	location b{}
+		location ddd { location eee{ location fff{ root roooooot; location xxx {}}}}
+		location eee { methods POST;}
+	}
+
 }

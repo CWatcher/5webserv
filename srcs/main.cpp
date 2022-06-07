@@ -11,9 +11,8 @@ int main(int, char* argv[])
     try
     {
         ConfigParser  config(argv[1]);
-        config.parseConfig();
-        // cforeach(std::vector<Server>, config.getServers(), server)
-        //     listened.insert(server->listen());
+        config.parse();
+        config.getServers();
         std::clog << config;
     }
     //ошибки, которые я обнаружил при парсинге (неизвестная опция, слишком много значений для опции ...)
@@ -21,7 +20,7 @@ int main(int, char* argv[])
     {
         logger::error << e.what() << logger::end;
     }
-    // все остальные системные ошибки (не удалось открыть файл ...), в том числе неожиданный конец файла
+    // все остальные системные ошибки (не удалось открыть файл, ошибка при чтении файла ...)
     catch(const std::exception& e)
     {
         logger::error << logger::cerror <<logger::end;

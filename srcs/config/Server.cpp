@@ -4,7 +4,16 @@
 #include <iostream>
 #include <arpa/inet.h>
 
-static std::ostream&	operator<<(std::ostream& o, const BaseConfig& c)
+static std::ostream&    operator<<(std::ostream& o, const Location& l)
+{
+    o << l.path << '{';
+    for (std::map<std::string, Location>::const_iterator it = l.location.begin(); it != l.location.end(); ++it)
+        o << it->second ;
+    o << '}';
+    return o;
+}
+
+static std::ostream&    operator<<(std::ostream& o, const BaseConfig& c)
 {
     o << "root: " << c.root;
     o << std::endl << "index: ";
@@ -18,12 +27,15 @@ static std::ostream&	operator<<(std::ostream& o, const BaseConfig& c)
     o << std::endl << "methods: ";
     cforeach(std::set<std::string>, c.methods, it)
         o << *it << ' ';
+    o << std::endl << "redirect: ";
     if (!c.redirect.second.empty())
-        o << std::endl << "redirect: " << c.redirect.first << ' ' << c.redirect.second;
+        o << c.redirect.first << ' ' << c.redirect.second;
     o << std::endl << "location: ";
-    // o << c.location.size();
-    // for (std::map<std::string, Location>::const_iterator it = s.location().begin(); it != s.location().end(); ++it)
-    //     o << it->second << ' ';
+    for (std::map<std::string, Location>::const_iterator it = c.location.begin(); it != c.location.end(); ++it)
+    {
+        o << it->second << ' ';
+        // o << std::endl << static_cast<const BaseConfig>(it->second);
+    }
     o << std::endl;
     return o;
 }
