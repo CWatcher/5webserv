@@ -17,8 +17,9 @@ class ConfigParser
 {
 public:
     ConfigParser(const char *filename);
-    void                        parse();
-    const std::vector<Server>&  getServers() const {return servers_;};
+    void                                                parse();
+    const std::vector<Server>&                          getServers() const {return servers_;};
+    const std::map<in_addr_t, std::set<in_port_t> >&    getListened() const {return listened_;};
 private:
     void                        parseServer();
     void                        parseBlock(BaseConfig& block);
@@ -41,13 +42,15 @@ private:
     static void                 completeServer(Server& server);
     static void                 completeLocation(const BaseConfig& parent, BaseConfig& location);
 private:
-    std::ifstream       f_;
-    std::string         block_;
-    std::vector<Server> servers_;
+    std::ifstream                               f_;
+    std::string                                 block_;
+
+    std::vector<Server>                         servers_;
+    std::map<in_addr_t, std::set<in_port_t> >   listened_;
 
     typedef void (ConfigParser::*parser)(BaseConfig&);
-    static const std::pair<std::string, parser>   init_list_[];
-    static const std::map<std::string, parser>    parsers_;
+    static const std::pair<std::string, parser> init_list_[];
+    static const std::map<std::string, parser>  parsers_;
 };
 
 std::ostream&   operator<<(std::ostream& o, const ConfigParser& parser);
