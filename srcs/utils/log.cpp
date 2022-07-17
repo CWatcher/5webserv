@@ -3,6 +3,7 @@
 #include <sys/time.h>
 #include <cerrno>
 #include <cstring>
+#include <pthread.h>
 
 #include "log.hpp"
 
@@ -17,6 +18,14 @@ LogStream<logger::Level::kError>    error;
 DevnullStream                       dev_null;
 std::ostream*                       ostream = &std::clog;
 logger::Level                       level = logger::Level::kDebug;
+
+Errno  cerror;
+EndLog end;
+
+namespace {
+pthread_mutex_t logger_lock = PTHREAD_MUTEX_INITIALIZER;
+bool            is_locked;
+}
 
 Level   getLevel()
 {
@@ -111,8 +120,22 @@ const char* lvlToStr[4] = {
 
 void printLoggerInfo(logger::Level lvl)
 {
-    (*logger::ostream) << '[' << logger::timestamp() << ']'
+    baseStream() << '[' << logger::timestamp() << ']'
         << " - " << lvlToStr[lvl] << " - ";
 }
+
+void lockOut()   { pthread_mutex_lock(&logger_lock); is_locked = true; }
+void unlockOut() { is_locked = false;  pthread_mutex_unlock(&logger_lock); }
+
+std::ostream& operator<<(std::ostream& o, EndLog& endlog)
+{
+    (void)endlog;
+    o << '\n';
+    if (logger::is_locked == true)
+        unlockOut();
+    return o;
+}
+
+std::ostream& operator<<(std::ostream& o, Errno&) { return o << strerror(errno); }
 
 }
