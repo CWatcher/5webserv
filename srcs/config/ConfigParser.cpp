@@ -20,14 +20,15 @@ const std::pair<std::string, ConfigParser::parser> ConfigParser::init_list_[] =
     std::make_pair("server_name", &ConfigParser::parseServerName)
 };
 
-const std::map<std::string, ConfigParser::parser> ConfigParser::parsers_(ConfigParser::init_list_, ConfigParser::init_list_ + 10);
+const std::map<std::string, ConfigParser::parser> ConfigParser::parsers_(init_list_, init_list_ + sizeof(init_list_) / sizeof(init_list_[0]));
 
 ConfigParser::ConfigParser(const char *filename) : block_("server")
 {
     if (filename == NULL)
         filename = "config";
-    f_.exceptions(std::ifstream::failbit);
     f_.open(filename);
+    if (f_.fail())
+        throw std::logic_error(std::string("Unable to open file '") + filename + "'");
     f_.exceptions(std::ifstream::badbit);
 }
 
