@@ -42,7 +42,7 @@ std::ostream&   devnullStream()
     return dev_null;
 }
 
-void    setLevel(logger::Level::_ level)
+void    setLevel(logger::Level level)
 {
     logger::level = level;
 }

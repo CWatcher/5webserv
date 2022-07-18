@@ -46,7 +46,7 @@ int main(int, char* argv[])
 	std::map<int, ASocket *>	sockets_array;
 
 //    signal(SIGUSR1, signal_handler);
-	logger::setLevel("debug");
+	logger::setLevel(logger::Level::kDebug);
 
 	try
     {
