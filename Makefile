@@ -5,22 +5,23 @@ NAME          = webserv
 
 CXX           = c++
 LD            = c++
-CXXFLAGS      = -Wall -Wextra -Werror --std=c++98 -Isrcs
+CXXFLAGS      = -Wall -Wextra -Werror -pedantic --std=c++98
 LDFLAGS       = -pthread
 DEP           = ./Makefile
+INC           = ./srcs
 
 BUILD        ?= debug
 
-
 $(call add/project,$(PROJECT_NAME))
-$(PROJECT_NAME)_SRCS     += srcs/main.cpp			\
-							srcs/Server.cpp			\
-							srcs/ASocket.cpp		\
-							srcs/SocketListen.cpp	\
-							srcs/SocketSession.cpp	\
-							srcs/HTTPMessage.cpp	\
-							srcs/utils/log.cpp		\
-							srcs/utils/string.cpp	\
+$(PROJECT_NAME)_SRCS     += srcs/main.cpp					\
+							srcs/Server.cpp					\
+							srcs/ASocket.cpp				\
+							srcs/SocketListen.cpp			\
+							srcs/SocketSession.cpp			\
+							srcs/HTTPMessage.cpp			\
+																\
+							srcs/config/ConfigParser.cpp		\
+							srcs/config/Server.cpp				\
 																\
 							srcs/handlers/runner/runner.cpp		\
 							srcs/handlers/base/Handler.cpp		\
@@ -28,7 +29,10 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp			\
 							srcs/handlers/FileReader.cpp		\
 							srcs/handlers/HeaderGenerator.cpp	\
 							srcs/handlers/HeaderParser.cpp		\
-							srcs/handlers/HeaderValidator.cpp
+							srcs/handlers/HeaderValidator.cpp	\
+																\
+							srcs/utils/log.cpp					\
+							srcs/utils/string.cpp
 
 $(call add/subproj,$(PROJECT_NAME),debugbase)
 debugbase_CXXFLAGS       += -O0 -g3
