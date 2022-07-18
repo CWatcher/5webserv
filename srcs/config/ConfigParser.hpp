@@ -16,7 +16,7 @@
 class ConfigParser
 {
 public:
-    ConfigParser(const char *filename);
+    ConfigParser(const char* filename);
     void                                                parse();
     const std::vector<Server>&                          getServers() const {return servers_;};
     const std::map<in_addr_t, std::set<in_port_t> >&    getListened() const {return listened_;};
@@ -35,9 +35,9 @@ private:
     void                        parseListen(BaseConfig& parent);
     void                        parseServerName(BaseConfig& parent);
 
-    std::vector<std::string>    getValues(const std::string& directive, char delim = ';');
-    std::string                 getValue(const std::string& directive, char delim = ';');
-    unsigned                    strToUInt(const std::string& str, const std::string& directive);
+    std::vector<std::string>    getValues(const char* directive, char delim = ';');
+    std::string                 getValue(const char* directive, char delim = ';');
+    unsigned                    strToUInt(const std::string& str, const char* directive);
 
     static void                 completeServer(Server& server);
     static void                 completeLocation(const BaseConfig& parent, BaseConfig& location);
