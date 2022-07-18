@@ -4,6 +4,7 @@
 #include "SocketSession.hpp"
 
 #include <cerrno>
+#include <cstring>
 
 int Server::poll_timeout = 30 * 1000;
 
@@ -12,12 +13,12 @@ Server::Server(const std::map<int, ASocket *> &sockets_to_listen)
 
 Server::~Server()
 {
-    logger::info("Shutting down Server...");
+    logger::info << "Server: shutting down..." << logger::end;
 
     for (std::map<int, ASocket *>::const_iterator it = _sockets.begin(); it != _sockets.end(); ++it)
         delete it->second;
 
-    logger::info("Bye!");
+    logger::info << "Server: bye!" << logger::end;
 }
 
 void Server::mainLoopRun()
@@ -26,22 +27,26 @@ void Server::mainLoopRun()
     size_t				poll_array_len;
     int					new_events;
 
-    logger::info("Entering main Server loop...");
+    logger::info << "Server: entering main loop..." << logger::end;
 
     while (!_sockets.empty())
     {
         poll_array_len = eventArrayPrepare(poll_array);
 
-        logger::debug("Polling...");
+        logger::debug << "Server: polling..." << logger::end;
         new_events = poll(&poll_array[0], poll_array_len, poll_timeout);
-        logger::debug("Polling done!");
+        logger::debug << "Server: polling done!" << logger::end;
 
         if (new_events <= 0)
         {
             if (errno)
-                logger::cerrno();
+            {
+                logger::error << "Server: " << strerror(errno) << logger::end;
+                errno = 0;
+            }
             else
-                logger::debug("No new events. Reached poll timeout (seconds):", poll_timeout / 1000);
+                logger::debug << "Server: no new events. Reached poll timeout (seconds): "
+                              << poll_timeout / 1000 << logger::end;
             continue ;
         }
 
@@ -59,7 +64,7 @@ size_t Server::eventArrayPrepare(std::vector<pollfd> &poll_array)
         poll_array.reserve(_sockets.size());
     }
     catch (std::bad_alloc &e) {
-        logger::error(e.what());
+        logger::error << "Server: eventArrayPrepare: " << e.what() << logger::end;
     }
 
     for (std::map<int, ASocket *>::const_iterator it = _sockets.begin(); it != _sockets.end(); ++it)
@@ -68,7 +73,7 @@ size_t Server::eventArrayPrepare(std::vector<pollfd> &poll_array)
 
         if (poll_array_len >= poll_array.capacity())
         {
-            logger::warning("Not enough memory to add socket", socket->fd);
+            logger::warning << "Server: not enough memory to add socket " << socket->fd << logger::end;
             _sockets.erase(socket->fd);
             delete socket;
             continue ;
@@ -92,7 +97,7 @@ bool Server::eventCheck(const pollfd *poll_fd)
 {
     if (poll_fd->revents & (POLLERR | POLLHUP | POLLNVAL))
     {
-        logger::info("Got terminating event on socket", poll_fd->fd);
+        logger::warning << "Server: got terminating event on socket " << poll_fd->fd << logger::end;
         delete _sockets[poll_fd->fd];
         _sockets.erase(poll_fd->fd);
     }
@@ -107,7 +112,10 @@ void Server::eventAction(ASocket *socket)
 
     return_value = socket->action(post_action);
     if (return_value == -1)
-        logger::cerrno(socket->fd);
+    {
+        logger::error << "Server: eventAction: " << strerror(errno) << socket->fd << logger::end;
+        errno = 0;
+    }
 
     switch (post_action)
     {
@@ -117,7 +125,7 @@ void Server::eventAction(ASocket *socket)
 
         case ASocket::Process:
             _thread_pool.pushTaskToQueue(reinterpret_cast<SocketSession *>(socket));
-            logger::info("Sent to Task queue, socket", socket->fd);
+            logger::info << "Server: eventAction: sent to Task queue, socket " << socket->fd << logger::end;
             break ;
 
         case ASocket::Disconnect:

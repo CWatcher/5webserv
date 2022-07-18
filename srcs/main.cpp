@@ -1,4 +1,4 @@
-#include "Logger.hpp"
+#include "utils/log.hpp"
 #include "ASocket.hpp"
 #include "SocketListen.hpp"
 #include "Server.hpp"
@@ -10,6 +10,8 @@
 #include <map>
 #include <csignal>
 #include <unistd.h>
+#include <cerrno>
+#include <cstring>
 
 const in_port_t	ListenPort = 9999;
 const int		ConnectionsLimit = 4;
@@ -26,13 +28,13 @@ int main()
 	std::map<int, ASocket *>	sockets_array;
 
 //    signal(SIGUSR1, signal_handler);
-	logger::setLevel(Logger::Debug);
+	logger::setLevel("debug");
 
 	try{
 		socket_listen = new SocketListen(ListenPort, ConnectionsLimit);
 	}
 	catch (std::exception &e){
-		logger::cerrno();
+        logger::error << __FUNCTION__ << ": " << strerror(errno) << logger::end;
 		return EXIT_FAILURE;
 	}
 

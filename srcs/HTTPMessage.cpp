@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <cerrno>
+#include <cstring>
 
 HTTPMessage::HTTPMessage()
 	: raw_data()
@@ -55,7 +56,8 @@ bool	HTTPMessage::hasEndOfMessage()
 			content_length = std::strtol(content_length_str->c_str(), NULL, 10);
 			if (errno || content_length < 0)
 			{
-				logger::cerrno();
+                logger::error << __FUNCTION__ << ": " << strerror(errno) << logger::end;
+                errno = 0;
 				end_found = true;
 			}
 			else
@@ -86,10 +88,10 @@ void	HTTPMessage::getHeader()
 	{
 		_header_size = header_end + 4;
 		header = getHeaderMapFromRaw();
-		logger::debug("HTTP request header found");
+        logger::debug << __FUNCTION__ << ": " << "HTTP request header found" << logger::end;
 	}
 	else
-		logger::debug("HTTP request header not found yet");
+        logger::debug << __FUNCTION__ << ": " << "HTTP request header not found yet" << logger::end;
 }
 
 std::map<std::string, std::string>	HTTPMessage::getHeaderMapFromRaw()

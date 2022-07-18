@@ -2,8 +2,8 @@
 #ifndef HTTPMESSAGE_HPP
 # define HTTPMESSAGE_HPP
 
-# include "Logger.hpp"
-# include "utils.hpp"
+# include "utils/log.hpp"
+# include "utils/string.hpp"
 
 # include <map>
 # include <string>

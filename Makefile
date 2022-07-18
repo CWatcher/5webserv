@@ -20,8 +20,8 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp			\
 							srcs/SocketSession.cpp	\
 							srcs/ThreadPool.cpp		\
 							srcs/HTTPMessage.cpp	\
-							srcs/utils.cpp			\
-							srcs/Logger.cpp			\
+							srcs/utils/log.cpp		\
+							srcs/utils/string.cpp	\
 																\
 							srcs/handlers/starter.cpp			\
 							srcs/handlers/base/Handler.cpp		\
@@ -30,7 +30,6 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp			\
 							srcs/handlers/HeaderGenerator.cpp	\
 							srcs/handlers/HeaderParser.cpp		\
 							srcs/handlers/HeaderValidator.cpp
-#							srcs/utils/log.cpp
 
 $(call add/subproj,$(PROJECT_NAME),debugbase)
 debugbase_CXXFLAGS       += -O0 -g3

@@ -14,7 +14,7 @@ ASocket::ASocket(const ASocket &src)
 ASocket::~ASocket()
 {
     close(fd);
-    logger::info("Disconnected socket", fd);
+    logger::info << "Disconnected socket " << fd << logger::end;
 }
 
 TriggerType::_ ASocket::getTrigger() const

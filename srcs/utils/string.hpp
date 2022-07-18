@@ -1,6 +1,6 @@
 
-#ifndef UTILS_HPP
-# define UTILS_HPP
+#ifndef STRING_HPP
+# define STRING_HPP
 
 # include <string>
 
