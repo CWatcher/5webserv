@@ -18,12 +18,11 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp			\
 							srcs/ASocket.cpp		\
 							srcs/SocketListen.cpp	\
 							srcs/SocketSession.cpp	\
-							srcs/ThreadPool.cpp		\
 							srcs/HTTPMessage.cpp	\
 							srcs/utils/log.cpp		\
 							srcs/utils/string.cpp	\
 																\
-							srcs/handlers/starter.cpp			\
+							srcs/handlers/runner/runner.cpp		\
 							srcs/handlers/base/Handler.cpp		\
 							srcs/handlers/CGIReader.cpp			\
 							srcs/handlers/FileReader.cpp		\

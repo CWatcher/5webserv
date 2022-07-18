@@ -2,6 +2,7 @@
 #include "HTTPMessage.hpp"
 #include "Server.hpp"
 #include "SocketSession.hpp"
+#include "handlers/runner/runner.hpp"
 
 #include <cerrno>
 #include <cstring>
@@ -124,7 +125,7 @@ void Server::eventAction(ASocket *socket)
             break ;
 
         case ASocket::Process:
-            _thread_pool.pushTaskToQueue(reinterpret_cast<SocketSession *>(socket));
+            _thread_pool.push_task(handlers::run, socket);
             logger::info << "Server: eventAction: sent to Task queue, socket " << socket->fd << logger::end;
             break ;
 
