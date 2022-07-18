@@ -35,8 +35,8 @@ private:
     void                        parseListen(BaseConfig& parent);
     void                        parseServerName(BaseConfig& parent);
 
-    std::vector<std::string>    getValues(char delim, const std::string& directive);
-    std::string                 getValue(char delim, const std::string& directive);
+    std::vector<std::string>    getValues(const std::string& directive, char delim = ';');
+    std::string                 getValue(const std::string& directive, char delim = ';');
     unsigned                    strToUInt(const std::string& str, const std::string& directive);
 
     static void                 completeServer(Server& server);
