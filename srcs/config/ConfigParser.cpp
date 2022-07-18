@@ -151,7 +151,7 @@ void    ConfigParser::parseLocation(BaseConfig& parent)
     std::string block_save = block_;
     LocationConfig    location;
 
-    location.path = getValue('{', "location");
+    location.path = getValue("location", '{');
     block_ = "location";
     parseBlock(location);
     block_ = block_save;
@@ -165,19 +165,19 @@ void    ConfigParser::parseRoot(BaseConfig& parent)
 {
     if (!parent.root.empty())
         throw std::logic_error(block_ + ": root duplicate");
-    parent.root = getValue(';', "root");
+    parent.root = getValue("root", ';');
 }
 
 void    ConfigParser::parseIndex(BaseConfig& parent)
 {
-    std::vector<std::string>    indexes = getValues(';', "index");
+    std::vector<std::string>    indexes = getValues("index");
 
     parent.index.insert(parent.index.end(), indexes.begin(), indexes.end());
 }
 
 void    ConfigParser::parseAutoindex(BaseConfig& parent)
 {
-    std::string value = getValue(';', "autoindex");
+    std::string value = getValue("autoindex", ';');
 
     if (parent.autoindex != -1)
         throw std::logic_error(block_ + ": autoindex duplicate");
@@ -191,7 +191,7 @@ void    ConfigParser::parseAutoindex(BaseConfig& parent)
 
 void    ConfigParser::parseErrorPage(BaseConfig& parent)
 {
-    std::vector<std::string>    values = getValues(';', "error_page");
+    std::vector<std::string>    values = getValues("error_page");
     unsigned                    code;
 
     if (values.size() < 2)
@@ -207,7 +207,7 @@ void    ConfigParser::parseErrorPage(BaseConfig& parent)
 
 void    ConfigParser::parseBodySize(BaseConfig& parent)
 {
-    std::string str = getValue(';', "body_size");
+    std::string str = getValue("body_size", ';');
     unsigned    size = strToUInt(str, "body_size");
 
     if (parent.body_size != std::numeric_limits<unsigned>::max())
@@ -217,7 +217,7 @@ void    ConfigParser::parseBodySize(BaseConfig& parent)
 
 void    ConfigParser::parseMethods(BaseConfig& parent)
 {
-    std::vector<std::string>    methods = getValues(';', "methods");
+    std::vector<std::string>    methods = getValues("methods");
 
     for (std::vector<std::string>::iterator method = methods.begin(); method != methods.end(); method++)
     {
@@ -229,7 +229,7 @@ void    ConfigParser::parseMethods(BaseConfig& parent)
 
 void    ConfigParser::parseReturn(BaseConfig& parent)
 {
-    std::vector<std::string>    values = getValues(';', "return");
+    std::vector<std::string>    values = getValues("return");
     unsigned                    code = 302;
 
     if (values.size() > 2)
@@ -251,7 +251,7 @@ void    ConfigParser::parseListen(BaseConfig& parent)
         throw std::logic_error(block_ + ": unexpected 'listen'");
 
     ServerConfig&                     server = static_cast<ServerConfig&>(parent);
-    std::vector<std::string>    values = getValues(';', "listen");
+    std::vector<std::string>    values = getValues("listen");
     std::string                 host = HOST_DFL, port = values.back();
 
     if (values.size() > 2)
@@ -272,12 +272,12 @@ void    ConfigParser::parseServerName(BaseConfig& parent)
         throw std::logic_error(block_ + ": unexpected 'server_name'");
 
     ServerConfig&                     server = static_cast<ServerConfig&>(parent);
-    std::vector<std::string>    server_names = getValues(';', "server_name");
+    std::vector<std::string>    server_names = getValues("server_name");
 
     server.server_name.insert(server.server_name.end(), server_names.begin(), server_names.end());
 }
 
-std::vector<std::string>    ConfigParser::getValues(char delim, const std::string& directive)
+std::vector<std::string>    ConfigParser::getValues(const std::string& directive, char delim)
 {
     std::string                 str;
     std::getline(f_ >> std::ws, str, delim);
@@ -289,7 +289,7 @@ std::vector<std::string>    ConfigParser::getValues(char delim, const std::strin
     return values;
 }
 
-std::string ConfigParser::getValue(char delim, const std::string& directive)
+std::string ConfigParser::getValue(const std::string& directive, char delim)
 {
     std::string         str;
     std::getline(f_ >> std::ws, str, delim);
