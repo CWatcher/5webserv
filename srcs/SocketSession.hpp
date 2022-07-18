@@ -5,11 +5,12 @@
 # include "ASocket.hpp"
 # include "HTTPMessage.hpp"
 
+# include <netinet/in.h>
+
 class SocketSession : public ASocket
 {
 public:
-	explicit SocketSession(int fd);
-	SocketSession(const SocketSession &src);
+	explicit SocketSession(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port);
 
 	virtual int action(enum PostAction &post_action);
     void        prepareForRead();
@@ -21,6 +22,8 @@ private:
 	int         actionWrite(enum PostAction &post_action);
 
 public:
+    std::pair<in_addr_t, in_port_t> from_listen_address;
+
     HTTPMessage	input;
     HTTPMessage	output;
 

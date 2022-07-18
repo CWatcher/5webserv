@@ -29,6 +29,9 @@ namespace handlers
 
         start_handler->handle(task->input, task->output);
 
+        // need to pass server config
+        logger::debug << "I know you came from port:" << ntohs(task->from_listen_address.second) << logger::end;
+
         task->prepareForWrite();
         logger::debug << "handlers: run: task completed" << logger::end;
         return NULL;

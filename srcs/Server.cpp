@@ -161,7 +161,11 @@ void Server::eventAction(ASocket *socket)
     switch (post_action)
     {
         case ASocket::Add:
-            _sockets[return_value] = new SocketSession(return_value);
+            _sockets[return_value] = new SocketSession(
+                return_value,
+                reinterpret_cast<SocketListen *>(socket)->ip,
+                reinterpret_cast<SocketListen *>(socket)->port
+            );
             break ;
 
         case ASocket::Process:

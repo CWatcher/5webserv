@@ -4,15 +4,10 @@
 #include <csignal>
 #include <sys/socket.h>
 
-SocketSession::SocketSession(int fd)
+SocketSession::SocketSession(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port)
 	: ASocket(fd, TriggerType::Read)
+    , from_listen_address(std::make_pair<in_addr_t, in_port_t>(from_listen_ip, from_listen_port))
     , _written_total(0) {}
-
-SocketSession::SocketSession(const SocketSession &src)
-	: ASocket(src.fd, src._trigger)
-    , input(src.input)
-    , output(src.output)
-    , _written_total(src._written_total){}
 
 int     SocketSession::action(enum PostAction &post_action)
 {
