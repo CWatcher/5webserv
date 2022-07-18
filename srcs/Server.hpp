@@ -4,16 +4,17 @@
 
 # include "ASocket.hpp"
 # include "utils/thread_pool.hpp"
+#include "config/ServerConfig.hpp"
 
 # include <map>
 # include <sys/poll.h>
 # include <vector>
+#include <netinet/in.h>
 
 class Server
 {
 public:
-//    Server(server configs); TODO: switch to configs for constructor
-    explicit Server(const std::map<int, ASocket *> &sockets_to_listen);
+    explicit Server(std::vector<ServerConfig> configs);
     ~Server();
 
     void       mainLoopRun();
@@ -30,6 +31,7 @@ private:
     void    eventAction(ASocket *socket);
 
     std::map<int, ASocket *> _sockets;
+    std::map<std::pair<in_addr_t, in_port_t>, std::map<std::string, ServerConfig> > _config_by_address;
     ft::thread_pool          _thread_pool;
 };
 

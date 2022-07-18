@@ -1,21 +1,14 @@
 #include "config/ConfigParser.hpp"
 #include "utils/log.hpp"
-#include "ASocket.hpp"
-#include "SocketListen.hpp"
 #include "Server.hpp"
 
-#include <netinet/in.h>
 #include <cstdlib>
 #include <iostream>
 #include <vector>
-#include <map>
-#include <csignal>
-#include <unistd.h>
 #include <cerrno>
 #include <cstring>
-
-const in_port_t	ListenPort = 9999;
-const int		ConnectionsLimit = 4;
+#include <csignal>
+#include <unistd.h>
 
 //void signal_handler(int _)
 //{
@@ -25,11 +18,15 @@ const int		ConnectionsLimit = 4;
 
 int main(int, char* argv[])
 {
+//    signal(SIGUSR1, signal_handler);
+    logger::setLevel(logger::Level::kDebug);
+
+    std::vector<ServerConfig> server_configs;
     try
     {
         ConfigParser config(argv[1]);
         config.parse();
-        config.getServers();
+        server_configs = config.getServers();
         std::clog << config;
     }
     catch (const std::logic_error &e)
@@ -41,24 +38,13 @@ int main(int, char* argv[])
         logger::error << logger::cerror << logger::end;
     }
 
-
-	ASocket						*socket_listen;
-	std::map<int, ASocket *>	sockets_array;
-
-//    signal(SIGUSR1, signal_handler);
-	logger::setLevel(logger::Level::kDebug);
-
-	try
+    try
     {
-		socket_listen = new SocketListen(ListenPort, ConnectionsLimit);
-	}
-	catch (std::exception &e){
-        logger::error << __FUNCTION__ << ": " << strerror(errno) << logger::end;
-		return EXIT_FAILURE;
-	}
-
-	sockets_array[socket_listen->fd] = socket_listen;
-
-    Server server(sockets_array);
-    server.mainLoopRun();
+        Server server(server_configs);
+        server.mainLoopRun();
+    }
+    catch (std::exception &e){
+        logger::error << "main: catched unhandled exception: " << strerror(errno) << logger::end;
+        return EXIT_FAILURE;
+    }
 }

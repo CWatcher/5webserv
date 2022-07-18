@@ -54,8 +54,8 @@ void    ConfigParser::parse()
 
 void    ConfigParser::parseServer()
 {
-    std::string str;
-    ServerConfig      server;
+    std::string  str;
+    ServerConfig server;
 
     f_.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
     try
