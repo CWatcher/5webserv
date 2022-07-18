@@ -28,7 +28,8 @@ ConfigParser::ConfigParser(const char *filename) : block_("server")
         filename = "config";
     f_.open(filename);
     if (f_.fail())
-        throw std::logic_error(std::string("Unable to open file '") + filename + "'");
+        throw std::logic_error(std::string("unable to open file '") + filename + "'");
+    logger::info << "configuration file '" << filename << "' opened" << logger::end;
     f_.exceptions(std::ifstream::badbit);
 }
 
@@ -277,7 +278,7 @@ void    ConfigParser::parseServerName(BaseConfig& parent)
     server.server_name.insert(server.server_name.end(), server_names.begin(), server_names.end());
 }
 
-std::vector<std::string>    ConfigParser::getValues(const std::string& directive, char delim)
+std::vector<std::string>    ConfigParser::getValues(const char* directive, char delim)
 {
     std::string                 str;
     std::getline(f_ >> std::ws, str, delim);
@@ -289,7 +290,7 @@ std::vector<std::string>    ConfigParser::getValues(const std::string& directive
     return values;
 }
 
-std::string ConfigParser::getValue(const std::string& directive, char delim)
+std::string ConfigParser::getValue(const char* directive, char delim)
 {
     std::string         str;
     std::getline(f_ >> std::ws, str, delim);
@@ -304,7 +305,7 @@ std::string ConfigParser::getValue(const std::string& directive, char delim)
     return str;
 }
 
-unsigned    ConfigParser::strToUInt(const std::string& str, const std::string& directive)
+unsigned    ConfigParser::strToUInt(const std::string& str, const char* directive)
 {
     unsigned            number;
     std::stringstream   ss(str);
