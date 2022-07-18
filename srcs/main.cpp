@@ -31,11 +31,13 @@ int main(int, char* argv[])
     }
     catch (const std::logic_error &e)
     {
-        logger::error << e.what() << logger::end;
+        logger::error << "ConfigParser: " << e.what() << logger::end;
+        return EXIT_FAILURE;
     }
     catch (const std::exception &e)
     {
-        logger::error << logger::cerror << logger::end;
+        logger::error << "ConfigParser: " << logger::cerror << logger::end;
+        return EXIT_FAILURE;
     }
 
     try
