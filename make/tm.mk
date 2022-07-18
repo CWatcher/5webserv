@@ -48,19 +48,19 @@ pretty_fail     = $(color_RED)✕$(color_RESET)
 pretty_clean    = $(color_YELLOW)♻$(color_RESET)
 pretty_file     = $(color_CYAN)%s$(color_RESET)
 
-define __print =
+define __print = 
 @printf "[$(1)][$(pretty_file)] %s\n"  $(2) $(3)
 endef
 
-define __in_work =
+define __in_work = 
 $(call __print,$(pretty_work),$(1),$(2))
 endef
 
-define __done =
+define __done = 
 $(call __print,$(pretty_done),$(1),$(2))
 endef
 
-define __clean =
+define __clean = 
 $(call __print,$(pretty_clean),$(1),$(2))
 endef
 
@@ -234,7 +234,7 @@ $$($(1)_SHLIB): $$($(1)_OBJS) $$($(1)_LD_DEP)
 $(1)/shlib: $$($(1)_SHLIB)
 endef
 
-define __add/header_dep =
+define __add/header_dep = 
 -include $$(__ALL_DFILES)
 endef
 

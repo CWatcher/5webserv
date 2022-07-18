@@ -3,23 +3,46 @@
 #include <sys/time.h>
 #include <cerrno>
 #include <cstring>
+#include <pthread.h>
 
 #include "log.hpp"
 
 namespace logger
 {
 
-class DevNull : public std::ostream
+LogStream<logger::Level::kInfo>     info;
+LogStream<logger::Level::kDebug>    debug;
+LogStream<logger::Level::kWarning>  warning;
+LogStream<logger::Level::kError>    error;
+
+DevnullStream                       dev_null;
+std::ostream*                       ostream = &std::clog;
+logger::Level                       level = logger::Level::kDebug;
+
+Errno  cerror;
+EndLog end;
+
+namespace {
+pthread_mutex_t logger_lock = PTHREAD_MUTEX_INITIALIZER;
+bool            is_locked;
+}
+
+Level   getLevel()
 {
-    template<typename T>
-    basic_ostream& operator<<(T value) { (void)value; return *this; }
-};
+    return level;
+}
 
-static logger::Level  level   = logger::Level::kDebug;
-static std::ostream*  ostream = &std::cerr;
-static DevNull        dev_null;
+std::ostream&   baseStream()
+{
+    return *ostream;
+}
 
-void    setLevel(logger::Level level)
+std::ostream&   devnullStream()
+{
+    return dev_null;
+}
+
+void    setLevel(logger::Level::_ level)
 {
     logger::level = level;
 }
@@ -49,6 +72,8 @@ void    setOut(std::string const& ostream_name)
         logger::setOut(std::cout);
     else if (ostream_name == "cerr")
         logger::setOut(std::cerr);
+    else if (ostream_name == "clog")
+        logger::setOut(std::clog);
     else
     {
         static std::ofstream fout;
@@ -59,10 +84,12 @@ void    setOut(std::string const& ostream_name)
     }
 }
 
-char*   _time()
+namespace {
+
+std::string   timestamp()
 {
-    struct timeval  time_now;
-    static char     time_str[16];
+    timeval         time_now;
+    char            time_str[16];
     char            msec[3];
 
     gettimeofday(&time_now, NULL);
@@ -89,19 +116,26 @@ const char* lvlToStr[4] = {
     COLOR_RED    "ERROR!"  COLOR_RESET
 };
 
-std::ostream&    put(logger::Level level)
-{
-    if (logger::level > level)
-        return dev_null;
-    
-    (*logger::ostream) << '\n' << logger::_time()
-        << " - " << logger::lvlToStr[level] << " - ";
-    return *logger::ostream;
 }
 
-std::ostream& puterrno(Level level)
+void printLoggerInfo(logger::Level lvl)
 {
-    return put(level) << strerror(errno);
+    baseStream() << '[' << logger::timestamp() << ']'
+        << " - " << lvlToStr[lvl] << " - ";
 }
+
+void lockOut()   { pthread_mutex_lock(&logger_lock); is_locked = true; }
+void unlockOut() { is_locked = false;  pthread_mutex_unlock(&logger_lock); }
+
+std::ostream& operator<<(std::ostream& o, EndLog& endlog)
+{
+    (void)endlog;
+    o << '\n';
+    if (logger::is_locked == true)
+        unlockOut();
+    return o;
+}
+
+std::ostream& operator<<(std::ostream& o, Errno&) { return o << strerror(errno); }
 
 }
