@@ -6,7 +6,7 @@
 
 namespace handlers
 {
-    extern IHandler *runner;
+    extern IHandler *start_handler;
 
     void *run(void *data);
 }

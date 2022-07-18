@@ -1,7 +1,7 @@
 #ifndef CONFIG_PARSER_HPP
 # define CONFIG_PARSER_HPP
 
-# include "Server.hpp"
+# include "ServerConfig.hpp"
 
 # include <fstream>
 
@@ -18,7 +18,7 @@ class ConfigParser
 public:
     ConfigParser(const char *filename);
     void                                                parse();
-    const std::vector<Server>&                          getServers() const {return servers_;};
+    const std::vector<ServerConfig>&                          getServers() const {return servers_;};
     const std::map<in_addr_t, std::set<in_port_t> >&    getListened() const {return listened_;};
 private:
     void                        parseServer();
@@ -39,13 +39,13 @@ private:
     std::string                 getValue(char delim, const std::string& directive);
     unsigned                    strToUInt(const std::string& str, const std::string& directive);
 
-    static void                 completeServer(Server& server);
+    static void                 completeServer(ServerConfig& server);
     static void                 completeLocation(const BaseConfig& parent, BaseConfig& location);
 private:
     std::ifstream                               f_;
     std::string                                 block_;
 
-    std::vector<Server>                         servers_;
+    std::vector<ServerConfig>                         servers_;
     std::map<in_addr_t, std::set<in_port_t> >   listened_;
 
     typedef void (ConfigParser::*parser)(BaseConfig&);

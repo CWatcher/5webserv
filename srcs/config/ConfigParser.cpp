@@ -55,7 +55,7 @@ void    ConfigParser::parse()
 void    ConfigParser::parseServer()
 {
     std::string str;
-    Server      server;
+    ServerConfig      server;
 
     f_.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
     try
@@ -79,7 +79,7 @@ void    ConfigParser::parseServer()
             listened_[it->first].insert(*port);
 }
 
-void    ConfigParser::completeServer(Server& server)
+void    ConfigParser::completeServer(ServerConfig& server)
 {
     if (server.root.empty())
         server.root = ROOT_DFL;
@@ -100,7 +100,7 @@ void    ConfigParser::completeServer(Server& server)
         in_port_t   port = htons(PORT_DFL);
         server.listen[host].insert(port);
     }
-    for (std::map<std::string, Location>::iterator it = server.location.begin(); it != server.location.end(); ++it)
+    for (std::map<std::string, LocationConfig>::iterator it = server.location.begin(); it != server.location.end(); ++it)
         completeLocation(server, it->second);
 }
 
@@ -119,7 +119,7 @@ void    ConfigParser::completeLocation(const BaseConfig& parent, BaseConfig& loc
     for (std::map<unsigned, std::string>::const_iterator it = parent.error_page.begin(); it != parent.error_page.end(); ++it)
         if (location.error_page.find(it->first) == location.error_page.end())
             location.error_page[it->first] = it->second;
-    for (std::map<std::string, Location>::iterator it = location.location.begin(); it != location.location.end(); ++it)
+    for (std::map<std::string, LocationConfig>::iterator it = location.location.begin(); it != location.location.end(); ++it)
         completeLocation(location, it->second);
 }
 
@@ -148,7 +148,7 @@ void    ConfigParser::parseBlock(BaseConfig& block)
 void    ConfigParser::parseLocation(BaseConfig& parent)
 {
     std::string block_save = block_;
-    Location    location;
+    LocationConfig    location;
 
     location.path = getValue('{', "location");
     block_ = "location";
@@ -249,7 +249,7 @@ void    ConfigParser::parseListen(BaseConfig& parent)
     if (block_ != "server")
         throw std::logic_error(block_ + ": unexpected 'listen'");
 
-    Server&                     server = static_cast<Server&>(parent);
+    ServerConfig&                     server = static_cast<ServerConfig&>(parent);
     std::vector<std::string>    values = getValues(';', "listen");
     std::string                 host = HOST_DFL, port = values.back();
 
@@ -270,7 +270,7 @@ void    ConfigParser::parseServerName(BaseConfig& parent)
     if (block_ != "server")
         throw std::logic_error(block_ + ": unexpected 'server_name'");
 
-    Server&                     server = static_cast<Server&>(parent);
+    ServerConfig&                     server = static_cast<ServerConfig&>(parent);
     std::vector<std::string>    server_names = getValues(';', "server_name");
 
     server.server_name.insert(server.server_name.end(), server_names.begin(), server_names.end());

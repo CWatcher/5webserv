@@ -21,7 +21,7 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp					\
 							srcs/HTTPMessage.cpp			\
 																\
 							srcs/config/ConfigParser.cpp		\
-							srcs/config/Server.cpp				\
+							srcs/config/ServerConfig.cpp		\
 																\
 							srcs/handlers/runner/runner.cpp		\
 							srcs/handlers/base/Handler.cpp		\

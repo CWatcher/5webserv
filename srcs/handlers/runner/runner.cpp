@@ -20,14 +20,15 @@ namespace handlers
     FileReader      file_reader(&cgi_reader);
     HeaderValidator header_validator(&file_reader);
     HeaderParser    header_parser(&header_validator);
-    IHandler        *runner = &header_parser;
+    IHandler        *start_handler = &header_parser;
     // FIRST HANDLER
     
     void *run(void *task_void)
     {
         SocketSession *task = reinterpret_cast<SocketSession *>(task_void);
 
-        runner->handle(task->input, task->output);
+        start_handler->handle(task->input, task->output);
+
         task->prepareForWrite();
         logger::debug << "handlers: run: task completed" << logger::end;
         return NULL;
