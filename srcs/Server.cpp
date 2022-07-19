@@ -7,6 +7,7 @@
 #include "handlers/runner/runner.hpp"
 #include "utils/syntax.hpp"
 
+#include <algorithm>
 #include <cerrno>
 #include <cstring>
 
@@ -30,16 +31,16 @@ Server::Server(const std::vector<ServerConfig> &configs)
 
                 if (server->server_name.empty())
                 {
-                    _config_by_address[address_pair][""] = *server;
+                    _config_by_address[address_pair].push_back(std::make_pair("", *server));
                     continue;
                 }
                 cforeach(std::vector<std::string>, server->server_name, name)
-                    _config_by_address[address_pair][*name] = *server;
+                    _config_by_address[address_pair].push_back(std::make_pair(*name, *server));
             }
         }
     }
 
-    for(std::map<std::pair<in_addr_t, in_port_t>, std::map<std::string, ServerConfig> >::const_iterator it = _config_by_address.begin();
+    for(std::map<std::pair<in_addr_t, in_port_t>, std::vector<std::pair<std::string, ServerConfig> > >::const_iterator it = _config_by_address.begin();
         it != _config_by_address.end(); ++it)
     {
         ASocket  *socket_listen;
@@ -183,34 +184,26 @@ void Server::eventAction(ASocket *socket)
 
 void Server::addProcessTask(ASocket *socket)
 {
-    const std::string default_server_name;
     SocketSession     *session  = reinterpret_cast<SocketSession *>(socket);
-    std::map<std::string, ServerConfig>::iterator config;
-    std::map<std::string, ServerConfig>::iterator not_found = _config_by_address[session->from_listen_address].end();
-
     const std::string *host_name = session->input.getHeaderValue("Host");
-    if (host_name == NULL)
-        host_name = &default_server_name;
+    std::string       server_name;
 
-    std::string server_name = host_name->substr(0, host_name->find(':'));
-    config = _config_by_address[session->from_listen_address].find(server_name);
-    if (config == not_found)
+    if (host_name != NULL)
+        server_name = host_name->substr(0, host_name->find(':'));
+
+    ServerConfig *config = NULL;
+    for (std::vector<std::pair<std::string, ServerConfig> >::iterator config_it = _config_by_address[session->from_listen_address].begin();
+         config_it != _config_by_address[session->from_listen_address].end(); ++config_it)
     {
-        config = _config_by_address[session->from_listen_address].find(default_server_name);
-        if (config == not_found)
+        if (config_it->first == server_name)
         {
-            logger::warning << "Server: addProcessTask: can't find config with server_name == '" << server_name << "' "
-                            << "and there is no 'default' server_name config for address with port "
-                            << ntohs(session->from_listen_address.second) << logger::end;
-            session->output.raw_data = "HTTP/1.1 404\n"
-                                       "Content-Length: 13\n"
-                                       "\n"
-                                       "404 Not Found";  // TODO: is it correct error?
-            session->prepareForWrite();
-            return;
+            config = &config_it->second;
+            break;
         }
     }
+    if (config == NULL)
+        config = &_config_by_address[session->from_listen_address][0].second;
 
-    _thread_pool.push_task(handlers::run, new HandlerTask(config->second, session));
+    _thread_pool.push_task(handlers::run, new HandlerTask(*config, session));
     logger::info << "Server: addProcessTask: sent to Task queue, socket " << socket->fd << logger::end;
 }

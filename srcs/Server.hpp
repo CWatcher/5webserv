@@ -32,7 +32,7 @@ private:
     void    addProcessTask(ASocket *socket);
 
     std::map<int, ASocket *> _sockets;
-    std::map<std::pair<in_addr_t, in_port_t>, std::map<std::string, ServerConfig> > _config_by_address;
+    std::map<std::pair<in_addr_t, in_port_t>, std::vector<std::pair<std::string, ServerConfig> > > _config_by_address;
     ft::thread_pool          _thread_pool;
 };
 
