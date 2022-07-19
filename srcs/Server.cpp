@@ -3,6 +3,7 @@
 #include "Server.hpp"
 #include "SocketSession.hpp"
 #include "handlers/runner/runner.hpp"
+#include "utils/syntax.hpp"
 #include "SocketListen.hpp"
 
 #include <cerrno>
@@ -10,21 +11,19 @@
 
 int Server::poll_timeout = 30 * 1000;
 
-Server::Server(std::vector<ServerConfig> configs)
+Server::Server(const std::vector<ServerConfig> &configs)
 {
-    for (std::vector<ServerConfig>::const_iterator server = configs.begin();
-         server != configs.end(); ++server)
+    cforeach(std::vector<ServerConfig>, configs, server)
     {
         std::map<in_addr_t, std::set<in_port_t> > listens_to = server->listen;
 
-        for (std::map<in_addr_t, std::set<in_port_t> >::const_iterator listen = listens_to.begin();
-             listen != listens_to.end(); ++listen)
+        for(std::map<in_addr_t, std::set<in_port_t> >::const_iterator listen = listens_to.begin();
+            listen != listens_to.end(); listen++)
         {
             in_addr_t           ip = listen->first;
             std::set<in_port_t> ports = listen->second;
 
-            for (std::set<in_port_t>::const_iterator port = ports.begin();
-                 port != ports.end(); ++port)
+            cforeach(std::set<in_port_t>, ports, port)
             {
                 std::pair<in_addr_t, in_port_t> address_pair = std::make_pair(ip, *port);
 
@@ -33,8 +32,7 @@ Server::Server(std::vector<ServerConfig> configs)
                     _config_by_address[address_pair][""] = *server;
                     continue;
                 }
-                for (std::vector<std::string>::const_iterator name = server->server_name.begin();
-                     name != server->server_name.end(); ++name)
+                cforeach(std::vector<std::string>, server->server_name, name)
                     _config_by_address[address_pair][*name] = *server;
             }
         }

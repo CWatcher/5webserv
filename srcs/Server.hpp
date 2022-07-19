@@ -14,7 +14,7 @@
 class Server
 {
 public:
-    explicit Server(std::vector<ServerConfig> configs);
+    explicit Server(const std::vector<ServerConfig> &configs);
     ~Server();
 
     void       mainLoopRun();
