@@ -1,4 +1,5 @@
 
+#include "handlers/base/HandlerTask.hpp"
 #include "handlers/HeaderParser.hpp"
 #include "handlers/HeaderValidator.hpp"
 #include "handlers/FileReader.hpp"
@@ -25,15 +26,18 @@ namespace handlers
     
     void *run(void *task_void)
     {
-        SocketSession *task = reinterpret_cast<SocketSession *>(task_void);
+        HandlerTask *task = reinterpret_cast<HandlerTask *>(task_void);
 
-        start_handler->handle(task->input, task->output);
+        start_handler->handle(task->session->input, task->session->output);
 
         // need to pass server config
-        logger::debug << "I know you came from port:" << ntohs(task->from_listen_address.second) << logger::end;
+        logger::debug << "I know you came from port:" << ntohs(task->session->from_listen_address.second) << logger::end;
+        logger::debug << "Your server config:\n" << task->config << logger::end;
 
-        task->prepareForWrite();
+        task->session->prepareForWrite();
         logger::debug << "handlers: run: task completed" << logger::end;
+
+        delete task;
         return NULL;
     }
 }

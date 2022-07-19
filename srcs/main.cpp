@@ -46,7 +46,7 @@ int main(int, char* argv[])
         server.mainLoopRun();
     }
     catch (std::exception &e){
-        logger::error << "main: catched unhandled exception: " << strerror(errno) << logger::end;
+        logger::error << "main: caught unhandled exception: " << strerror(errno) << logger::end;
         return EXIT_FAILURE;
     }
 }

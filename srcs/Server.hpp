@@ -29,6 +29,7 @@ private:
     size_t  eventArrayPrepare(std::vector<pollfd> &poll_array);
     bool    eventCheck(const pollfd *poll_fd);
     void    eventAction(ASocket *socket);
+    void    addProcessTask(ASocket *socket);
 
     std::map<int, ASocket *> _sockets;
     std::map<std::pair<in_addr_t, in_port_t>, std::map<std::string, ServerConfig> > _config_by_address;

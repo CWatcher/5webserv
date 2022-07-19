@@ -36,7 +36,7 @@ SocketListen::SocketListen(in_addr_t ip, in_port_t port, int connections_limit)
 	if (listen(fd, connections_limit))
 		throw std::exception();
 
-    logger::debug << "Enabled listen on: " << addr_str << ':' << ntohs(port) << logger::end;
+    logger::info << "Enabled listen on: " << addr_str << ':' << ntohs(port) << logger::end;
 }
 
 int	SocketListen::action(enum PostAction &post_action)

@@ -1,10 +1,11 @@
 
-#include "HTTPMessage.hpp"
 #include "Server.hpp"
+#include "SocketListen.hpp"
 #include "SocketSession.hpp"
+#include "HTTPMessage.hpp"
+#include "handlers/base/HandlerTask.hpp"
 #include "handlers/runner/runner.hpp"
 #include "utils/syntax.hpp"
-#include "SocketListen.hpp"
 
 #include <cerrno>
 #include <cstring>
@@ -167,8 +168,7 @@ void Server::eventAction(ASocket *socket)
             break ;
 
         case ASocket::Process:
-            _thread_pool.push_task(handlers::run, socket);
-            logger::info << "Server: eventAction: sent to Task queue, socket " << socket->fd << logger::end;
+            addProcessTask(socket);
             break ;
 
         case ASocket::Disconnect:
@@ -179,4 +179,38 @@ void Server::eventAction(ASocket *socket)
         default:
             break ;
     }
+}
+
+void Server::addProcessTask(ASocket *socket)
+{
+    const std::string default_server_name;
+    SocketSession     *session  = reinterpret_cast<SocketSession *>(socket);
+    std::map<std::string, ServerConfig>::iterator config;
+    std::map<std::string, ServerConfig>::iterator not_found = _config_by_address[session->from_listen_address].end();
+
+    const std::string *host_name = session->input.getHeaderValue("Host");
+    if (host_name == NULL)
+        host_name = &default_server_name;
+
+    std::string server_name = host_name->substr(0, host_name->find(':'));
+    config = _config_by_address[session->from_listen_address].find(server_name);
+    if (config == not_found)
+    {
+        config = _config_by_address[session->from_listen_address].find(default_server_name);
+        if (config == not_found)
+        {
+            logger::warning << "Server: addProcessTask: can't find config with server_name == '" << server_name << "' "
+                            << "and there is no 'default' server_name config for address with port "
+                            << ntohs(session->from_listen_address.second) << logger::end;
+            session->output.raw_data = "HTTP/1.1 404\n"
+                                       "Content-Length: 13\n"
+                                       "\n"
+                                       "404 Not Found";  // TODO: is it correct error?
+            session->prepareForWrite();
+            return;
+        }
+    }
+
+    _thread_pool.push_task(handlers::run, new HandlerTask(config->second, session));
+    logger::info << "Server: addProcessTask: sent to Task queue, socket " << socket->fd << logger::end;
 }

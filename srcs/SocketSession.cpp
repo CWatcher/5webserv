@@ -71,20 +71,31 @@ int	    SocketSession::actionWrite(enum PostAction &post_action)
     const size_t	left_to_write = output.raw_data.size() - _written_total;
     ssize_t			bytes_written;
 
-    logger::debug << "Trying to write to socket " << fd << logger::end;
+    if (left_to_write == 0)
+    {
+        const char *error = "HTTP/1.1 500\nContent-Length: 25\n\n500 Internal Server Error";
+
+        logger::warning << "actionWrite: Empty data to write to socket " << fd << logger::end;
+        send(fd, error, strlen(error), MSG_NOSIGNAL | MSG_DONTWAIT);
+        prepareForRead();
+        post_action = NoAction;
+        return 0;
+    }
+
+    logger::debug << "actionWrite: Trying to write to socket " << fd << logger::end;
     bytes_written = send(fd, start, left_to_write, MSG_NOSIGNAL | MSG_DONTWAIT);
-    logger::debug << "Written to socket (bytes): " << bytes_written << logger::end;
+    logger::debug << "actionWrite: Written to socket (bytes): " << bytes_written << logger::end;
 
     if (bytes_written > 0)
     {
         _written_total += bytes_written;
         if (_written_total == output.raw_data.size())
         {
-            logger::info << "HTTP response sent. Switching to read socket " << fd << logger::end;
+            logger::info << "actionWrite: HTTP response sent. Switching to read socket " << fd << logger::end;
             prepareForRead();
         }
         else
-            logger::debug << "Left to write (bytes): " << left_to_write - bytes_written << logger::end;
+            logger::debug << "actionWrite: Left to write (bytes): " << left_to_write - bytes_written << logger::end;
     }
     post_action = NoAction;
     return static_cast<int>(bytes_written);

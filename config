@@ -10,7 +10,7 @@ server {}
 	 listen 127.0.0.1 345;listen 365
 	  ;
 
-server_name name1 name2 name3;
+server_name name1 name2 localhost;
 
 	index aaa bbb ccc;
 	methods GET;
