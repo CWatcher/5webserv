@@ -30,9 +30,9 @@ namespace handlers
         logger::info << task->session->input.starting_line << logger::end;
 
         // TODO: need to find and pass proper location or server config
-        start_handler->handle(task->session->input, task->session->output);
+        start_handler->handle(task->config, task->session->input, task->session->output);
 
-        logger::debug << "I know you came from port:" << ntohs(task->session->from_listen_port) << logger::end;
+        logger::debug << "I know you came from port: " << ntohs(task->session->from_listen_port) << logger::end;
         logger::debug << "Your server config:\n" << task->config << logger::end;
 
         task->session->prepareForWrite();

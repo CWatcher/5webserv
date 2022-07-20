@@ -2,14 +2,15 @@
 #ifndef IHANDLER_HPP
 # define IHANDLER_HPP
 
-#include "HTTPMessage.hpp"
+# include "HTTPMessage.hpp"
+# include "config/ServerConfig.hpp"
 
 class IHandler
 {
 public:
     virtual ~IHandler() {};
 
-    virtual void handle(HTTPMessage &input, HTTPMessage &output) = 0;
+    virtual void handle(const BaseConfig &config, const HTTPMessage &input, HTTPMessage &output) = 0;
 };
 
 

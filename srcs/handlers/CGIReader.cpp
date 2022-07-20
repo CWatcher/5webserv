@@ -4,10 +4,10 @@
 CGIReader::CGIReader(IHandler *next_handler)
     : Handler(next_handler) {}
 
-void CGIReader::handle(HTTPMessage &input, HTTPMessage &output)
+void CGIReader::handle(const BaseConfig &config, const HTTPMessage &input, HTTPMessage &output)
 {
     if (runScript(input, output))
-        Handler::handle(input, output);
+        Handler::handle(config, input, output);
 }
 
 bool CGIReader::runScript(const HTTPMessage &input, HTTPMessage &output) const

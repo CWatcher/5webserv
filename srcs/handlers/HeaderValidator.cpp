@@ -4,10 +4,10 @@
 HeaderValidator::HeaderValidator(IHandler *next_handler)
     : Handler(next_handler) {}
 
-void HeaderValidator::handle(HTTPMessage &input, HTTPMessage &output)
+void HeaderValidator::handle(const BaseConfig &config, const HTTPMessage &input, HTTPMessage &output)
 {
     if (checkHeader(input))
-        Handler::handle(input, output);
+        Handler::handle(config, input, output);
 }
 
 bool HeaderValidator::checkHeader(const HTTPMessage &input) const

@@ -39,13 +39,18 @@ int main(int, char* argv[])
 
     std::clog << config;
 
-    try
+    while (true)
     {
-        Server server(config);
-        server.mainLoopRun();
-    }
-    catch (std::exception &e){
-        logger::error << "main: caught unhandled exception: " << strerror(errno) << logger::end;
-        return EXIT_FAILURE;
+        try
+        {
+            Server server(config);
+            server.mainLoopRun();
+        }
+        catch (std::exception &e)
+        {
+            logger::error << "main: unhandled exception: " << e.what() << "errno: " << logger::cerror << logger::end;
+            // TODO: clean all allocated by server (implement in destructors!)
+            sleep(5);
+        }
     }
 }

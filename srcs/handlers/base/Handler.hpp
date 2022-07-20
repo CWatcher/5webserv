@@ -10,7 +10,7 @@ class Handler : public IHandler
 public:
     virtual	~Handler();
 
-    virtual void handle(HTTPMessage &input, HTTPMessage &output);
+    virtual void handle(const BaseConfig &config, const HTTPMessage &input, HTTPMessage &output);
 
 protected:
     Handler(IHandler *next_handler);
