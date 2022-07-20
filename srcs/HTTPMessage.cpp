@@ -31,7 +31,7 @@ void		HTTPMessage::operator+=(const std::string &rhs)
 	raw_data += rhs;
 
 	if (header.empty())
-		getHeader();
+        parseHeader();
 
 	if (!header.empty())
 		_body_size = raw_data.size() - _header_size;
@@ -80,7 +80,7 @@ std::string	*HTTPMessage::getHeaderValue(const std::string &header_key)
 		return NULL;
 }
 
-void	HTTPMessage::getHeader()
+void	HTTPMessage::parseHeader()
 {
 	const size_t	header_end = raw_data.find("\r\n\r\n");
 
@@ -88,16 +88,23 @@ void	HTTPMessage::getHeader()
 	{
 		_header_size = header_end + 4;
 		header = getHeaderMapFromRaw();
-        starting_line = getStartingLine();
+        parseStartingLine();
         logger::debug << __FUNCTION__ << ": " << "HTTP request header found" << logger::end;
 	}
 	else
         logger::debug << __FUNCTION__ << ": " << "HTTP request header not found yet" << logger::end;
 }
 
-std::string HTTPMessage::getStartingLine()
+void HTTPMessage::parseStartingLine()
 {
-    return raw_data.substr(0, raw_data.find('\n'));
+    starting_line = raw_data.substr(0, raw_data.find('\n'));
+    size_t delimiter_index = starting_line.find(' ');
+    method = starting_line.substr(0, delimiter_index);
+    if (delimiter_index != std::string::npos)
+    {
+        ++delimiter_index;
+        url = starting_line.substr(delimiter_index, starting_line.find(' ', delimiter_index) - delimiter_index);
+    }
 }
 
 std::map<std::string, std::string>	HTTPMessage::getHeaderMapFromRaw()

@@ -22,14 +22,16 @@ public:
     std::string							getHeaderHostName();
 
 private:
-	void								getHeader();
-    std::string                         getStartingLine();
+	void								parseHeader();
+    void                                parseStartingLine();
 	std::map<std::string, std::string>	getHeaderMapFromRaw();
 	std::pair<std::string, std::string>	getHeaderPairFromLine(const std::string &line);
 
 public:
 	std::string							raw_data;
     std::string                         starting_line;
+    std::string                         method;
+    std::string                         url;
 	std::map<std::string, std::string>	header;
 
 private:
