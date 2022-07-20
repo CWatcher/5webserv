@@ -88,10 +88,16 @@ void	HTTPMessage::getHeader()
 	{
 		_header_size = header_end + 4;
 		header = getHeaderMapFromRaw();
+        starting_line = getStartingLine();
         logger::debug << __FUNCTION__ << ": " << "HTTP request header found" << logger::end;
 	}
 	else
         logger::debug << __FUNCTION__ << ": " << "HTTP request header not found yet" << logger::end;
+}
+
+std::string HTTPMessage::getStartingLine()
+{
+    return raw_data.substr(0, raw_data.find('\n'));
 }
 
 std::map<std::string, std::string>	HTTPMessage::getHeaderMapFromRaw()
@@ -137,4 +143,14 @@ std::pair<std::string, std::string>	HTTPMessage::getHeaderPairFromLine(const std
 	strTrim(value);
 
 	return std::make_pair(key, value);
+}
+
+std::string HTTPMessage::getHeaderHostName()
+{
+    std::string *host = getHeaderValue("Host");
+
+    if (host == NULL)
+        return std::string();
+
+    return host->substr(0, host->find(':'));
 }

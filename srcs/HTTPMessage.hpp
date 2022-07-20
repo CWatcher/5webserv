@@ -19,14 +19,17 @@ public:
 
 	bool								hasEndOfMessage();
 	std::string							*getHeaderValue(const std::string &header_key);
+    std::string							getHeaderHostName();
 
 private:
 	void								getHeader();
+    std::string                         getStartingLine();
 	std::map<std::string, std::string>	getHeaderMapFromRaw();
 	std::pair<std::string, std::string>	getHeaderPairFromLine(const std::string &line);
 
 public:
 	std::string							raw_data;
+    std::string                         starting_line;
 	std::map<std::string, std::string>	header;
 
 private:

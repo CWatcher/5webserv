@@ -4,10 +4,10 @@
 #include <iostream>
 #include <arpa/inet.h>
 
-static std::ostream&    operator<<(std::ostream& o, const LocationConfig& l)
+static std::ostream&    operator<<(std::ostream& o, const Location& l)
 {
     o << l.path << '{';
-    for (std::map<std::string, LocationConfig>::const_iterator it = l.location.begin(); it != l.location.end(); ++it)
+    for (std::map<std::string, Location>::const_iterator it = l.location.begin(); it != l.location.end(); ++it)
         o << it->second ;
     o << '}';
     return o;
@@ -31,7 +31,7 @@ static std::ostream&    operator<<(std::ostream& o, const BaseConfig& c)
     if (!c.redirect.second.empty())
         o << c.redirect.first << ' ' << c.redirect.second;
     o << std::endl << "location: ";
-    for (std::map<std::string, LocationConfig>::const_iterator it = c.location.begin(); it != c.location.end(); ++it)
+    for (std::map<std::string, Location>::const_iterator it = c.location.begin(); it != c.location.end(); ++it)
     {
         o << it->second << ' ';
         // o << std::endl << static_cast<const BaseConfig>(it->second);

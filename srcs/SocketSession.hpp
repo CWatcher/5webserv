@@ -22,7 +22,8 @@ private:
 	int         actionWrite(enum PostAction &post_action);
 
 public:
-    std::pair<in_addr_t, in_port_t> from_listen_address;
+    in_addr_t from_listen_ip;
+    in_port_t from_listen_port;
 
     HTTPMessage	input;
     HTTPMessage	output;

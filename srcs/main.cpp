@@ -1,4 +1,4 @@
-#include "config/ConfigParser.hpp"
+#include "config/Config.hpp"
 #include "utils/log.hpp"
 #include "Server.hpp"
 
@@ -21,13 +21,10 @@ int main(int, char* argv[])
 //    signal(SIGUSR1, signal_handler);
     logger::setLevel(logger::Level::kDebug);
 
-    std::vector<ServerConfig> server_configs;
+    Config config(argv[1]);
     try
     {
-        ConfigParser config(argv[1]);
-        config.parse();
-        server_configs = config.getServers();
-        std::clog << config;
+//        Config config(argv[1]);
     }
     catch (const std::logic_error &e)
     {
@@ -40,9 +37,11 @@ int main(int, char* argv[])
         return EXIT_FAILURE;
     }
 
+    std::clog << config;
+
     try
     {
-        Server server(server_configs);
+        Server server(config);
         server.mainLoopRun();
     }
     catch (std::exception &e){

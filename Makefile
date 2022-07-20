@@ -20,7 +20,7 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp					\
 							srcs/SocketSession.cpp			\
 							srcs/HTTPMessage.cpp			\
 																\
-							srcs/config/ConfigParser.cpp		\
+							srcs/config/Config.cpp				\
 							srcs/config/ServerConfig.cpp		\
 																\
 							srcs/handlers/runner/runner.cpp		\

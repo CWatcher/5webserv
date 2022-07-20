@@ -13,42 +13,18 @@
 
 int Server::poll_timeout = 30 * 1000;
 
-Server::Server(const std::vector<ServerConfig> &configs)
+Server::Server(Config &config)
+    : _config(config)
 {
-    cforeach(std::vector<ServerConfig>, configs, server)
+    for(std::map<in_addr_t, std::set<in_port_t> >::const_iterator it = config.getListened().begin();
+        it != config.getListened().end(); ++it)
     {
-        std::map<in_addr_t, std::set<in_port_t> > listens_to = server->listen;
-
-        for(std::map<in_addr_t, std::set<in_port_t> >::const_iterator listen = listens_to.begin();
-            listen != listens_to.end(); listen++)
+        in_addr_t ip   = it->first;
+        cforeach(std::set<in_port_t>, it->second, port)
         {
-            in_addr_t           ip = listen->first;
-            std::set<in_port_t> ports = listen->second;
-
-            cforeach(std::set<in_port_t>, ports, port)
-            {
-                std::pair<in_addr_t, in_port_t> address_pair = std::make_pair(ip, *port);
-
-                if (server->server_name.empty())
-                {
-                    _config_by_address[address_pair].push_back(std::make_pair("", *server));
-                    continue;
-                }
-                cforeach(std::vector<std::string>, server->server_name, name)
-                    _config_by_address[address_pair].push_back(std::make_pair(*name, *server));
-            }
+            ASocket  *socket_listen = new SocketListen(ip, *port);
+            _sockets[socket_listen->fd] = socket_listen;
         }
-    }
-
-    for(std::map<std::pair<in_addr_t, in_port_t>, std::vector<std::pair<std::string, ServerConfig> > >::const_iterator it = _config_by_address.begin();
-        it != _config_by_address.end(); ++it)
-    {
-        ASocket  *socket_listen;
-        in_addr_t ip   = it->first.first;
-        in_port_t port = it->first.second;
-
-        socket_listen = new SocketListen(ip, port);
-        _sockets[socket_listen->fd] = socket_listen;
     }
 }
 
@@ -184,26 +160,10 @@ void Server::eventAction(ASocket *socket)
 
 void Server::addProcessTask(ASocket *socket)
 {
-    SocketSession     *session  = reinterpret_cast<SocketSession *>(socket);
-    const std::string *host_name = session->input.getHeaderValue("Host");
-    std::string       server_name;
+    SocketSession      *session  = reinterpret_cast<SocketSession *>(socket);
+    const std::string  &server_name = session->input.getHeaderHostName();
+    const ServerConfig &config = _config.getServer(session->from_listen_ip, session->from_listen_port, server_name);
 
-    if (host_name != NULL)
-        server_name = host_name->substr(0, host_name->find(':'));
-
-    ServerConfig *config = NULL;
-    for (std::vector<std::pair<std::string, ServerConfig> >::iterator config_it = _config_by_address[session->from_listen_address].begin();
-         config_it != _config_by_address[session->from_listen_address].end(); ++config_it)
-    {
-        if (config_it->first == server_name)
-        {
-            config = &config_it->second;
-            break;
-        }
-    }
-    if (config == NULL)
-        config = &_config_by_address[session->from_listen_address][0].second;
-
-    _thread_pool.push_task(handlers::run, new HandlerTask(*config, session));
+    _thread_pool.push_task(handlers::run, new HandlerTask(config, session));
     logger::info << "Server: addProcessTask: sent to Task queue, socket " << socket->fd << logger::end;
 }

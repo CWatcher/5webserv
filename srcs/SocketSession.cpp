@@ -6,7 +6,8 @@
 
 SocketSession::SocketSession(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port)
 	: ASocket(fd, TriggerType::Read)
-    , from_listen_address(std::make_pair<in_addr_t, in_port_t>(from_listen_ip, from_listen_port))
+    , from_listen_ip(from_listen_ip)
+    , from_listen_port(from_listen_port)
     , _written_total(0) {}
 
 int     SocketSession::action(enum PostAction &post_action)
