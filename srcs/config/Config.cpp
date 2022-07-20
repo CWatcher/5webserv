@@ -1,42 +1,71 @@
-#include "ConfigParser.hpp"
+#include "Config.hpp"
 #include "utils/log.hpp"
 
 #include <stdexcept>
 #include <sstream>
 #include <iterator>
 #include <arpa/inet.h>
+#include <algorithm>
 
-const std::pair<std::string, ConfigParser::parser> ConfigParser::init_list_[] =
+const std::pair<std::string, Config::parser> Config::init_list_[] =
 {
-    std::make_pair("root", &ConfigParser::parseRoot),
-    std::make_pair("index", &ConfigParser::parseIndex),
-    std::make_pair("autoindex", &ConfigParser::parseAutoindex),
-    std::make_pair("error_page", &ConfigParser::parseErrorPage),
-    std::make_pair("body_size", &ConfigParser::parseBodySize),
-    std::make_pair("methods", &ConfigParser::parseMethods),
-    std::make_pair("return", &ConfigParser::parseReturn),
-    std::make_pair("location", &ConfigParser::parseLocation),
-    std::make_pair("listen", &ConfigParser::parseListen),
-    std::make_pair("server_name", &ConfigParser::parseServerName)
+    std::make_pair("root", &Config::parseRoot),
+    std::make_pair("index", &Config::parseIndex),
+    std::make_pair("autoindex", &Config::parseAutoindex),
+    std::make_pair("error_page", &Config::parseErrorPage),
+    std::make_pair("body_size", &Config::parseBodySize),
+    std::make_pair("methods", &Config::parseMethods),
+    std::make_pair("return", &Config::parseReturn),
+    std::make_pair("location", &Config::parseLocation),
+    std::make_pair("listen", &Config::parseListen),
+    std::make_pair("server_name", &Config::parseServerName)
 };
 
-const std::map<std::string, ConfigParser::parser> ConfigParser::parsers_(init_list_, init_list_ + sizeof(init_list_) / sizeof(init_list_[0]));
+const std::map<std::string, Config::parser> Config::parsers_(init_list_, init_list_ + sizeof(init_list_) / sizeof(init_list_[0]));
 
-ConfigParser::ConfigParser(const char *filename) : block_("server")
+Config::Config(const char *filename) : block_("server")
 {
     if (filename == NULL)
         filename = "config";
     f_.open(filename);
     if (f_.fail())
-        throw std::logic_error(std::string("unable to open file '") + filename + "'");
+        throw std::runtime_error(std::string("unable to open file '") + filename + "'");
     logger::info << "configuration file '" << filename << "' opened" << logger::end;
-    f_.exceptions(std::ifstream::badbit);
+    try{
+        loadConfig();
+    }
+    catch (const std::exception& e)
+    {
+        f_.close();
+        throw;
+    }
+    f_.close();
+    logger::info << "configuration file '" << filename << "' loaded" << logger::end;
 }
 
-void    ConfigParser::parse()
+const ServerConfig& Config::getServer(in_addr_t host, in_port_t port, const std::string& name)
+{
+    std::vector<ServerConfig>::const_iterator server = servers_.end();
+
+    for(std::vector<ServerConfig>::const_iterator it = servers_.begin(); it != servers_.end(); it++)
+    {
+        std::map<in_addr_t, std::set<in_port_t> >::const_iterator ports = it->listen.find(host);
+        if (ports != it->listen.end() && ports->second.find(port) != ports->second.end())
+        {
+            if (std::find(it->server_name.begin(), it->server_name.end(), name) != it->server_name.end())
+                return *it;
+            if (server == servers_.end())
+                server = it;
+        }
+    }
+    return *server;
+}
+
+void    Config::loadConfig()
 {
     std::string directive;
 
+    f_.exceptions(std::ifstream::badbit);
     while (!(f_ >> std::ws).eof())
     {
         if (f_.peek() == '#')
@@ -50,14 +79,12 @@ void    ConfigParser::parse()
         else
             throw std::logic_error("unknown directive '" + directive + "'");
     }
-    logger::info << "configuration file OK" << logger::end;
-    f_.close();
 }
 
-void    ConfigParser::parseServer()
+void    Config::parseServer()
 {
-    std::string  str;
-    ServerConfig server;
+    std::string     str;
+    ServerConfig    server;
 
     f_.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
     try
@@ -81,7 +108,7 @@ void    ConfigParser::parseServer()
             listened_[it->first].insert(*port);
 }
 
-void    ConfigParser::completeServer(ServerConfig& server)
+void    Config::completeServer(ServerConfig& server)
 {
     if (server.root.empty())
         server.root = ROOT_DFL;
@@ -102,11 +129,11 @@ void    ConfigParser::completeServer(ServerConfig& server)
         in_port_t   port = htons(PORT_DFL);
         server.listen[host].insert(port);
     }
-    for (std::map<std::string, LocationConfig>::iterator it = server.location.begin(); it != server.location.end(); ++it)
+    for (std::map<std::string, Location>::iterator it = server.location.begin(); it != server.location.end(); ++it)
         completeLocation(server, it->second);
 }
 
-void    ConfigParser::completeLocation(const BaseConfig& parent, BaseConfig& location)
+void    Config::completeLocation(const BaseConfig& parent, BaseConfig& location)
 {
     if (location.root.empty())
         location.root = parent.root;
@@ -121,11 +148,11 @@ void    ConfigParser::completeLocation(const BaseConfig& parent, BaseConfig& loc
     for (std::map<unsigned, std::string>::const_iterator it = parent.error_page.begin(); it != parent.error_page.end(); ++it)
         if (location.error_page.find(it->first) == location.error_page.end())
             location.error_page[it->first] = it->second;
-    for (std::map<std::string, LocationConfig>::iterator it = location.location.begin(); it != location.location.end(); ++it)
+    for (std::map<std::string, Location>::iterator it = location.location.begin(); it != location.location.end(); ++it)
         completeLocation(location, it->second);
 }
 
-void    ConfigParser::parseBlock(BaseConfig& block)
+void    Config::parseBlock(BaseConfig& block)
 {
     std::string                                     directive;
     std::map<std::string, parser>::const_iterator   parser;
@@ -147,10 +174,10 @@ void    ConfigParser::parseBlock(BaseConfig& block)
     f_.get();
 }
 
-void    ConfigParser::parseLocation(BaseConfig& parent)
+void    Config::parseLocation(BaseConfig& parent)
 {
     std::string block_save = block_;
-    LocationConfig    location;
+    Location    location;
 
     location.path = getValue("location", '{');
     block_ = "location";
@@ -162,21 +189,21 @@ void    ConfigParser::parseLocation(BaseConfig& parent)
         throw std::logic_error("location: '" + location.path + "' duplicate");
 }
 
-void    ConfigParser::parseRoot(BaseConfig& parent)
+void    Config::parseRoot(BaseConfig& parent)
 {
     if (!parent.root.empty())
         throw std::logic_error(block_ + ": root duplicate");
     parent.root = getValue("root", ';');
 }
 
-void    ConfigParser::parseIndex(BaseConfig& parent)
+void    Config::parseIndex(BaseConfig& parent)
 {
     std::vector<std::string>    indexes = getValues("index");
 
     parent.index.insert(parent.index.end(), indexes.begin(), indexes.end());
 }
 
-void    ConfigParser::parseAutoindex(BaseConfig& parent)
+void    Config::parseAutoindex(BaseConfig& parent)
 {
     std::string value = getValue("autoindex", ';');
 
@@ -190,7 +217,7 @@ void    ConfigParser::parseAutoindex(BaseConfig& parent)
         throw std::logic_error(block_ + ": autoindex bad value '" + value + "'");
 }
 
-void    ConfigParser::parseErrorPage(BaseConfig& parent)
+void    Config::parseErrorPage(BaseConfig& parent)
 {
     std::vector<std::string>    values = getValues("error_page");
     unsigned                    code;
@@ -206,7 +233,7 @@ void    ConfigParser::parseErrorPage(BaseConfig& parent)
     }
 }
 
-void    ConfigParser::parseBodySize(BaseConfig& parent)
+void    Config::parseBodySize(BaseConfig& parent)
 {
     std::string str = getValue("body_size", ';');
     unsigned    size = strToUInt(str, "body_size");
@@ -216,7 +243,7 @@ void    ConfigParser::parseBodySize(BaseConfig& parent)
     parent.body_size = size;
 }
 
-void    ConfigParser::parseMethods(BaseConfig& parent)
+void    Config::parseMethods(BaseConfig& parent)
 {
     std::vector<std::string>    methods = getValues("methods");
 
@@ -228,7 +255,7 @@ void    ConfigParser::parseMethods(BaseConfig& parent)
     }
 }
 
-void    ConfigParser::parseReturn(BaseConfig& parent)
+void    Config::parseReturn(BaseConfig& parent)
 {
     std::vector<std::string>    values = getValues("return");
     unsigned                    code = 302;
@@ -246,7 +273,7 @@ void    ConfigParser::parseReturn(BaseConfig& parent)
     }
 }
 
-void    ConfigParser::parseListen(BaseConfig& parent)
+void    Config::parseListen(BaseConfig& parent)
 {
     if (block_ != "server")
         throw std::logic_error(block_ + ": unexpected 'listen'");
@@ -267,7 +294,7 @@ void    ConfigParser::parseListen(BaseConfig& parent)
         throw std::logic_error("server: duplicate listen " + host + ':' + port);
 }
 
-void    ConfigParser::parseServerName(BaseConfig& parent)
+void    Config::parseServerName(BaseConfig& parent)
 {
     if (block_ != "server")
         throw std::logic_error(block_ + ": unexpected 'server_name'");
@@ -278,7 +305,7 @@ void    ConfigParser::parseServerName(BaseConfig& parent)
     server.server_name.insert(server.server_name.end(), server_names.begin(), server_names.end());
 }
 
-std::vector<std::string>    ConfigParser::getValues(const char* directive, char delim)
+std::vector<std::string>    Config::getValues(const char* directive, char delim)
 {
     std::string                 str;
     std::getline(f_ >> std::ws, str, delim);
@@ -290,7 +317,7 @@ std::vector<std::string>    ConfigParser::getValues(const char* directive, char 
     return values;
 }
 
-std::string ConfigParser::getValue(const char* directive, char delim)
+std::string Config::getValue(const char* directive, char delim)
 {
     std::string         str;
     std::getline(f_ >> std::ws, str, delim);
@@ -305,7 +332,7 @@ std::string ConfigParser::getValue(const char* directive, char delim)
     return str;
 }
 
-unsigned    ConfigParser::strToUInt(const std::string& str, const char* directive)
+unsigned    Config::strToUInt(const std::string& str, const char* directive)
 {
     unsigned            number;
     std::stringstream   ss(str);
@@ -316,12 +343,12 @@ unsigned    ConfigParser::strToUInt(const std::string& str, const char* directiv
     return number;
 }
 
-std::ostream&   operator<<(std::ostream& o, const ConfigParser& parser)
+std::ostream&   operator<<(std::ostream& o, const Config& parser)
 {
-    for (size_t i = 0; i < parser.getServers().size(); i++)
+    for (size_t i = 0; i < parser.servers_.size(); i++)
     {
         o << "\033[0;32m" << std::string(10, '-') << "Server " << i << std::string(10, '-') << "\033[0m" << std::endl;
-        o << parser.getServers()[i];
+        o << parser.servers_[i];
     }
     o << "\033[0;32m" << "Listened: "<< "\033[0m";
     in_addr tmp;

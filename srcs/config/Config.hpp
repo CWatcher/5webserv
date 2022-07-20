@@ -1,5 +1,5 @@
-#ifndef CONFIG_PARSER_HPP
-# define CONFIG_PARSER_HPP
+#ifndef CONFIG_HPP
+# define CONFIG_HPP
 
 # include "ServerConfig.hpp"
 
@@ -13,14 +13,16 @@
 # define HOST_DFL       "0.0.0.0"
 # define PORT_DFL       80
 
-class ConfigParser
+class Config
 {
 public:
-    ConfigParser(const char* filename);
-    void                                             parse();
-    const std::vector<ServerConfig>&                 getServers() const {return servers_;};
-    const std::map<in_addr_t, std::set<in_port_t> >& getListened() const {return listened_;};
+    Config(const char* filename);
+    const ServerConfig&                                 getServer(in_addr_t host, in_port_t port, const std::string& name);
+    const std::map<in_addr_t, std::set<in_port_t> >&    getListened() const {return listened_;};
+
+    friend std::ostream&                                operator<<(std::ostream& o, const Config& parser);
 private:
+    void                        loadConfig();
     void                        parseServer();
     void                        parseBlock(BaseConfig& block);
 
@@ -48,11 +50,8 @@ private:
     std::vector<ServerConfig>                   servers_;
     std::map<in_addr_t, std::set<in_port_t> >   listened_;
 
-    typedef void (ConfigParser::*parser)(BaseConfig&);
+    typedef void (Config::*parser)(BaseConfig&);
     static const std::pair<std::string, parser> init_list_[];
     static const std::map<std::string, parser>  parsers_;
 };
-
-std::ostream&   operator<<(std::ostream& o, const ConfigParser& parser);
-
 #endif
