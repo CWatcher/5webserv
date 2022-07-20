@@ -29,7 +29,7 @@ Config::Config(const char *filename) : block_("server")
         filename = "config";
     f_.open(filename);
     if (f_.fail())
-        throw std::runtime_error(std::string("unable to open file '") + filename + "'");
+        throw bad_config(std::string("unable to open file '") + filename + "'");
     logger::info << "configuration file '" << filename << "' opened" << logger::end;
     try{
         loadConfig();
@@ -77,7 +77,7 @@ void    Config::loadConfig()
         if (directive == "server")
             parseServer();
         else
-            throw std::logic_error("unknown directive '" + directive + "'");
+            throw bad_config("unknown directive '" + directive + "'");
     }
 }
 
@@ -91,14 +91,14 @@ void    Config::parseServer()
     {
         std::getline(f_ >> std::ws, str, '{');
         if (!str.empty())
-            throw std::logic_error("server: unexpected '" + str + "'");
+            throw bad_config("server: unexpected '" + str + "'");
         parseBlock(server);
     }
     catch (const std::ifstream::failure& e)
     {
         if (f_.eof())
-            throw std::logic_error(block_ + ": unexpected end of file");
-        throw e;
+            throw bad_config(block_ + ": unexpected end of file");
+        throw;
     }
     f_.exceptions(std::ifstream::badbit);
     completeServer(server);
@@ -169,7 +169,7 @@ void    Config::parseBlock(BaseConfig& block)
         if (parser != parsers_.end())
             (this->*parser->second)(block);
         else
-            throw std::logic_error(block_ + ": unknown directive '" + directive + "'");
+            throw bad_config(block_ + ": unknown directive '" + directive + "'");
     }
     f_.get();
 }
@@ -186,13 +186,13 @@ void    Config::parseLocation(BaseConfig& parent)
     if (parent.location.find(location.path) == parent.location.end())
         parent.location[location.path] = location;
     else
-        throw std::logic_error("location: '" + location.path + "' duplicate");
+        throw bad_config("location: '" + location.path + "' duplicate");
 }
 
 void    Config::parseRoot(BaseConfig& parent)
 {
     if (!parent.root.empty())
-        throw std::logic_error(block_ + ": root duplicate");
+        throw bad_config(block_ + ": root duplicate");
     parent.root = getValue("root", ';');
 }
 
@@ -208,13 +208,13 @@ void    Config::parseAutoindex(BaseConfig& parent)
     std::string value = getValue("autoindex", ';');
 
     if (parent.autoindex != -1)
-        throw std::logic_error(block_ + ": autoindex duplicate");
+        throw bad_config(block_ + ": autoindex duplicate");
     if (value == "on")
         parent.autoindex = true;
     else if (value == "off")
         parent.autoindex = false;
     else
-        throw std::logic_error(block_ + ": autoindex bad value '" + value + "'");
+        throw bad_config(block_ + ": autoindex bad value '" + value + "'");
 }
 
 void    Config::parseErrorPage(BaseConfig& parent)
@@ -223,12 +223,12 @@ void    Config::parseErrorPage(BaseConfig& parent)
     unsigned                    code;
 
     if (values.size() < 2)
-        throw std::logic_error(block_ + ": error_page not enough values");
+        throw bad_config(block_ + ": error_page not enough values");
     for (std::vector<std::string>::iterator it = values.begin(); it != values.end() - 1; it++)
     {
         code = strToUInt(*it, "error_page");
         if (code < 400 || code > 599)
-             throw std::logic_error(block_ + ": error_page bad value '" + *it + "'");
+             throw bad_config(block_ + ": error_page bad value '" + *it + "'");
         parent.error_page[code] = values.back();
     }
 }
@@ -239,7 +239,7 @@ void    Config::parseBodySize(BaseConfig& parent)
     unsigned    size = strToUInt(str, "body_size");
 
     if (parent.body_size != std::numeric_limits<unsigned>::max())
-        throw std::logic_error(block_ + ": body_size duplicate");
+        throw bad_config(block_ + ": body_size duplicate");
     parent.body_size = size;
 }
 
@@ -250,7 +250,7 @@ void    Config::parseMethods(BaseConfig& parent)
     for (std::vector<std::string>::iterator method = methods.begin(); method != methods.end(); method++)
     {
         if (*method != "GET" && *method != "POST" && *method != "DELETE")
-            throw std::logic_error(block_ + ": methods bad value '" + *method + "'");
+            throw bad_config(block_ + ": methods bad value '" + *method + "'");
         parent.methods.insert(*method);
     }
 }
@@ -261,11 +261,11 @@ void    Config::parseReturn(BaseConfig& parent)
     unsigned                    code = 302;
 
     if (values.size() > 2)
-        throw std::logic_error(block_ + ": return too many values");
+        throw bad_config(block_ + ": return too many values");
     if (values.size() == 2)
         code = strToUInt(values[0], "return");
     if (code < 301 || (code > 303 && code != 307 && code != 308))
-        throw std::logic_error(block_ + ": return bad code '" + values[0] +"'");
+        throw bad_config(block_ + ": return bad code '" + values[0] +"'");
     if (parent.redirect.second.empty())
     {
         parent.redirect.first = code;
@@ -276,28 +276,28 @@ void    Config::parseReturn(BaseConfig& parent)
 void    Config::parseListen(BaseConfig& parent)
 {
     if (block_ != "server")
-        throw std::logic_error(block_ + ": unexpected 'listen'");
+        throw bad_config(block_ + ": unexpected 'listen'");
 
     ServerConfig&                     server = static_cast<ServerConfig&>(parent);
     std::vector<std::string>    values = getValues("listen");
     std::string                 host = HOST_DFL, port = values.back();
 
     if (values.size() > 2)
-        throw std::logic_error("server: listen: too many values");
+        throw bad_config("server: listen: too many values");
     if (values.size() == 2)
         host = values[0];
     in_addr_t in_host = inet_addr(host.c_str());
     if (in_host == INADDR_NONE)
-        throw std::logic_error("server: listen bad value '" + host + "'");
+        throw bad_config("server: listen bad value '" + host + "'");
     in_port_t in_port = htons(strToUInt(port, "server: listen:"));
     if (!server.listen[in_host].insert(in_port).second)
-        throw std::logic_error("server: duplicate listen " + host + ':' + port);
+        throw bad_config("server: duplicate listen " + host + ':' + port);
 }
 
 void    Config::parseServerName(BaseConfig& parent)
 {
     if (block_ != "server")
-        throw std::logic_error(block_ + ": unexpected 'server_name'");
+        throw bad_config(block_ + ": unexpected 'server_name'");
 
     ServerConfig&                     server = static_cast<ServerConfig&>(parent);
     std::vector<std::string>    server_names = getValues("server_name");
@@ -313,7 +313,7 @@ std::vector<std::string>    Config::getValues(const char* directive, char delim)
     std::vector<std::string>    values((std::istream_iterator<std::string>(ss)), std::istream_iterator<std::string>());
 
     if (values.empty())
-        throw std::logic_error(block_ + ": " + directive + " no values");
+        throw bad_config(block_ + ": " + directive + " no values");
     return values;
 }
 
@@ -324,11 +324,11 @@ std::string Config::getValue(const char* directive, char delim)
     std::stringstream   ss(str);
 
     if (str.empty())
-        throw std::logic_error(block_ + ": " + directive + " no value");
+        throw bad_config(block_ + ": " + directive + " no value");
     ss >> str;
     ss >> std::ws;
     if (!ss.eof())
-        throw std::logic_error(block_ + ": " + directive + " too many values");
+        throw bad_config(block_ + ": " + directive + " too many values");
     return str;
 }
 
@@ -338,7 +338,7 @@ unsigned    Config::strToUInt(const std::string& str, const char* directive)
     std::stringstream   ss(str);
 
     if (str.find_first_not_of("0123456789") != std::string::npos)
-         throw std::invalid_argument(block_ + ": " + directive + " bad value '" + str + "'");
+        throw bad_config(block_ + ": " + directive + " bad value '" + str + "'");
     ss >> number;
     return number;
 }

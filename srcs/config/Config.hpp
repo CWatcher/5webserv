@@ -21,6 +21,12 @@ public:
     const std::map<in_addr_t, std::set<in_port_t> >&    getListened() const {return listened_;};
 
     friend std::ostream&                                operator<<(std::ostream& o, const Config& parser);
+
+    class bad_config : public std::runtime_error
+    {
+    public:
+        bad_config(const std::string& msg) : runtime_error(msg) {}
+    };
 private:
     void                        loadConfig();
     void                        parseServer();
