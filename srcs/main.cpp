@@ -21,36 +21,40 @@ int main(int, char* argv[])
 //    signal(SIGUSR1, signal_handler);
     logger::setLevel(logger::Level::kDebug);
 
-    Config config(argv[1]);
-    try
-    {
-//        Config config(argv[1]);
-    }
-    catch (const std::logic_error &e)
-    {
-        logger::error << "ConfigParser: " << e.what() << logger::end;
-        return EXIT_FAILURE;
-    }
-    catch (const std::exception &e)
-    {
-        logger::error << "ConfigParser: " << logger::cerror << logger::end;
-        return EXIT_FAILURE;
-    }
-
-    std::clog << config;
-
     while (true)
     {
         try
         {
+            Config config(argv[1]);
+            std::clog << config;
+
             Server server(config);
-            server.mainLoopRun();
+
+            try
+            {
+                server.mainLoopRun();
+            }
+            catch (std::exception &e)
+            {
+                logger::error << "main: unhandled exception: " << e.what() << "errno: " << logger::cerror << logger::end;
+                // TODO: clean all allocated by server and send 500 to all sessions (implement in destructors!)
+                sleep(5);
+            }
+        }
+        catch (const std::logic_error &e)
+        {
+            logger::error << e.what() << logger::end;
+            return EXIT_FAILURE;
+        }
+        catch (const std::runtime_error &e)
+        {
+            logger::error << e.what() << logger::end;
+            return EXIT_FAILURE;
         }
         catch (std::exception &e)
         {
-            logger::error << "main: unhandled exception: " << e.what() << "errno: " << logger::cerror << logger::end;
-            // TODO: clean all allocated by server (implement in destructors!)
-            sleep(5);
+            logger::error << logger::cerror << logger::end;
+            return EXIT_FAILURE;
         }
     }
 }
