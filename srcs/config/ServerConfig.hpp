@@ -1,5 +1,5 @@
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#ifndef SERVERCONFIG_HPP
+# define SERVERCONFIG_HPP
 
 # include <string>
 # include <vector>
@@ -29,12 +29,12 @@ struct Location : public BaseConfig
     std::string path;
 };
 
-struct Server : public BaseConfig
+struct ServerConfig : public BaseConfig
 {
     std::map<in_addr_t, std::set<in_port_t> >   listen;
     std::vector<std::string>                    server_name;
 };
 
-std::ostream&   operator<<(std::ostream& o, const Server& s);
+std::ostream&   operator<<(std::ostream& o, const ServerConfig& s);
 
 #endif

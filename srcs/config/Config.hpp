@@ -1,7 +1,7 @@
-#ifndef CONFIG_PARSER_HPP
-# define CONFIG_PARSER_HPP
+#ifndef CONFIG_HPP
+# define CONFIG_HPP
 
-# include "Server.hpp"
+# include "ServerConfig.hpp"
 
 # include <fstream>
 
@@ -13,14 +13,16 @@
 # define HOST_DFL       "0.0.0.0"
 # define PORT_DFL       80
 
-class ConfigParser
+class Config
 {
 public:
-    ConfigParser(const char* filename);
-    void                                                parse();
-    const std::vector<Server>&                          getServers() const {return servers_;};
+    Config(const char* filename);
+    const ServerConfig&                                 getServer(in_addr_t host, in_port_t port, const std::string& name);
     const std::map<in_addr_t, std::set<in_port_t> >&    getListened() const {return listened_;};
+
+    friend std::ostream&                                operator<<(std::ostream& o, const Config& parser);
 private:
+    void                        loadConfig();
     void                        parseServer();
     void                        parseBlock(BaseConfig& block);
 
@@ -39,20 +41,17 @@ private:
     std::string                 getValue(const char* directive, char delim = ';');
     unsigned                    strToUInt(const std::string& str, const char* directive);
 
-    static void                 completeServer(Server& server);
+    static void                 completeServer(ServerConfig& server);
     static void                 completeLocation(const BaseConfig& parent, BaseConfig& location);
 private:
     std::ifstream                               f_;
     std::string                                 block_;
 
-    std::vector<Server>                         servers_;
+    std::vector<ServerConfig>                   servers_;
     std::map<in_addr_t, std::set<in_port_t> >   listened_;
 
-    typedef void (ConfigParser::*parser)(BaseConfig&);
+    typedef void (Config::*parser)(BaseConfig&);
     static const std::pair<std::string, parser> init_list_[];
     static const std::map<std::string, parser>  parsers_;
 };
-
-std::ostream&   operator<<(std::ostream& o, const ConfigParser& parser);
-
 #endif

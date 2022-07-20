@@ -1,4 +1,4 @@
-#include "Server.hpp"
+#include "ServerConfig.hpp"
 #include "utils/syntax.hpp"
 
 #include <iostream>
@@ -40,7 +40,7 @@ static std::ostream&    operator<<(std::ostream& o, const BaseConfig& c)
     return o;
 }
 
-std::ostream&   operator<<(std::ostream& o, const Server& s)
+std::ostream&   operator<<(std::ostream& o, const ServerConfig& s)
 {
     o << static_cast<const BaseConfig&>(s);
     o << "sever_name: ";
