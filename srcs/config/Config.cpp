@@ -32,7 +32,7 @@ Config::Config(const char *filename) : block_("server")
         throw bad_config(std::string("unable to open file '") + filename + "'");
     logger::info << "configuration file '" << filename << "' opened" << logger::end;
     try{
-        loadConfig();
+        parseConfig();
     }
     catch (const std::exception& e)
     {
@@ -61,7 +61,7 @@ const ServerConfig& Config::getServer(in_addr_t host, in_port_t port, const std:
     return *server;
 }
 
-void    Config::loadConfig()
+void    Config::parseConfig()
 {
     std::string directive;
 
@@ -179,8 +179,12 @@ void    Config::parseLocation(BaseConfig& parent)
     std::string block_save = block_;
     Location    location;
 
-    location.path = getValue("location", '{');
     block_ = "location";
+    location.path = getValue("location", '{');
+    if (*(location.path.end() - 1) != '/')
+        location.path.push_back('/');
+    if (location.path.compare(0, parent.path.size(), parent.path) != 0)
+            throw bad_config(std::string("location: location '") + location.path + "' is outside location '" + parent.path + "'");
     parseBlock(location);
     block_ = block_save;
     if (parent.location.find(location.path) == parent.location.end())

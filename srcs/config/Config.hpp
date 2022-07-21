@@ -28,7 +28,7 @@ public:
         bad_config(const std::string& msg) : runtime_error(msg) {}
     };
 private:
-    void                        loadConfig();
+    void                        parseConfig();
     void                        parseServer();
     void                        parseBlock(BaseConfig& block);
 

@@ -28,7 +28,7 @@ server_name name1 name2 name3;
 #ещё один, не должен переписать предыдущий
 	return 303 www.google.com;
 #в этом location переопределяются параметры
-	location aaa {
+	location /aaa {
 		methods DELETE;
 		root a/rooot;
 		autoindex off;
@@ -39,25 +39,26 @@ server_name name1 name2 name3;
 
 
 		#все параметры кроме return и methods будут как у aaa
-		location ccc{
+		location /aaa/ccc{
 			methods POST;
 		}
 
 	}
 
 # a в этом нет
-	location bbb {}
+	location /bbb {}
 }
 
 
 # много вложенных location
 server {
-	location aaa{
-		location bbb{
-			location ccc{body_size 777;}
+	server_name nested;
+	location /aaa{
+		location /aaa/bbb{
+			location /aaa/bbb/ccc{body_size 777;}
 		}
-		location ddd { location eee{ location fff{ root roooooot; location xxx {}}}}
-		location eee { methods POST;}
+		location /aaa/ddd { location /aaa/ddd/eee{ location /aaa/ddd/eee/fff{ root roooooot; location /aaa/ddd/eee/fff/xxx {}}}}
+		location /aaa/eee { methods POST;}
 	}
 
 }

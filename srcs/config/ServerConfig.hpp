@@ -12,8 +12,9 @@ struct Location;
 
 struct BaseConfig
 {
-    BaseConfig() : autoindex(-1), body_size(std::numeric_limits<unsigned>::max()){}
+    BaseConfig() : path("/"), autoindex(-1), body_size(std::numeric_limits<unsigned>::max()){}
 
+    std::string                         path;
     std::string                         root;
     std::vector<std::string>            index;
     int                                 autoindex;
@@ -26,7 +27,6 @@ struct BaseConfig
 
 struct Location : public BaseConfig
 {
-    std::string path;
 };
 
 struct ServerConfig : public BaseConfig
