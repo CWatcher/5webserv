@@ -5,13 +5,14 @@
 
 # include <fstream>
 
-# define ROOT_DFL       "./www"
-# define INDEX_DFL      "index.html"
-# define AUTOINDEX_DFL  false
-# define BODY_SIZE_DFL  0
-# define METHODS_DFL    "GET POST DELETE"
-# define HOST_DFL       "0.0.0.0"
-# define PORT_DFL       80
+# define ROOT_DFL           "../www"
+# define INDEX_DFL          "index.html"
+# define AUTOINDEX_DFL      false
+# define BODY_SIZE_DFL      0
+# define METHODS_DFL        "GET POST DELETE"
+# define UPLOAD_STORE_DFL   "../www/upload"
+# define HOST_DFL           "0.0.0.0"
+# define PORT_DFL           80
 
 class Config
 {
@@ -39,6 +40,8 @@ private:
     void                        parseBodySize(BaseConfig& parent);
     void                        parseMethods(BaseConfig& parent);
     void                        parseReturn(BaseConfig& parent);
+    void                        parseDirectoryPage(BaseConfig& parent);
+    void                        parseUploadStore(BaseConfig& parent);
     void                        parseLocation(BaseConfig& parent);
     void                        parseListen(BaseConfig& parent);
     void                        parseServerName(BaseConfig& parent);

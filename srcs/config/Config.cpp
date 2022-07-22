@@ -14,8 +14,10 @@ const std::pair<std::string, Config::parser> Config::init_list_[] =
     std::make_pair("autoindex", &Config::parseAutoindex),
     std::make_pair("error_page", &Config::parseErrorPage),
     std::make_pair("body_size", &Config::parseBodySize),
-    std::make_pair("methods", &Config::parseMethods),
     std::make_pair("return", &Config::parseReturn),
+    std::make_pair("methods", &Config::parseMethods),
+    std::make_pair("directory_page", &Config::parseDirectoryPage),
+    std::make_pair("upload_store", &Config::parseUploadStore),
     std::make_pair("location", &Config::parseLocation),
     std::make_pair("listen", &Config::parseListen),
     std::make_pair("server_name", &Config::parseServerName)
@@ -123,6 +125,8 @@ void    Config::completeServer(ServerConfig& server)
         std::stringstream ss(METHODS_DFL);
         server.methods.insert(std::istream_iterator<std::string> (ss), std::istream_iterator<std::string>());
     }
+    if (server.upload_store.empty())
+        server.upload_store = UPLOAD_STORE_DFL;
     if (server.listen.empty())
     {
         in_addr_t   host = inet_addr(HOST_DFL);
@@ -145,6 +149,10 @@ void    Config::completeLocation(const BaseConfig& parent, BaseConfig& location)
         location.body_size = parent.body_size;
     if (location.methods.empty())
         location.methods = parent.methods;
+    if (location.directory_page.empty())
+        location.directory_page = parent.directory_page;
+    if (location.upload_store.empty())
+        location.upload_store = parent.upload_store;
     for (std::map<unsigned, std::string>::const_iterator it = parent.error_page.begin(); it != parent.error_page.end(); ++it)
         if (location.error_page.find(it->first) == location.error_page.end())
             location.error_page[it->first] = it->second;
@@ -259,6 +267,20 @@ void    Config::parseMethods(BaseConfig& parent)
     }
 }
 
+void    Config::parseDirectoryPage(BaseConfig& parent)
+{
+    if (!parent.directory_page.empty())
+        throw bad_config(block_ + ": directory_page duplicate");
+    parent.directory_page = getValue("directory_page");
+}
+
+void    Config::parseUploadStore(BaseConfig& parent)
+{
+    if (!parent.upload_store.empty())
+        throw bad_config(block_ + ": upload_store duplicate");
+    parent.upload_store = getValue("upload_store");
+}
+
 void    Config::parseReturn(BaseConfig& parent)
 {
     std::vector<std::string>    values = getValues("return");
@@ -282,7 +304,7 @@ void    Config::parseListen(BaseConfig& parent)
     if (block_ != "server")
         throw bad_config(block_ + ": unexpected 'listen'");
 
-    ServerConfig&                     server = static_cast<ServerConfig&>(parent);
+    ServerConfig&               server = static_cast<ServerConfig&>(parent);
     std::vector<std::string>    values = getValues("listen");
     std::string                 host = HOST_DFL, port = values.back();
 

@@ -1,3 +1,4 @@
+# https://docs.google.com/spreadsheets/d/1XZdfuUlACFeA5fPuh8J15eKgNshtirq-eh3oi3ZnhmM
 
 # сервер со всеми параметрами по умолчанию
 
@@ -39,12 +40,13 @@ server_name name1 name2 name3;
 
 
 		#все параметры кроме return и methods будут как у aaa
-		location /aaa/ccc{
+		location /aaa/ddd{
 			methods POST;
 		}
 
 	}
-
+	directory_page eeeeeeeeeeeee;
+	upload_store aaaaaaaaaaa;
 # a в этом нет
 	location /bbb {}
 }

@@ -20,8 +20,10 @@ struct BaseConfig
     int                                 autoindex;
     std::map<unsigned, std::string>     error_page;
     unsigned                            body_size;
-    std::set<std::string>               methods;
     std::pair<unsigned, std::string>    redirect;
+    std::set<std::string>               methods;
+    std::string                         directory_page;
+    std::string                         upload_store;
     std::map<std::string, Location>     location;
 };
 

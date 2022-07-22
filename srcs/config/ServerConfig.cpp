@@ -27,6 +27,8 @@ static std::ostream&    operator<<(std::ostream& o, const BaseConfig& c)
     o << std::endl << "methods: ";
     cforeach(std::set<std::string>, c.methods, it)
         o << *it << ' ';
+    o << std::endl << "directory_page: " << c.directory_page;
+    o << std::endl << "upload_store: " << c.upload_store;
     o << std::endl << "redirect: ";
     if (!c.redirect.second.empty())
         o << c.redirect.first << ' ' << c.redirect.second;
@@ -34,7 +36,7 @@ static std::ostream&    operator<<(std::ostream& o, const BaseConfig& c)
     for (std::map<std::string, Location>::const_iterator it = c.location.begin(); it != c.location.end(); ++it)
     {
         o << it->second << ' ';
-        // o << std::endl << static_cast<const BaseConfig>(it->second);
+        // o << it->second.path << std::endl << static_cast<const BaseConfig>(it->second);
     }
     o << std::endl;
     return o;

@@ -35,18 +35,14 @@ int main(int, char* argv[])
         Config  config(argv[1]);
 
         std::clog << config << std::endl;
-        const ServerConfig& server = config.getServer(inet_addr("0.0.0.0"), ntohs(80), "nested");
-        std::clog << server;
-        while (true)
-        {
-            std::string uri;
-            cout << "uri:";
-            std::getline(std::cin, uri);
-            if (uri.empty())
-                break;
-            const BaseConfig& location = getLocation(server, uri);
-            cout << location.path << endl;
-        }
+        // const ServerConfig& server = config.getServer(inet_addr("0.0.0.0"), ntohs(80), "nested");
+        // std::clog << server;
+        // std::string uri;
+        // while (std::getline(std::cin, uri))
+        // {
+        //     const BaseConfig& location = getLocation(server, uri);
+        //     cout << "location: " << location.path << endl;
+        // }
 
     }
     // ошибки, которые я обнаружил при парсинге (не удалось открыть файл, некорректные значения в файле ...)
