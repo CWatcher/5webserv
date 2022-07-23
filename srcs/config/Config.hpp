@@ -16,8 +16,8 @@ class Config
 {
 public:
     Config(const char* filename);
-    const ServerConfig&                                 getServer(in_addr_t host, in_port_t port, const std::string& name);
-    const std::map<in_addr_t, std::set<in_port_t> >&    getListened() const {return listened_;};
+    const ServerConfig&                                 getServer(in_addr_t host, in_port_t port, const std::string& name) const;
+    const std::map<in_addr_t, std::set<in_port_t> >     getListened() const;
 
     friend std::ostream&                                operator<<(std::ostream& o, const Config& config);
 
@@ -52,11 +52,10 @@ private:
     static void                 completeServer(ServerConfig& server);
     static void                 completeLocation(const Location& parent, Location& location);
 private:
+    std::vector<ServerConfig>                   servers_;
+
     std::ifstream                               f_;
     std::string                                 block_;
-
-    std::vector<ServerConfig>                   servers_;
-    std::map<in_addr_t, std::set<in_port_t> >   listened_;
 
     typedef void (Config::*parser)(Location&);
     static const std::pair<std::string, parser> init_list_[];

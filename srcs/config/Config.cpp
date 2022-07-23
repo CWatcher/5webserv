@@ -46,7 +46,7 @@ Config::Config(const char *filename) : block_("server")
     logger::info << "configuration file '" << filename << "' loaded" << logger::end;
 }
 
-const ServerConfig& Config::getServer(in_addr_t host, in_port_t port, const std::string& name)
+const ServerConfig& Config::getServer(in_addr_t host, in_port_t port, const std::string& name) const
 {
     std::vector<ServerConfig>::const_iterator server = servers_.end();
 
@@ -62,6 +62,17 @@ const ServerConfig& Config::getServer(in_addr_t host, in_port_t port, const std:
         }
     }
     return *server;
+}
+
+const std::map<in_addr_t, std::set<in_port_t> >    Config::getListened() const
+{
+    std::map<in_addr_t, std::set<in_port_t> >   listened;
+
+    for (std::vector<ServerConfig>::const_iterator server = servers_.begin(); server != servers_.end(); server++)
+        for (std::map<in_addr_t, std::set<in_port_t> >::const_iterator it = server->listen.begin(); it != server->listen.end(); ++it)
+            for (std::set<in_port_t>::iterator port = it->second.begin(); port != it->second.end(); ++port)
+                listened[it->first].insert(*port);
+    return listened;
 }
 
 void    Config::parseConfig()
@@ -107,9 +118,6 @@ void    Config::parseServer()
     f_.exceptions(std::ifstream::badbit);
     completeServer(server);
     servers_.push_back(server);
-    for (std::map<in_addr_t, std::set<in_port_t> >::iterator it = server.listen.begin(); it != server.listen.end(); ++it)
-        for (std::set<in_port_t>::iterator port = it->second.begin(); port != it->second.end(); ++port)
-            listened_[it->first].insert(*port);
 }
 
 void    Config::completeServer(ServerConfig& server)
@@ -390,11 +398,12 @@ std::ostream&   operator<<(std::ostream& o, const Config& config)
         o << config.servers_[i];
     }
     o << "\033[0;32m" << "Listened: "<< "\033[0m";
-    in_addr tmp;
-    for (std::map<in_addr_t, std::set<in_port_t> >::const_iterator it = config.getListened().begin(); it != config.getListened().end(); ++it)
+    std::map<in_addr_t, std::set<in_port_t> >   listened = config.getListened();
+    for (std::map<in_addr_t, std::set<in_port_t> >::iterator it = listened.begin(); it != listened.end(); ++it)
     {
+        in_addr tmp;
         tmp.s_addr = it->first;
-        for (std::set<in_port_t>::const_iterator port = it->second.begin(); port != it->second.end(); ++port)
+        for (std::set<in_port_t>::iterator port = it->second.begin(); port != it->second.end(); ++port)
             o << inet_ntoa(tmp) << ":" << ntohs(*port) << ' ';
     }
     o << std::endl;
