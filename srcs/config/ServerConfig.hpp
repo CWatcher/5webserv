@@ -8,11 +8,9 @@
 # include <netinet/in.h>
 # include <limits>
 
-struct Location;
-
-struct BaseConfig
+struct Location
 {
-    BaseConfig() : path("/"), autoindex(-1), body_size(std::numeric_limits<unsigned>::max()){}
+    Location() : autoindex(-1), body_size(std::numeric_limits<unsigned>::max()){}
 
     std::string                         path;
     std::string                         root;
@@ -24,14 +22,11 @@ struct BaseConfig
     std::set<std::string>               methods;
     std::string                         directory_page;
     std::string                         upload_store;
-    std::map<std::string, Location>     location;
+    std::map<std::string, std::string>  cgi;
+    std::map<std::string, Location>     locations;
 };
 
-struct Location : public BaseConfig
-{
-};
-
-struct ServerConfig : public BaseConfig
+struct ServerConfig : public Location
 {
     std::map<in_addr_t, std::set<in_port_t> >   listen;
     std::vector<std::string>                    server_name;

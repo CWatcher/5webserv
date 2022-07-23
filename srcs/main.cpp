@@ -8,15 +8,15 @@ using std::cout;
 using std::endl;
 
 
-const BaseConfig&   getLocation(const BaseConfig& server, const std::string& uri)
+const Location&   getLocation(const Location& server, const std::string& uri)
 {
-    const BaseConfig*   location = &server;
+    const Location*   location = &server;
     std::string         tmp_uri = uri;
 
-    while (!tmp_uri.empty() && !location->location.empty())
+    while (!tmp_uri.empty() && !location->locations.empty())
     {
-        std::map<std::string, Location>::const_iterator next_location = location->location.find(tmp_uri + "/");
-        if (next_location != location->location.end())
+        std::map<std::string, Location>::const_iterator next_location = location->locations.find(tmp_uri + "/");
+        if (next_location != location->locations.end())
         {
             tmp_uri = uri;
             location = &next_location->second;

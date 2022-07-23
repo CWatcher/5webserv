@@ -1,4 +1,6 @@
 # https://docs.google.com/spreadsheets/d/1XZdfuUlACFeA5fPuh8J15eKgNshtirq-eh3oi3ZnhmM
+# по умолчанию все методы отключены
+
 
 # сервер со всеми параметрами по умолчанию
 
@@ -29,6 +31,7 @@ server_name name1 name2 name3;
 #ещё один, не должен переписать предыдущий
 	return 303 www.google.com;
 #в этом location переопределяются параметры
+	cgi php php;
 	location /aaa {
 		methods DELETE;
 		root a/rooot;
@@ -38,10 +41,11 @@ server_name name1 name2 name3;
 		error_page 505 506 er3.html;
 		return 303 www.google.com;
 
-
+		cgi py jjjjjjjj;
 		#все параметры кроме return и methods будут как у aaa
 		location /aaa/ddd{
 			methods POST;
+			cgi go go;
 		}
 
 	}

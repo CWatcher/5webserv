@@ -4,16 +4,15 @@
 #include <iostream>
 #include <arpa/inet.h>
 
-static std::ostream&    operator<<(std::ostream& o, const Location& l)
+static void    show_locations(std::ostream& o, const Location& l)
 {
     o << l.path << '{';
-    for (std::map<std::string, Location>::const_iterator it = l.location.begin(); it != l.location.end(); ++it)
-        o << it->second ;
+    for (std::map<std::string, Location>::const_iterator it = l.locations.begin(); it != l.locations.end(); ++it)
+        show_locations(o, it->second);
     o << '}';
-    return o;
 }
 
-static std::ostream&    operator<<(std::ostream& o, const BaseConfig& c)
+static std::ostream&    operator<<(std::ostream& o, const Location& c)
 {
     o << "root: " << c.root;
     o << std::endl << "index: ";
@@ -32,11 +31,14 @@ static std::ostream&    operator<<(std::ostream& o, const BaseConfig& c)
     o << std::endl << "redirect: ";
     if (!c.redirect.second.empty())
         o << c.redirect.first << ' ' << c.redirect.second;
-    o << std::endl << "location: ";
-    for (std::map<std::string, Location>::const_iterator it = c.location.begin(); it != c.location.end(); ++it)
+    o << std::endl << "cgi:" << std::endl;
+    for (std::map<std::string, std::string>::const_iterator it = c.cgi.begin(); it != c.cgi.end(); it++)
+        o << "- " << it->first << ' ' << it->second << std::endl;
+    o << "location: ";
+    for (std::map<std::string, Location>::const_iterator it = c.locations.begin(); it != c.locations.end(); ++it)
     {
-        o << it->second << ' ';
-        // o << it->second.path << std::endl << static_cast<const BaseConfig>(it->second);
+        show_locations(o, it->second);
+        // o << it->second.path << std::endl << it->second;
     }
     o << std::endl;
     return o;
@@ -44,7 +46,7 @@ static std::ostream&    operator<<(std::ostream& o, const BaseConfig& c)
 
 std::ostream&   operator<<(std::ostream& o, const ServerConfig& s)
 {
-    o << static_cast<const BaseConfig&>(s);
+    o << static_cast<const Location&>(s);
     o << "sever_name: ";
     cforeach(std::vector<std::string>, s.server_name, it)
         o << *it << ' ';
