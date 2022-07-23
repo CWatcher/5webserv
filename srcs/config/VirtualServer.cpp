@@ -1,16 +1,17 @@
-#include "ServerConfig.hpp"
+#include "VirtualServer.hpp"
 #include "utils/syntax.hpp"
 
 #include <iostream>
 #include <arpa/inet.h>
+#include <iomanip>
 
-static void    show_locations(std::ostream& o, const Location& l)
-{
-    o << l.path << '{';
-    for (std::map<std::string, Location>::const_iterator it = l.locations.begin(); it != l.locations.end(); ++it)
-        show_locations(o, it->second);
-    o << '}';
-}
+// static void    show_locations(std::ostream& o, const Location& l)
+// {
+//     o << l.path << '{';
+//     for (std::map<std::string, Location>::const_iterator it = l.locations.begin(); it != l.locations.end(); ++it)
+//         show_locations(o, it->second);
+//     o << '}';
+// }
 
 static std::ostream&    operator<<(std::ostream& o, const Location& c)
 {
@@ -34,19 +35,11 @@ static std::ostream&    operator<<(std::ostream& o, const Location& c)
     o << std::endl << "cgi:" << std::endl;
     for (std::map<std::string, std::string>::const_iterator it = c.cgi.begin(); it != c.cgi.end(); it++)
         o << "- " << it->first << ' ' << it->second << std::endl;
-    o << "location: ";
-    for (std::map<std::string, Location>::const_iterator it = c.locations.begin(); it != c.locations.end(); ++it)
-    {
-        show_locations(o, it->second);
-        // o << it->second.path << std::endl << it->second;
-    }
-    o << std::endl;
     return o;
 }
 
-std::ostream&   operator<<(std::ostream& o, const ServerConfig& s)
+std::ostream&   operator<<(std::ostream& o, const VirtualServer& s)
 {
-    o << static_cast<const Location&>(s);
     o << "sever_name: ";
     cforeach(std::vector<std::string>, s.server_name, it)
         o << *it << ' ';
@@ -59,6 +52,13 @@ std::ostream&   operator<<(std::ostream& o, const ServerConfig& s)
         for (std::set<in_port_t>::const_iterator port = it->second.begin(); port != it->second.end(); ++port)
             o << ntohs(*port) << ' ';
         o << std::endl;
+    }
+    o << static_cast<const Location&>(s);
+    o << "\033[0;34m" << "locations:" << "\033[0m" << std::endl;
+    for (std::map<std::string, Location>::const_iterator it = s.locations.begin(); it != s.locations.end(); ++it)
+    {
+        // o << "- " << std::setw(42) << std::left << it->first << " parent: " << it->second.parent << std::endl << it->second << std::endl;
+        o << "path: " << std::setw(42) << std::left << it->first << " parent: " << it->second.parent << std::endl;
     }
     return o;
 }

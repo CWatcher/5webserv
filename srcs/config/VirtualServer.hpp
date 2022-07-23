@@ -1,5 +1,5 @@
-#ifndef SERVERCONFIG_HPP
-# define SERVERCONFIG_HPP
+#ifndef VIRTUALSERVER_HPP
+# define VIRTUALSERVER_HPP
 
 # include <string>
 # include <vector>
@@ -23,15 +23,16 @@ struct Location
     std::string                         directory_page;
     std::string                         upload_store;
     std::map<std::string, std::string>  cgi;
-    std::map<std::string, Location>     locations;
+    std::string                         parent;
 };
 
-struct ServerConfig : public Location
+struct VirtualServer : public Location
 {
     std::map<in_addr_t, std::set<in_port_t> >   listen;
     std::vector<std::string>                    server_name;
+    std::map<std::string, Location>             locations;
 };
 
-std::ostream&   operator<<(std::ostream& o, const ServerConfig& s);
+std::ostream&   operator<<(std::ostream& o, const VirtualServer& s);
 
 #endif

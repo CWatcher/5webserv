@@ -8,24 +8,24 @@ using std::cout;
 using std::endl;
 
 
-const Location&   getLocation(const Location& server, const std::string& uri)
-{
-    const Location*   location = &server;
-    std::string         tmp_uri = uri;
+// const Location&   getLocation(const Location& server, const std::string& uri)
+// {
+//     const Location* location = &server;
+//     std::string     tmp_uri = uri;
 
-    while (!tmp_uri.empty() && !location->locations.empty())
-    {
-        std::map<std::string, Location>::const_iterator next_location = location->locations.find(tmp_uri + "/");
-        if (next_location != location->locations.end())
-        {
-            tmp_uri = uri;
-            location = &next_location->second;
-            continue;
-        }
-        tmp_uri.erase(tmp_uri.rfind('/'));
-    }
-    return *location;
-}
+//     while (!tmp_uri.empty() && !location->locations.empty())
+//     {
+//         std::map<std::string, Location>::const_iterator next_location = location->locations.find(tmp_uri + "/");
+//         if (next_location != location->locations.end())
+//         {
+//             tmp_uri = uri;
+//             location = &next_location->second;
+//             continue;
+//         }
+//         tmp_uri.erase(tmp_uri.rfind('/'));
+//     }
+//     return *location;
+// }
 
 
 int main(int, char* argv[])
@@ -35,7 +35,7 @@ int main(int, char* argv[])
         Config  config(argv[1]);
 
         std::clog << config << std::endl;
-        // const ServerConfig& server = config.getServer(inet_addr("0.0.0.0"), ntohs(80), "nested");
+        // const VirtualServer& server = config.getServer(inet_addr("0.0.0.0"), ntohs(80), "nested");
         // std::clog << server;
         // std::string uri;
         // while (std::getline(std::cin, uri))

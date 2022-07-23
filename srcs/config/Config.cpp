@@ -26,7 +26,7 @@ const std::pair<std::string, Config::parser> Config::init_list_[] =
 
 const std::map<std::string, Config::parser> Config::parsers_(init_list_, init_list_ + sizeof(init_list_) / sizeof(init_list_[0]));
 
-Config::Config(const char *filename) : block_("server")
+Config::Config(const char *filename) : block_("server:")
 {
     if (filename == NULL)
         filename = "config";
@@ -46,11 +46,11 @@ Config::Config(const char *filename) : block_("server")
     logger::info << "configuration file '" << filename << "' loaded" << logger::end;
 }
 
-const ServerConfig& Config::getServer(in_addr_t host, in_port_t port, const std::string& name) const
+const VirtualServer& Config::getServer(in_addr_t host, in_port_t port, const std::string& name) const
 {
-    std::vector<ServerConfig>::const_iterator server = servers_.end();
+    std::vector<VirtualServer>::const_iterator server = servers_.end();
 
-    for(std::vector<ServerConfig>::const_iterator it = servers_.begin(); it != servers_.end(); it++)
+    for(std::vector<VirtualServer>::const_iterator it = servers_.begin(); it != servers_.end(); it++)
     {
         std::map<in_addr_t, std::set<in_port_t> >::const_iterator ports = it->listen.find(host);
         if (ports != it->listen.end() && ports->second.find(port) != ports->second.end())
@@ -68,7 +68,7 @@ const std::map<in_addr_t, std::set<in_port_t> >    Config::getListened() const
 {
     std::map<in_addr_t, std::set<in_port_t> >   listened;
 
-    for (std::vector<ServerConfig>::const_iterator server = servers_.begin(); server != servers_.end(); server++)
+    for (std::vector<VirtualServer>::const_iterator server = servers_.begin(); server != servers_.end(); server++)
         for (std::map<in_addr_t, std::set<in_port_t> >::const_iterator it = server->listen.begin(); it != server->listen.end(); ++it)
             for (std::set<in_port_t>::iterator port = it->second.begin(); port != it->second.end(); ++port)
                 listened[it->first].insert(*port);
@@ -98,8 +98,9 @@ void    Config::parseConfig()
 void    Config::parseServer()
 {
     std::string     str;
-    ServerConfig    server;
+    VirtualServer   server;
 
+    server_locations_ = &server.locations;
     f_.exceptions(std::ifstream::failbit | std::ifstream::badbit | std::ifstream::eofbit);
     try
     {
@@ -112,15 +113,16 @@ void    Config::parseServer()
     catch (const std::ifstream::failure& e)
     {
         if (f_.eof())
-            throw bad_config(block_ + ": unexpected end of file");
+            throw bad_config(block_ + " unexpected end of file");
         throw;
     }
     f_.exceptions(std::ifstream::badbit);
     completeServer(server);
     servers_.push_back(server);
+
 }
 
-void    Config::completeServer(ServerConfig& server)
+void    Config::completeServer(VirtualServer& server)
 {
     if (server.root.empty())
         server.root = ROOT_DFL;
@@ -136,8 +138,9 @@ void    Config::completeServer(ServerConfig& server)
         in_port_t   port = htons(PORT_DFL);
         server.listen[host].insert(port);
     }
-    for (std::map<std::string, Location>::iterator it = server.locations.begin(); it != server.locations.end(); ++it)
-        completeLocation(server, it->second);
+    server.locations["/"] = server;
+    for (std::map<std::string, Location>::iterator it = ++server.locations.begin(); it != server.locations.end(); ++it)
+        completeLocation(server.locations[it->second.parent], it->second);
 }
 
 void    Config::completeLocation(const Location& parent, Location& location)
@@ -162,13 +165,11 @@ void    Config::completeLocation(const Location& parent, Location& location)
         if (find == location.cgi.end())
             location.cgi[it->first] = it->second;
         else if (it->second != find->second)
-            throw bad_config("location: cgi '" + find->first + "' path mismathc '" + it->second + "' and '" + find->second + "'");
+            throw bad_config("location '" + location.path + "': cgi '" + find->first + "' path mismathc '" + it->second + "' and '" + find->second + "'");
     }
     for (std::map<unsigned, std::string>::const_iterator it = parent.error_page.begin(); it != parent.error_page.end(); ++it)
         if (location.error_page.find(it->first) == location.error_page.end())
             location.error_page[it->first] = it->second;
-    for (std::map<std::string, Location>::iterator it = location.locations.begin(); it != location.locations.end(); ++it)
-        completeLocation(location, it->second);
 }
 
 void    Config::parseBlock(Location& block)
@@ -188,7 +189,7 @@ void    Config::parseBlock(Location& block)
         if (parser != parsers_.end())
             (this->*parser->second)(block);
         else
-            throw bad_config(block_ + ": unknown directive '" + directive + "'");
+            throw bad_config(block_ + " unknown directive '" + directive + "'");
     }
     f_.get();
 }
@@ -198,25 +199,22 @@ void    Config::parseLocation(Location& parent)
     std::string block_save = block_;
     Location    location;
 
-    block_ = "location";
     location.path = getValue("location", '{');
-    // if (*(location.path.end() - 1) != '/')
-    //     location.path.push_back('/');
+    block_ = "location '" + location.path + "'";
     if (location.path.compare(0, parent.path.size(), parent.path) != 0)
-            throw bad_config(std::string("location: location '") + location.path + "' is outside location '" + parent.path + "'");
+            throw bad_config(block_ + " is outside location '" + parent.path + "'");
+    location.parent = parent.path;
     parseBlock(location);
     block_ = block_save;
-    if (parent.locations.find(location.path) == parent.locations.end())
-        parent.locations[location.path] = location;
-    else
-        throw bad_config("location: '" + location.path + "' duplicate");
+    if (!server_locations_->insert(std::make_pair(location.path, location)).second)
+        throw bad_config(block_ + " duplicate");
 }
 
 void    Config::parseRoot(Location& parent)
 {
     if (!parent.root.empty())
-        throw bad_config(block_ + ": root duplicate");
-    parent.root = getValue("root", ';');
+        throw bad_config(block_ + " root duplicate");
+    parent.root = getValue("root");
 }
 
 void    Config::parseIndex(Location& parent)
@@ -231,13 +229,13 @@ void    Config::parseAutoindex(Location& parent)
     std::string value = getValue("autoindex", ';');
 
     if (parent.autoindex != -1)
-        throw bad_config(block_ + ": autoindex duplicate");
+        throw bad_config(block_ + " autoindex duplicate");
     if (value == "on")
         parent.autoindex = true;
     else if (value == "off")
         parent.autoindex = false;
     else
-        throw bad_config(block_ + ": autoindex bad value '" + value + "'");
+        throw bad_config(block_ + " autoindex bad value '" + value + "'");
 }
 
 void    Config::parseErrorPage(Location& parent)
@@ -246,12 +244,12 @@ void    Config::parseErrorPage(Location& parent)
     unsigned                    code;
 
     if (values.size() < 2)
-        throw bad_config(block_ + ": error_page not enough values");
+        throw bad_config(block_ + " error_page not enough values");
     for (std::vector<std::string>::iterator it = values.begin(); it != values.end() - 1; it++)
     {
         code = strToUInt(*it, "error_page");
         if (code < 400 || code > 599)
-             throw bad_config(block_ + ": error_page bad value '" + *it + "'");
+             throw bad_config(block_ + " error_page bad value '" + *it + "'");
         parent.error_page[code] = values.back();
     }
 }
@@ -262,7 +260,7 @@ void    Config::parseBodySize(Location& parent)
     unsigned    size = strToUInt(str, "body_size");
 
     if (parent.body_size != std::numeric_limits<unsigned>::max())
-        throw bad_config(block_ + ": body_size duplicate");
+        throw bad_config(block_ + " body_size duplicate");
     parent.body_size = size;
 }
 
@@ -273,7 +271,7 @@ void    Config::parseMethods(Location& parent)
     for (std::vector<std::string>::iterator method = methods.begin(); method != methods.end(); method++)
     {
         if (*method != "GET" && *method != "POST" && *method != "DELETE")
-            throw bad_config(block_ + ": methods bad value '" + *method + "'");
+            throw bad_config(block_ + " methods bad value '" + *method + "'");
         parent.methods.insert(*method);
     }
 }
@@ -281,14 +279,14 @@ void    Config::parseMethods(Location& parent)
 void    Config::parseDirectoryPage(Location& parent)
 {
     if (!parent.directory_page.empty())
-        throw bad_config(block_ + ": directory_page duplicate");
+        throw bad_config(block_ + " directory_page duplicate");
     parent.directory_page = getValue("directory_page");
 }
 
 void    Config::parseUploadStore(Location& parent)
 {
     if (!parent.upload_store.empty())
-        throw bad_config(block_ + ": upload_store duplicate");
+        throw bad_config(block_ + " upload_store duplicate");
     parent.upload_store = getValue("upload_store");
 }
 
@@ -297,9 +295,9 @@ void    Config::parseCgi(Location& parent)
     std::vector<std::string>    values = getValues("cgi");
 
     if (values.size() != 2)
-        throw bad_config(block_ + ": cgi need two values");
+        throw bad_config(block_ + " cgi need two values");
     if (!parent.cgi.insert(std::make_pair(values[0], values[1])).second)
-        throw bad_config(block_ + ": cgi '" + values[0] + "' duplicate");
+        throw bad_config(block_ + " cgi '" + values[0] + "' duplicate");
 }
 
 void    Config::parseReturn(Location& parent)
@@ -308,11 +306,11 @@ void    Config::parseReturn(Location& parent)
     unsigned                    code = 302;
 
     if (values.size() > 2)
-        throw bad_config(block_ + ": return too many values");
+        throw bad_config(block_ + " return too many values");
     if (values.size() == 2)
         code = strToUInt(values[0], "return");
     if (code < 301 || (code > 303 && code != 307 && code != 308))
-        throw bad_config(block_ + ": return bad code '" + values[0] +"'");
+        throw bad_config(block_ + " return bad code '" + values[0] +"'");
     if (parent.redirect.second.empty())
     {
         parent.redirect.first = code;
@@ -322,15 +320,15 @@ void    Config::parseReturn(Location& parent)
 
 void    Config::parseListen(Location& parent)
 {
-    if (block_ != "server")
-        throw bad_config(block_ + ": unexpected 'listen'");
+    if (block_ != "server:")
+        throw bad_config(block_ + " unexpected 'listen'");
 
-    ServerConfig&               server = static_cast<ServerConfig&>(parent);
+    VirtualServer&              server = static_cast<VirtualServer&>(parent);
     std::vector<std::string>    values = getValues("listen");
     std::string                 host = HOST_DFL, port = values.back();
 
     if (values.size() > 2)
-        throw bad_config("server: listen: too many values");
+        throw bad_config("server: listen too many values");
     if (values.size() == 2)
         host = values[0];
     in_addr_t in_host = inet_addr(host.c_str());
@@ -343,10 +341,10 @@ void    Config::parseListen(Location& parent)
 
 void    Config::parseServerName(Location& parent)
 {
-    if (block_ != "server")
-        throw bad_config(block_ + ": unexpected 'server_name'");
+    if (block_ != "server:")
+        throw bad_config(block_ + " unexpected 'server_name'");
 
-    ServerConfig&                     server = static_cast<ServerConfig&>(parent);
+    VirtualServer&              server = static_cast<VirtualServer&>(parent);
     std::vector<std::string>    server_names = getValues("server_name");
 
     server.server_name.insert(server.server_name.end(), server_names.begin(), server_names.end());
@@ -360,7 +358,7 @@ std::vector<std::string>    Config::getValues(const char* directive, char delim)
     std::vector<std::string>    values((std::istream_iterator<std::string>(ss)), std::istream_iterator<std::string>());
 
     if (values.empty())
-        throw bad_config(block_ + ": " + directive + " no values");
+        throw bad_config(block_ + " " + directive + " no values");
     return values;
 }
 
@@ -371,11 +369,11 @@ std::string Config::getValue(const char* directive, char delim)
     std::stringstream   ss(str);
 
     if (str.empty())
-        throw bad_config(block_ + ": " + directive + " no value");
+        throw bad_config(block_ + " " + directive + " no value");
     ss >> str;
     ss >> std::ws;
     if (!ss.eof())
-        throw bad_config(block_ + ": " + directive + " too many values");
+        throw bad_config(block_ + " " + directive + " too many values");
     return str;
 }
 
@@ -385,7 +383,7 @@ unsigned    Config::strToUInt(const std::string& str, const char* directive)
     std::stringstream   ss(str);
 
     if (str.find_first_not_of("0123456789") != std::string::npos)
-        throw bad_config(block_ + ": " + directive + " bad value '" + str + "'");
+        throw bad_config(block_ + " " + directive + " bad value '" + str + "'");
     ss >> number;
     return number;
 }

@@ -1,7 +1,7 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
-# include "ServerConfig.hpp"
+# include "VirtualServer.hpp"
 
 # include <fstream>
 
@@ -16,7 +16,7 @@ class Config
 {
 public:
     Config(const char* filename);
-    const ServerConfig&                                 getServer(in_addr_t host, in_port_t port, const std::string& name) const;
+    const VirtualServer&                                getServer(in_addr_t host, in_port_t port, const std::string& name) const;
     const std::map<in_addr_t, std::set<in_port_t> >     getListened() const;
 
     friend std::ostream&                                operator<<(std::ostream& o, const Config& config);
@@ -49,13 +49,14 @@ private:
     std::string                 getValue(const char* directive, char delim = ';');
     unsigned                    strToUInt(const std::string& str, const char* directive);
 
-    static void                 completeServer(ServerConfig& server);
+    static void                 completeServer(VirtualServer& server);
     static void                 completeLocation(const Location& parent, Location& location);
 private:
-    std::vector<ServerConfig>                   servers_;
+    std::vector<VirtualServer>                   servers_;
 
     std::ifstream                               f_;
     std::string                                 block_;
+    std::map<std::string, Location>*            server_locations_;
 
     typedef void (Config::*parser)(Location&);
     static const std::pair<std::string, parser> init_list_[];
