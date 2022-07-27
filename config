@@ -68,6 +68,7 @@ server {
 		}
 		location /aaa/ddd { location /aaa/ddd/eee{ location /aaa/ddd/eee/fff{ root roooooot; location /aaa/ddd/eee/fff/xxx {}}}}
 		location /aaa/eee { methods POST;}
+		location /aaabbb {}
 	}
 
 }

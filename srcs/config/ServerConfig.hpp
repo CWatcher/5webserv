@@ -1,5 +1,5 @@
-#ifndef CONFIG_HPP
-# define CONFIG_HPP
+#ifndef SERVERCONFIG_HPP
+# define SERVERCONFIG_HPP
 
 # include "VirtualServer.hpp"
 
@@ -12,14 +12,14 @@
 # define HOST_DFL           "0.0.0.0"
 # define PORT_DFL           80
 
-class Config
+class ServerConfig
 {
 public:
-    Config(const char* filename);
-    const VirtualServer&                                getServer(in_addr_t host, in_port_t port, const std::string& name) const;
+    ServerConfig(const char* filename);
+    const VirtualServer&                                getVirtualServer(in_addr_t host, in_port_t port, const std::string& name) const;
     const std::map<in_addr_t, std::set<in_port_t> >     getListened() const;
 
-    friend std::ostream&                                operator<<(std::ostream& o, const Config& config);
+    friend std::ostream&                                operator<<(std::ostream& o, const ServerConfig& config);
 
     class bad_config : public std::runtime_error
     {
@@ -58,7 +58,7 @@ private:
     std::string                                 block_;
     std::map<std::string, Location>*            server_locations_;
 
-    typedef void (Config::*parser)(Location&);
+    typedef void (ServerConfig::*parser)(Location&);
     static const std::pair<std::string, parser> init_list_[];
     static const std::map<std::string, parser>  parsers_;
 };

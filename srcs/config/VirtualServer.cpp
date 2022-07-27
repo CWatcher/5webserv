@@ -5,6 +5,18 @@
 #include <arpa/inet.h>
 #include <iomanip>
 
+const Location&   VirtualServer::getLocation(const VirtualServer& server, const std::string& uri)
+{
+    for (std::map<std::string, Location>::const_reverse_iterator rit = server.locations.rbegin();
+        rit != server.locations.rend(); ++rit)
+    {
+        const std::string& path = rit->first;
+        if (uri.compare(0, path.size(), path) == 0)
+            return rit->second;
+    }
+    return server;
+}
+
 // static void    show_locations(std::ostream& o, const Location& l)
 // {
 //     o << l.path << '{';

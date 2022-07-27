@@ -15,7 +15,7 @@ $(call add/project,$(PROJECT_NAME))
 $(PROJECT_NAME)_SRCS     += $(addprefix srcs/, \
 							main.cpp \
 							utils/log.cpp \
-							config/Config.cpp \
+							config/ServerConfig.cpp \
 							config/VirtualServer.cpp)
 
 $(call add/subproj,$(PROJECT_NAME),debugbase)

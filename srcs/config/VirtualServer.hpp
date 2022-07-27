@@ -31,6 +31,8 @@ struct VirtualServer : public Location
     std::map<in_addr_t, std::set<in_port_t> >   listen;
     std::vector<std::string>                    server_name;
     std::map<std::string, Location>             locations;
+
+    static const Location&                      getLocation(const VirtualServer& server, const std::string& uri);
 };
 
 std::ostream&   operator<<(std::ostream& o, const VirtualServer& s);
