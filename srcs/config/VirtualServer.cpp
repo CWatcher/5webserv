@@ -25,27 +25,27 @@ const Location&   VirtualServer::getLocation(const VirtualServer& server, const 
 //     o << '}';
 // }
 
-static std::ostream&    operator<<(std::ostream& o, const Location& c)
+std::ostream&    operator<<(std::ostream& o, const Location& l)
 {
-    o << "root: " << c.root;
+    o << "root: " << l.root;
     o << std::endl << "index: ";
-    cforeach(std::vector<std::string>, c.index, it)
+    cforeach(std::vector<std::string>, l.index, it)
         o << *it << ' ';
-    o << std::endl << "autoindex: " << std::boolalpha << c.autoindex;
+    o << std::endl << "autoindex: " << std::boolalpha << l.autoindex;
     o << std::endl << "error_page: ";
-    for (std::map<unsigned, std::string>::const_iterator it = c.error_page.begin(); it != c.error_page.end(); ++it)
+    for (std::map<unsigned, std::string>::const_iterator it = l.error_page.begin(); it != l.error_page.end(); ++it)
         o << it->first << ':' << it->second << ' ';
-    o << std::endl << "body_size: " << c.body_size;
+    o << std::endl << "body_size: " << l.body_size;
     o << std::endl << "methods: ";
-    cforeach(std::set<std::string>, c.methods, it)
+    cforeach(std::set<std::string>, l.methods, it)
         o << *it << ' ';
-    o << std::endl << "directory_page: " << c.directory_page;
-    o << std::endl << "upload_store: " << c.upload_store;
+    o << std::endl << "directory_page: " << l.directory_page;
+    o << std::endl << "upload_store: " << l.upload_store;
     o << std::endl << "redirect: ";
-    if (!c.redirect.second.empty())
-        o << c.redirect.first << ' ' << c.redirect.second;
+    if (!l.redirect.second.empty())
+        o << l.redirect.first << ' ' << l.redirect.second;
     o << std::endl << "cgi:" << std::endl;
-    for (std::map<std::string, std::string>::const_iterator it = c.cgi.begin(); it != c.cgi.end(); it++)
+    for (std::map<std::string, std::string>::const_iterator it = l.cgi.begin(); it != l.cgi.end(); it++)
         o << "- " << it->first << ' ' << it->second << std::endl;
     return o;
 }

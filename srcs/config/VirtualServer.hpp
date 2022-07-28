@@ -35,6 +35,7 @@ struct VirtualServer : public Location
     static const Location&                      getLocation(const VirtualServer& server, const std::string& uri);
 };
 
+std::ostream&   operator<<(std::ostream& o, const Location& l);
 std::ostream&   operator<<(std::ostream& o, const VirtualServer& s);
 
 #endif
