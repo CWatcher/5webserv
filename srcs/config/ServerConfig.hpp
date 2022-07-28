@@ -1,40 +1,65 @@
 #ifndef SERVERCONFIG_HPP
 # define SERVERCONFIG_HPP
 
-# include <string>
-# include <vector>
-# include <set>
-# include <map>
-# include <netinet/in.h>
-# include <limits>
+# include "VirtualServer.hpp"
 
-struct Location;
+# include <fstream>
 
-struct BaseConfig
+# define ROOT_DFL           "./www"
+# define INDEX_DFL          "index.html"
+# define AUTOINDEX_DFL      false
+# define BODY_SIZE_DFL      0
+# define HOST_DFL           "0.0.0.0"
+# define PORT_DFL           80
+
+class ServerConfig
 {
-    BaseConfig() : autoindex(-1), body_size(std::numeric_limits<unsigned>::max()){}
+public:
+    ServerConfig(const char* filename);
+    const VirtualServer&                                getVirtualServer(in_addr_t host, in_port_t port, const std::string& name) const;
+    const std::map<in_addr_t, std::set<in_port_t> >     getListened() const;
 
-    std::string                         root;
-    std::vector<std::string>            index;
-    int                                 autoindex;
-    std::map<unsigned, std::string>     error_page;
-    unsigned                            body_size;
-    std::set<std::string>               methods;
-    std::pair<unsigned, std::string>    redirect;
-    std::map<std::string, Location>     location;
+    friend std::ostream&                                operator<<(std::ostream& o, const ServerConfig& config);
+
+    class bad_config : public std::runtime_error
+    {
+    public:
+        bad_config(const std::string& msg) : runtime_error(msg) {}
+    };
+private:
+    void                        parseConfig();
+    void                        parseServer();
+    void                        parseBlock(Location& block);
+
+    void                        parseRoot(Location& parent);
+    void                        parseIndex(Location& parent);
+    void                        parseAutoindex(Location& parent);
+    void                        parseErrorPage(Location& parent);
+    void                        parseBodySize(Location& parent);
+    void                        parseMethods(Location& parent);
+    void                        parseReturn(Location& parent);
+    void                        parseDirectoryPage(Location& parent);
+    void                        parseUploadStore(Location& parent);
+    void                        parseCgi(Location& parent);
+    void                        parseLocation(Location& parent);
+    void                        parseListen(Location& parent);
+    void                        parseServerName(Location& parent);
+
+    std::vector<std::string>    getValues(const char* directive, char delim = ';');
+    std::string                 getValue(const char* directive, char delim = ';');
+    unsigned                    strToUInt(const std::string& str, const char* directive);
+
+    static void                 completeServer(VirtualServer& server);
+    static void                 completeLocation(const Location& parent, Location& location);
+private:
+    std::vector<VirtualServer>                   servers_;
+
+    std::ifstream                               f_;
+    std::string                                 block_;
+    std::map<std::string, Location>*            server_locations_;
+
+    typedef void (ServerConfig::*parser)(Location&);
+    static const std::pair<std::string, parser> init_list_[];
+    static const std::map<std::string, parser>  parsers_;
 };
-
-struct Location : public BaseConfig
-{
-    std::string path;
-};
-
-struct ServerConfig : public BaseConfig
-{
-    std::map<in_addr_t, std::set<in_port_t> >   listen;
-    std::vector<std::string>                    server_name;
-};
-
-std::ostream&   operator<<(std::ostream& o, const ServerConfig& s);
-
 #endif

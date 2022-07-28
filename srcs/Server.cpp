@@ -13,11 +13,13 @@
 
 int Server::poll_timeout = 30 * 1000;
 
-Server::Server(Config &config)
+Server::Server(ServerConfig &config)
     : _config(config)
 {
-    for(std::map<in_addr_t, std::set<in_port_t> >::const_iterator it = config.getListened().begin();
-        it != config.getListened().end(); ++it)
+    std::map<in_addr_t, std::set<in_port_t> > listened = config.getListened();
+
+    for(std::map<in_addr_t, std::set<in_port_t> >::const_iterator it = listened.begin();
+        it != listened.end(); ++it)
     {
         in_addr_t ip   = it->first;
         cforeach(std::set<in_port_t>, it->second, port)
@@ -160,9 +162,9 @@ void Server::eventAction(ASocket *socket)
 
 void Server::addProcessTask(ASocket *socket)
 {
-    SocketSession      *session  = reinterpret_cast<SocketSession *>(socket);
-    const std::string  &server_name = session->input.getHeaderHostName();
-    const ServerConfig &config = _config.getServer(session->from_listen_ip, session->from_listen_port, server_name);
+    SocketSession       *session  = reinterpret_cast<SocketSession *>(socket);
+    const std::string   &server_name = session->input.getHeaderHostName();
+    const VirtualServer &config = _config.getVirtualServer(session->from_listen_ip, session->from_listen_port, server_name);
 
     _thread_pool.push_task(handlers::run, new HandlerTask(config, session));
     logger::info << "Server: addProcessTask: sent to Task queue, socket " << socket->fd << logger::end;

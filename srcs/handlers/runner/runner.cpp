@@ -23,7 +23,7 @@ namespace handlers
     HeaderParser    header_parser(&header_validator);
     IHandler        *start_handler = &header_parser;
     // FIRST HANDLER
-    
+
     void *run(void *task_void)
     {
         HandlerTask *task = reinterpret_cast<HandlerTask *>(task_void);

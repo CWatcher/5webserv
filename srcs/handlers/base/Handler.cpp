@@ -6,7 +6,7 @@ Handler::Handler(IHandler *next_handler)
 
 Handler::~Handler() {}
 
-void Handler::handle(const BaseConfig &config, const HTTPMessage &input, HTTPMessage &output)
+void Handler::handle(const Location &config, const HTTPMessage &input, HTTPMessage &output)
 {
     if (_next)
         _next->handle(config, input, output);

@@ -4,7 +4,7 @@
 
 # include "ASocket.hpp"
 # include "utils/thread_pool.hpp"
-# include "config/Config.hpp"
+# include "config/ServerConfig.hpp"
 
 # include <map>
 # include <sys/poll.h>
@@ -14,7 +14,7 @@
 class Server
 {
 public:
-    explicit Server(Config &config);
+    explicit Server(ServerConfig &config);
     ~Server();
 
     void       mainLoopRun();
@@ -31,7 +31,7 @@ private:
     void    eventAction(ASocket *socket);
     void    addProcessTask(ASocket *socket);
 
-    Config                   &_config;
+    ServerConfig             &_config;
     std::map<int, ASocket *> _sockets;
     ft::thread_pool          _thread_pool;
 };

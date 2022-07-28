@@ -4,7 +4,7 @@
 HeaderGenerator::HeaderGenerator(IHandler *next_handler)
     : Handler(next_handler) {}
 
-void HeaderGenerator::handle(const BaseConfig &config, const HTTPMessage &input, HTTPMessage &output)
+void HeaderGenerator::handle(const Location &config, const HTTPMessage &input, HTTPMessage &output)
 {
     if (generateHeader(input, output))
         Handler::handle(config, input, output);

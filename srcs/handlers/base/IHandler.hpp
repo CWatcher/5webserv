@@ -10,7 +10,7 @@ class IHandler
 public:
     virtual ~IHandler() {};
 
-    virtual void handle(const BaseConfig &config, const HTTPMessage &input, HTTPMessage &output) = 0;
+    virtual void handle(const Location &config, const HTTPMessage &input, HTTPMessage &output) = 0;
 };
 
 

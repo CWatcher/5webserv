@@ -1,3 +1,9 @@
+# https://docs.google.com/spreadsheets/d/1XZdfuUlACFeA5fPuh8J15eKgNshtirq-eh3oi3ZnhmM
+# methods - по умолчанию все методы отключены, дочерние блоки переопределяют методы родительского блока
+# cgi - дочерние блоки дополняют параметры родительского блока, пути для одного и того типа должны быть одинаковые
+# error_page - в дочернем блоке список ошибок дополняется новыми ошибками
+# все остальные параметры переоределяются в дочерних блоках
+
 
 # сервер со всеми параметрами по умолчанию
 
@@ -28,7 +34,8 @@ server_name name1 name2 localhost;
 #ещё один, не должен переписать предыдущий
 	return 303 www.google.com;
 #в этом location переопределяются параметры
-	location aaa {
+	cgi php php;
+	location /aaa {
 		methods DELETE;
 		root a/rooot;
 		autoindex off;
@@ -37,27 +44,31 @@ server_name name1 name2 localhost;
 		error_page 505 506 er3.html;
 		return 303 www.google.com;
 
-
+		cgi py jjjjjjjj;
 		#все параметры кроме return и methods будут как у aaa
-		location ccc{
+		location /aaa/ddd{
 			methods POST;
+			cgi go go;
 		}
 
 	}
-
+	directory_page eeeeeeeeeeeee;
+	upload_store aaaaaaaaaaa;
 # a в этом нет
-	location bbb {}
+	location /bbb {}
 }
 
 
 # много вложенных location
 server {
-	location aaa{
-		location bbb{
-			location ccc{body_size 777;}
+	server_name nested;
+	location /aaa{
+		location /aaa/bbb{
+			location /aaa/bbb/ccc{body_size 777;}
 		}
-		location ddd { location eee{ location fff{ root roooooot; location xxx {}}}}
-		location eee { methods POST;}
+		location /aaa/ddd { location /aaa/ddd/eee{ location /aaa/ddd/eee/fff{ root roooooot; location /aaa/ddd/eee/fff/xxx {}}}}
+		location /aaa/eee { methods POST;}
+		location /aaabbb {}
 	}
 
 }

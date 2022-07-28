@@ -1,4 +1,4 @@
-#include "config/Config.hpp"
+#include "config/ServerConfig.hpp"
 #include "utils/log.hpp"
 #include "Server.hpp"
 
@@ -16,6 +16,7 @@
 //    logger::debug("Catched signal");
 //}
 
+
 int main(int, char* argv[])
 {
 //    signal(SIGUSR1, signal_handler);
@@ -25,7 +26,7 @@ int main(int, char* argv[])
     {
         try
         {
-            Config config(argv[1]);
+            ServerConfig config(argv[1]);
             std::clog << config;
 
             Server server(config);
@@ -41,12 +42,7 @@ int main(int, char* argv[])
                 sleep(5);
             }
         }
-        catch (const std::logic_error &e)
-        {
-            logger::error << e.what() << logger::end;
-            return EXIT_FAILURE;
-        }
-        catch (const std::runtime_error &e)
+        catch (const ServerConfig::bad_config &e)
         {
             logger::error << e.what() << logger::end;
             return EXIT_FAILURE;

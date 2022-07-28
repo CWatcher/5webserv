@@ -7,11 +7,11 @@
 
 struct HandlerTask
 {
-    HandlerTask(const ServerConfig &config, SocketSession *session)
+    HandlerTask(const Location &config, SocketSession *session)
         : config(config), session(session) {}
 
-    const ServerConfig config;
-    SocketSession      *session;
+    const Location  config;
+    SocketSession   *session;
 };
 
 #endif

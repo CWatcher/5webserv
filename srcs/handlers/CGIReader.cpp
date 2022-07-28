@@ -4,7 +4,7 @@
 CGIReader::CGIReader(IHandler *next_handler)
     : Handler(next_handler) {}
 
-void CGIReader::handle(const BaseConfig &config, const HTTPMessage &input, HTTPMessage &output)
+void CGIReader::handle(const Location &config, const HTTPMessage &input, HTTPMessage &output)
 {
     if (runScript(input, output))
         Handler::handle(config, input, output);

@@ -9,7 +9,7 @@ class CGIReader : public Handler
 
 public:
     CGIReader(IHandler *next_handler = NULL);
-    virtual void handle(const BaseConfig &config, const HTTPMessage &input, HTTPMessage &output);
+    virtual void handle(const Location &config, const HTTPMessage &input, HTTPMessage &output);
 
 private:
     bool runScript(const HTTPMessage &input, HTTPMessage &output) const;
