@@ -24,7 +24,7 @@ public:
     class bad_config : public std::runtime_error
     {
     public:
-        bad_config(const std::string& msg) : runtime_error(msg) {}
+        bad_config(const std::string& msg) : std::runtime_error(msg) {}
     };
 private:
     void                        parseConfig();

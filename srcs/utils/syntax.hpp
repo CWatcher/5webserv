@@ -3,6 +3,7 @@
 
 # include <cstring>
 # include <errno.h>
+# include <stdexcept>
 
 class __enum_class
 {

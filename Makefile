@@ -15,10 +15,11 @@ BUILD        ?= debug
 $(call add/project,$(PROJECT_NAME))
 $(PROJECT_NAME)_SRCS     += srcs/main.cpp					\
 							srcs/Server.cpp					\
-							srcs/ASocket.cpp				\
-							srcs/SocketListen.cpp			\
-							srcs/SocketSession.cpp			\
 							srcs/HTTPMessage.cpp			\
+															\
+							srcs/socket/ASocket.cpp			\
+							srcs/socket/SocketListen.cpp	\
+							srcs/socket/SocketSession.cpp	\
 																\
 							srcs/config/VirtualServer.cpp		\
 							srcs/config/ServerConfig.cpp		\

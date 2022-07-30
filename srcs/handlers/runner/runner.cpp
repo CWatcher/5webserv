@@ -5,7 +5,7 @@
 #include "handlers/FileReader.hpp"
 #include "handlers/CGIReader.hpp"
 #include "handlers/HeaderGenerator.hpp"
-#include "SocketSession.hpp"
+#include "socket/SocketSession.hpp"
 
 // ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
 // | | | | | | | | | | | | | | | | | | |
@@ -32,10 +32,10 @@ namespace handlers
         // TODO: need to find and pass proper location or server config
         start_handler->handle(task->config, task->session->input, task->session->output);
 
-        logger::debug << "I know you came from port: " << ntohs(task->session->from_listen_port) << logger::end;
+        logger::debug << "I know you came from port: " << ntohs(task->session->port()) << logger::end;
         logger::debug << "Your server config:\n" << task->config << logger::end;
 
-        task->session->prepareForWrite();
+        task->session->setStateToWrite();
         logger::debug << "handlers: run: task completed" << logger::end;
 
         delete task;

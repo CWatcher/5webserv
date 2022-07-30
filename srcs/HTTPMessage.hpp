@@ -11,32 +11,32 @@
 class HTTPMessage
 {
 public:
-	HTTPMessage();
-	HTTPMessage(const HTTPMessage &src);
-	~HTTPMessage();
-	HTTPMessage	&operator=(const HTTPMessage &rhs);
-	void		operator+=(const std::string &rhs);
+    HTTPMessage();
+    HTTPMessage(const HTTPMessage &src);
+    ~HTTPMessage();
+    HTTPMessage	&operator=(const HTTPMessage &rhs);
+    void		operator+=(const std::string &rhs);
 
-	bool								hasEndOfMessage();
-	std::string							*getHeaderValue(const std::string &header_key);
+    bool								hasEndOfMessage();
+    std::string							*getHeaderValue(const std::string &header_key);
     std::string							getHeaderHostName();
 
 private:
-	void								parseHeader();
+    void								parseHeader();
     void                                parseStartingLine();
-	std::map<std::string, std::string>	getHeaderMapFromRaw();
-	std::pair<std::string, std::string>	getHeaderPairFromLine(const std::string &line);
+    std::map<std::string, std::string>	getHeaderMapFromRaw();
+    std::pair<std::string, std::string>	getHeaderPairFromLine(const std::string &line);
 
 public:
-	std::string							raw_data;
+    std::string							raw_data;
     std::string                         starting_line;
     std::string                         method;
     std::string                         url;
-	std::map<std::string, std::string>	header;
+    std::map<std::string, std::string>	header;
 
 private:
-	size_t	_header_size;
-	size_t	_body_size;
+    size_t	_header_size;
+    size_t	_body_size;
 };
 
 

@@ -1,15 +1,10 @@
 
 #include "Server.hpp"
-#include "SocketListen.hpp"
-#include "SocketSession.hpp"
+#include "socket/SocketListen.hpp"
 #include "HTTPMessage.hpp"
 #include "handlers/base/HandlerTask.hpp"
 #include "handlers/runner/runner.hpp"
 #include "utils/syntax.hpp"
-
-#include <algorithm>
-#include <cerrno>
-#include <cstring>
 
 int Server::poll_timeout = 30 * 1000;
 
@@ -24,8 +19,17 @@ Server::Server(ServerConfig &config)
         in_addr_t ip   = it->first;
         cforeach(std::set<in_port_t>, it->second, port)
         {
-            ASocket  *socket_listen = new SocketListen(ip, *port);
-            _sockets[socket_listen->fd] = socket_listen;
+            try
+            {
+                ASocket  *socket_listen = new SocketListen(ip, *port);
+                _sockets[socket_listen->fd()] = socket_listen;
+            }
+            catch (const std::exception &e)
+            {
+                for (std::map<int, ASocket *>::const_iterator it = _sockets.begin(); it != _sockets.end(); ++it)
+                    delete it->second;
+                throw;
+            }
         }
     }
 }
@@ -42,17 +46,19 @@ Server::~Server()
 
 void Server::mainLoopRun()
 {
-    std::vector<pollfd>	poll_array;
-    size_t				poll_array_len;
-    int					new_events;
+    std::vector<pollfd> poll_array;
+    size_t	            poll_array_len;
+    size_t              new_events;
 
     logger::info << "Server: entering main loop..." << logger::end;
 
-    while (!_sockets.empty())
+    while (!_sockets.empty()) // не запускаем, если нет слушающих сокетов?
     {
+        // Обернурть всё тело цикла в try, чтобы никогда не выходить из него?
         poll_array_len = eventArrayPrepare(poll_array);
 
         logger::debug << "Server: polling..." << logger::end;
+        // что будет если poll_array_len == 0, ок?
         new_events = poll(&poll_array[0], poll_array_len, poll_timeout);
         logger::debug << "Server: polling done!" << logger::end;
 
@@ -60,7 +66,7 @@ void Server::mainLoopRun()
         {
             if (errno)
             {
-                logger::error << "Server: " << strerror(errno) << logger::end;
+                logger::error << "Server: " << logger::cerror << logger::end;
                 errno = 0;
             }
             else
@@ -69,43 +75,39 @@ void Server::mainLoopRun()
             continue ;
         }
 
-        for (size_t i = 0; i < poll_array_len; ++i)
+        for (size_t i = 0; i < poll_array.size(); ++i)
             if (eventCheck(&poll_array[i]))
-                eventAction(_sockets[poll_array[i].fd]);
+            {
+                ASocket *socket = _sockets[poll_array[i].fd];
+                socket->action(this);
+            }
     }
 }
 
-size_t Server::eventArrayPrepare(std::vector<pollfd> &poll_array)
+size_t Server::eventArrayPrepare(std::vector<pollfd> &poll_array) const
 {
     size_t	poll_array_len = 0;
 
     try {
-        poll_array.reserve(_sockets.size());
+        poll_array.resize(_sockets.size());
     }
     catch (std::bad_alloc &e) {
         logger::error << "Server: eventArrayPrepare: " << e.what() << logger::end;
+        return 0;
     }
 
     for (std::map<int, ASocket *>::const_iterator it = _sockets.begin(); it != _sockets.end(); ++it)
     {
         ASocket	*socket = it->second;
 
-        if (poll_array_len >= poll_array.capacity())
-        {
-            logger::warning << "Server: not enough memory to add socket " << socket->fd << logger::end;
-            _sockets.erase(socket->fd);
-            delete socket;
-            continue ;
-        }
-
-        if (socket->getTrigger() == TriggerType::Read)
+        if (socket->state() == SocketState::Read)
             poll_array[poll_array_len].events = POLLIN;
-        else if (socket->getTrigger() == TriggerType::Write)
+        else if (socket->state() == SocketState::Write)
             poll_array[poll_array_len].events = POLLOUT;
         else
             continue ;
 
-        poll_array[poll_array_len].fd = socket->fd;
+        poll_array[poll_array_len].fd = socket->fd();
 
         ++poll_array_len;
     }
@@ -117,55 +119,35 @@ bool Server::eventCheck(const pollfd *poll_fd)
     if (poll_fd->revents & (POLLERR | POLLHUP | POLLNVAL))
     {
         logger::warning << "Server: got terminating event on socket " << poll_fd->fd << logger::end;
-        delete _sockets[poll_fd->fd];
-        _sockets.erase(poll_fd->fd);
+        deleteSession(poll_fd->fd);
     }
 
     return (poll_fd->events == poll_fd->revents);
 }
 
-void Server::eventAction(ASocket *socket)
+void Server::addSession(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port)
 {
-    enum ASocket::PostAction    post_action;
-    int                         return_value;
-
-    return_value = socket->action(post_action);
-    if (return_value == -1)
+    try
     {
-        logger::error << "Server: eventAction: " << strerror(errno) << socket->fd << logger::end;
-        errno = 0;
+        _sockets[fd] = new SocketSession(fd, from_listen_ip, from_listen_port);
     }
-
-    switch (post_action)
+    catch(const std::bad_alloc& e)
     {
-        case ASocket::Add:
-            _sockets[return_value] = new SocketSession(
-                return_value,
-                reinterpret_cast<SocketListen *>(socket)->ip,
-                reinterpret_cast<SocketListen *>(socket)->port
-            );
-            break ;
-
-        case ASocket::Process:
-            addProcessTask(socket);
-            break ;
-
-        case ASocket::Disconnect:
-            _sockets.erase(socket->fd);
-            delete socket;
-            break ;
-
-        default:
-            break ;
+        logger::error << "Server: addSocketSession: " << e.what() << logger::end;
     }
 }
 
-void Server::addProcessTask(ASocket *socket)
+void Server::deleteSession(int fd)
 {
-    SocketSession       *session  = reinterpret_cast<SocketSession *>(socket);
+    delete _sockets[fd];
+    _sockets.erase(fd);
+}
+
+void Server::addProcessTask(SocketSession *session)
+{
     const std::string   &server_name = session->input.getHeaderHostName();
-    const VirtualServer &config = _config.getVirtualServer(session->from_listen_ip, session->from_listen_port, server_name);
+    const VirtualServer &config = _config.getVirtualServer(session->ip(), session->port(), server_name);
 
     _thread_pool.push_task(handlers::run, new HandlerTask(config, session));
-    logger::info << "Server: addProcessTask: sent to Task queue, socket " << socket->fd << logger::end;
+    logger::info << "Server: addProcessTask: sent to Task queue, socket " << session->fd() << logger::end;
 }
