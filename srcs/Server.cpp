@@ -64,23 +64,17 @@ void Server::mainLoopRun()
 
         if (new_events <= 0)
         {
-            if (errno)
-            {
-                logger::error << "Server: " << logger::cerror << logger::end;
-                errno = 0;
-            }
+            if (new_events == -1ul)
+                logger::error << "Server: poll: " << logger::cerror << logger::end;
             else
                 logger::debug << "Server: no new events. Reached poll timeout (seconds): "
                               << poll_timeout / 1000 << logger::end;
             continue ;
         }
 
-        for (size_t i = 0; i < poll_array.size(); ++i)
+        for (size_t i = 0; i < poll_array_len; ++i)
             if (eventCheck(&poll_array[i]))
-            {
-                ASocket *socket = _sockets[poll_array[i].fd];
-                socket->action(this);
-            }
+                eventAction(_sockets[poll_array[i].fd]);
     }
 }
 
@@ -119,35 +113,48 @@ bool Server::eventCheck(const pollfd *poll_fd)
     if (poll_fd->revents & (POLLERR | POLLHUP | POLLNVAL))
     {
         logger::warning << "Server: got terminating event on socket " << poll_fd->fd << logger::end;
-        deleteSession(poll_fd->fd);
+        delete _sockets[poll_fd->fd];
+        _sockets.erase(poll_fd->fd);
     }
 
     return (poll_fd->events == poll_fd->revents);
 }
 
-void Server::addSession(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port)
+void Server::eventAction(ASocket *socket)
 {
-    try
+    int return_value = socket->action();
+
+    if (return_value != -1)
+        try
+        {
+            _sockets[return_value] = new SocketSession(return_value, socket->ip(), socket->port());
+        }
+        catch(const std::bad_alloc& e)
+        {
+            logger::error << "Server: unable add new Session: " << e.what() << logger::end;
+        }
+    else if (socket->state() == SocketState::Disconnect)
     {
-        _sockets[fd] = new SocketSession(fd, from_listen_ip, from_listen_port);
+        _sockets.erase(socket->fd());
+        delete socket;
     }
-    catch(const std::bad_alloc& e)
-    {
-        logger::error << "Server: addSocketSession: " << e.what() << logger::end;
-    }
+    else if (socket->state() == SocketState::Process)
+        addProcessTask(socket);
 }
 
-void Server::deleteSession(int fd)
+void Server::addProcessTask(ASocket *socket)
 {
-    delete _sockets[fd];
-    _sockets.erase(fd);
-}
-
-void Server::addProcessTask(SocketSession *session)
-{
+    SocketSession      *session = static_cast<SocketSession *>(socket);
     const std::string   &server_name = session->input.getHeaderHostName();
     const VirtualServer &config = _config.getVirtualServer(session->ip(), session->port(), server_name);
 
-    _thread_pool.push_task(handlers::run, new HandlerTask(config, session));
+    try
+    {
+        _thread_pool.push_task(handlers::run, new HandlerTask(config, session));
+    }
+    catch(const std::bad_alloc& e)
+    {
+        logger::error << "Server: unable add new Task" << e.what() << logger::end;
+    }
     logger::info << "Server: addProcessTask: sent to Task queue, socket " << session->fd() << logger::end;
 }

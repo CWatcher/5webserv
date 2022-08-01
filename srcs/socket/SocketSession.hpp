@@ -10,12 +10,12 @@ class SocketSession : public ASocket
 public:
     explicit        SocketSession(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port);
 
-    virtual void    action(Server *server);
+    virtual int     action();
     void            setStateToWrite();
 
 private:
-    void            actionRead();
-    void            actionWrite();
+    size_t          actionRead();
+    size_t          actionWrite();
 
 public:
     HTTPMessage     input;

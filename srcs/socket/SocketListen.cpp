@@ -4,6 +4,8 @@
 
 #include <arpa/inet.h>
 
+int SocketListen::ConnectionsLimit = 1024;
+
 SocketListen::SocketListen(in_addr_t ip, in_port_t port, int connections_limit)
     : ASocket(socket(AF_INET, SOCK_STREAM, IPPROTO_IP), ip, port)
 {
@@ -42,7 +44,7 @@ SocketListen::SocketListen(in_addr_t ip, in_port_t port, int connections_limit)
     logger::info << "Enabled listen on: " << addr_str << ':' << ntohs(port) << logger::end;
 }
 
-void	SocketListen::action(Server *server)
+int SocketListen::action()
 {
     sockaddr_in	client_address;
     socklen_t	address_len = sizeof(client_address);
@@ -52,12 +54,10 @@ void	SocketListen::action(Server *server)
     new_fd = accept(_fd, (sockaddr *)&client_address, &address_len);
 
     if (new_fd == -1)
-    {
         logger::error << "Accept error on port " << ntohs(_port) << " (socket " << _fd << ")" << logger::end;
-        return;
-    }
-    logger::info << "Connected new client: socket " << new_fd
-                << " (" << inet_ntoa(client_address.sin_addr)
-                << ":" << ntohs(client_address.sin_port) << ")" << logger::end;
-    server->addSession(new_fd, _ip, _port);
+    else
+        logger::info << "Connected new client: socket " << new_fd
+            << " (" << inet_ntoa(client_address.sin_addr)
+            << ":" << ntohs(client_address.sin_port) << ")" << logger::end;
+    return new_fd;
 }

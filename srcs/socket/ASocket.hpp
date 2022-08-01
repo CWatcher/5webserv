@@ -2,7 +2,7 @@
 #ifndef ASOCKET_HPP
 # define ASOCKET_HPP
 
-# include "Server.hpp"
+# include <netinet/in.h>
 
 namespace SocketState { enum _ {
     Read,
@@ -18,7 +18,7 @@ public:
     ASocket(const ASocket &src);
     virtual	~ASocket();
 
-    virtual void    action(Server *server) = 0;
+    virtual int     action() = 0;
     int             fd() const;
     int             ip() const;
     int             port() const;

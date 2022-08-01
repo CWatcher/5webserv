@@ -7,24 +7,26 @@ SocketSession::SocketSession(int fd, in_addr_t from_listen_ip, in_port_t from_li
     : ASocket(fd, from_listen_ip, from_listen_port),
     _written_total(0) {}
 
-void     SocketSession::action(Server *server)
+int     SocketSession::action()
 {
+    size_t  ret;
+
     if (_state == SocketState::Read)
-        actionRead();
+        ret = actionRead();
     else
-        actionWrite();
-    if (_state == SocketState::Disconnect)
-        server->deleteSession(_fd);
-    else if (_state == SocketState::Process)
-        server->addProcessTask(this);
+        ret = actionWrite();
+    if (ret == -1ul)
+        logger::error << "SocketSession: actionRead/actionWrite: " << logger::cerror << logger::end;
+    return -1;
 }
 
 void    SocketSession::setStateToWrite()
 {
+    _written_total = 0;
     _state = SocketState::Write;
 }
 
-void    SocketSession::actionRead()
+size_t  SocketSession::actionRead()
 {
     char	temp_buffer[8192];
     ssize_t	bytes_read;
@@ -50,9 +52,10 @@ void    SocketSession::actionRead()
             logger::info << "Got end of HTTP message from socket " << _fd << logger::end;
         }
     }
+    return bytes_read;
 }
 
-void    SocketSession::actionWrite()
+size_t  SocketSession::actionWrite()
 {
     const char		*start = output.raw_data.c_str() + _written_total;
     const size_t	left_to_write = output.raw_data.size() - _written_total;
@@ -64,9 +67,10 @@ void    SocketSession::actionWrite()
         const char *error = "HTTP/1.1 500\nContent-Length: 25\n\n500 Internal Server Error";
 
         logger::warning << "actionWrite: Empty data to write to socket " << _fd << logger::end;
-        send(_fd, error, strlen(error), MSG_NOSIGNAL | MSG_DONTWAIT);
+        bytes_written = send(_fd, error, strlen(error), MSG_NOSIGNAL | MSG_DONTWAIT);
+        input = HTTPMessage();
         _state = SocketState::Read;
-        return;
+        return bytes_written;
     }
 
     logger::debug << "actionWrite: Trying to write to socket " << _fd << logger::end;
@@ -79,9 +83,11 @@ void    SocketSession::actionWrite()
         if (_written_total == output.raw_data.size())
         {
             logger::info << "actionWrite: HTTP response sent. Switching to read socket " << _fd << logger::end;
+            input = HTTPMessage();
             _state = SocketState::Read;
         }
         else
             logger::debug << "actionWrite: Left to write (bytes): " << left_to_write - bytes_written << logger::end;
     }
+    return bytes_written;
 }
