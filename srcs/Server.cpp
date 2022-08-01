@@ -145,9 +145,12 @@ void Server::eventAction(ASocket *socket)
 void Server::addProcessTask(ASocket *socket)
 {
     SocketSession       *session = static_cast<SocketSession *>(socket);
-    const std::string   &server_name = session->request().getHeaderHostName();
-    const VirtualServer &config = _config.getVirtualServer(session->ip(), session->port(), server_name);
+    HTTPRequest         &request = session->request();
+    const VirtualServer &config = _config.getVirtualServer(session->ip(), session->port(), request.getHeaderHostName());
 
+    // здесь uri должен быть в нормальном виде
+    // сделать все пути с маленькой буквы в Location?
+    request.setLocation(VirtualServer::getLocation(config, request.uri()));
     try
     {
         _thread_pool.push_task(handlers::run, new HandlerTask(config, session));

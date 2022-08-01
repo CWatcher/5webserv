@@ -4,9 +4,9 @@
 
 #include <cstdlib>
 
-void    HTTPRequest::append(const char* s, size_t n)
+void    HTTPRequest::addData(const char* data, size_t n)
 {
-    _raw_data.append(s, n);
+    _raw_data.append(data, n);
 
     if (_header.empty())
         parseHeader();

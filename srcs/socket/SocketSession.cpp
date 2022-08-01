@@ -52,7 +52,7 @@ size_t  SocketSession::actionRead()
         _state = SocketState::Disconnect;
     else
     {
-        _request.append(temp_buffer, bytes_read);
+        _request.addData(temp_buffer, bytes_read);
         if (_request.hasEndOfMessage())
         {
             _state = SocketState::Process;

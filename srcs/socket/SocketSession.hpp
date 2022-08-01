@@ -13,7 +13,7 @@ public:
 
     virtual int         action();
     void                setStateToWrite();
-    const HTTPRequest   &request() const {return _request;}
+    HTTPRequest         &request() {return _request;}
 
 private:
     size_t              actionRead();
