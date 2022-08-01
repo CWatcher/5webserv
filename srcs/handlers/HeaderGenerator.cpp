@@ -4,13 +4,13 @@
 HeaderGenerator::HeaderGenerator(IHandler *next_handler)
     : Handler(next_handler) {}
 
-void HeaderGenerator::handle(const Location &config, const HTTPMessage &input, HTTPMessage &output)
+void HeaderGenerator::handle(const Location &config, const HTTPRequest &input, HTTPMessage &output)
 {
     if (generateHeader(input, output))
         Handler::handle(config, input, output);
 }
 
-bool HeaderGenerator::generateHeader(const HTTPMessage &input, HTTPMessage &output) const
+bool HeaderGenerator::generateHeader(const HTTPRequest &input, HTTPMessage &output) const
 {
     (void)input;
     (void)output;

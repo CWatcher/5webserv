@@ -12,11 +12,19 @@ int     SocketSession::action()
     size_t  ret;
 
     if (_state == SocketState::Read)
-        ret = actionRead();
+        try
+        {
+            ret = actionRead();
+        }
+        catch (const std::bad_alloc &e)
+        {
+            //output status 500
+            logger::error << "SocketSession: actionRead: " << e.what() << logger::end;
+        }
     else
         ret = actionWrite();
     if (ret == -1ul)
-        logger::error << "SocketSession: actionRead/actionWrite: " << logger::cerror << logger::end;
+        logger::error << "SocketSession: recv/send: " << logger::cerror << logger::end;
     return -1;
 }
 
@@ -44,9 +52,8 @@ size_t  SocketSession::actionRead()
         _state = SocketState::Disconnect;
     else
     {
-        temp_buffer[bytes_read] = '\0';
-        input += temp_buffer;
-        if (input.hasEndOfMessage())
+        _request.append(temp_buffer, bytes_read);
+        if (_request.hasEndOfMessage())
         {
             _state = SocketState::Process;
             logger::info << "Got end of HTTP message from socket " << _fd << logger::end;
@@ -68,7 +75,7 @@ size_t  SocketSession::actionWrite()
 
         logger::warning << "actionWrite: Empty data to write to socket " << _fd << logger::end;
         bytes_written = send(_fd, error, strlen(error), MSG_NOSIGNAL | MSG_DONTWAIT);
-        input = HTTPMessage();
+        _request = HTTPRequest();
         _state = SocketState::Read;
         return bytes_written;
     }
@@ -83,7 +90,7 @@ size_t  SocketSession::actionWrite()
         if (_written_total == output.raw_data.size())
         {
             logger::info << "actionWrite: HTTP response sent. Switching to read socket " << _fd << logger::end;
-            input = HTTPMessage();
+            _request = HTTPRequest();
             _state = SocketState::Read;
         }
         else

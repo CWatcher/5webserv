@@ -27,10 +27,10 @@ namespace handlers
     void *run(void *task_void)
     {
         HandlerTask *task = reinterpret_cast<HandlerTask *>(task_void);
-        logger::info << task->session->input.starting_line << logger::end;
+        logger::info << task->session->request().start_line() << logger::end;
 
         // TODO: need to find and pass proper location or server config
-        start_handler->handle(task->config, task->session->input, task->session->output);
+        start_handler->handle(task->config, task->session->request(), task->session->output);
 
         logger::debug << "I know you came from port: " << ntohs(task->session->port()) << logger::end;
         logger::debug << "Your server config:\n" << task->config << logger::end;

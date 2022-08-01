@@ -9,10 +9,10 @@ class HeaderValidator : public Handler
 
 public:
     HeaderValidator(IHandler *next_handler = NULL);
-    virtual void handle(const Location &config, const HTTPMessage &input, HTTPMessage &output);
+    virtual void handle(const Location &config, const HTTPRequest &input, HTTPMessage &output);
 
 private:
-    bool checkHeader(const HTTPMessage &input) const;
+    bool checkHeader(const HTTPRequest &input) const;
 
 };
 

@@ -144,8 +144,8 @@ void Server::eventAction(ASocket *socket)
 
 void Server::addProcessTask(ASocket *socket)
 {
-    SocketSession      *session = static_cast<SocketSession *>(socket);
-    const std::string   &server_name = session->input.getHeaderHostName();
+    SocketSession       *session = static_cast<SocketSession *>(socket);
+    const std::string   &server_name = session->request().getHeaderHostName();
     const VirtualServer &config = _config.getVirtualServer(session->ip(), session->port(), server_name);
 
     try
@@ -155,6 +155,7 @@ void Server::addProcessTask(ASocket *socket)
     catch(const std::bad_alloc& e)
     {
         logger::error << "Server: unable add new Task" << e.what() << logger::end;
+        return ;
     }
     logger::info << "Server: addProcessTask: sent to Task queue, socket " << session->fd() << logger::end;
 }

@@ -9,10 +9,10 @@ int SocketListen::ConnectionsLimit = 1024;
 SocketListen::SocketListen(in_addr_t ip, in_port_t port, int connections_limit)
     : ASocket(socket(AF_INET, SOCK_STREAM, IPPROTO_IP), ip, port)
 {
-    const int	sockopt_value = 1;
-    sockaddr_in	socket_address;
-    char addr_str[40];
-    struct in_addr addr;
+    const int   sockopt_value = 1;
+    sockaddr_in socket_address;
+    char        addr_str[40];
+    struct      in_addr addr;
 
     addr.s_addr = ip;
     inet_ntop(AF_INET, &addr, addr_str, 40);
