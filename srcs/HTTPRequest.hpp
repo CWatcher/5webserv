@@ -1,10 +1,10 @@
-#ifndef HTTPREQUEST
-# define HTTPREQUEST
+#ifndef HTTPREQUEST_HPP
+# define HTTPREQUEST_HPP
 
-# include "AHTTPMessage.hpp"
+# include "HTTPMessage.hpp"
 # include "config/VirtualServer.hpp"
 
-class HTTPRequest : public AHTTPMessage
+class HTTPRequest : public HTTPMessage
 {
 public:
     HTTPRequest() : _start_line(), _method(), _uri(), _header_size(0), _body_size(0), _location(NULL) {}
@@ -15,10 +15,10 @@ public:
     const std::string   *getHeaderValue(const std::string &header_key) const;
     const std::string   getHeaderHostName() const;
 
-    const std::string   &uri() {return _uri;}
-    const std::string   &method() {return _method;}
+    const std::string   &uri() const {return _uri;}
+    const std::string   &method() const {return _method;}
     const std::string   &start_line() const {return _start_line;}
-    const Location      *location() {return _location;}
+    const Location      *location() const {return _location;}
     void                setLocation(const Location &location) {_location = &location;}
 
 private:

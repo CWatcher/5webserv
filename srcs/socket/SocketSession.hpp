@@ -3,7 +3,7 @@
 # define SOCKETSESSION_HPP
 
 # include "HTTPRequest.hpp"
-# include "HTTPMessage.hpp"
+# include "HTTPResponse.hpp"
 # include "socket/ASocket.hpp"
 
 class SocketSession : public ASocket
@@ -14,19 +14,16 @@ public:
     virtual int         action();
     void                setStateToWrite();
     HTTPRequest         &request() {return _request;}
+    HTTPResponse        &response() {return _response;}
 
 private:
     size_t              actionRead();
     size_t              actionWrite();
 
-public:
-    // HTTPMessage     request;
-    HTTPMessage         output;
-
 private:
     size_t              _written_total;
     HTTPRequest         _request;
-    // HTTPResponse     _response;
+    HTTPResponse        _response;
 };
 
 #endif

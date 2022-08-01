@@ -9,7 +9,7 @@ class HeaderParser : public Handler
 
 public:
     HeaderParser(IHandler *next_handler = NULL);
-    virtual void handle(const Location &config, const HTTPRequest &input, HTTPMessage &output);
+    virtual void handle(const Location &config, const HTTPRequest &input, HTTPResponse &output);
 
 private:
     bool parseHeader(const HTTPRequest &input) const;

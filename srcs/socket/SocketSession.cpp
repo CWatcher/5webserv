@@ -1,5 +1,6 @@
 
 #include "socket/SocketSession.hpp"
+#include "utils/log.hpp"
 
 #include <sys/socket.h>
 
@@ -18,7 +19,8 @@ int     SocketSession::action()
         }
         catch (const std::bad_alloc &e)
         {
-            //output status 500
+            _response.setStatus(500);
+            //что делать дальше? дочитать запрос?
             logger::error << "SocketSession: actionRead: " << e.what() << logger::end;
         }
     else
@@ -64,8 +66,8 @@ size_t  SocketSession::actionRead()
 
 size_t  SocketSession::actionWrite()
 {
-    const char		*start = output.raw_data.c_str() + _written_total;
-    const size_t	left_to_write = output.raw_data.size() - _written_total;
+    const char		*start = _response.raw_data().data() + _written_total;
+    const size_t	left_to_write = _response.raw_data().size() - _written_total;
     ssize_t			bytes_written;
 
     if (left_to_write == 0)
@@ -87,7 +89,7 @@ size_t  SocketSession::actionWrite()
     if (bytes_written > 0)
     {
         _written_total += bytes_written;
-        if (_written_total == output.raw_data.size())
+        if (_written_total == _response.raw_data().size())
         {
             logger::info << "actionWrite: HTTP response sent. Switching to read socket " << _fd << logger::end;
             _request = HTTPRequest();

@@ -16,7 +16,7 @@ $(call add/project,$(PROJECT_NAME))
 $(PROJECT_NAME)_SRCS     += srcs/main.cpp					\
 							srcs/Server.cpp					\
 							srcs/HTTPRequest.cpp			\
-							srcs/HTTPMessage.cpp			\
+							srcs/HTTPResponse.cpp			\
 															\
 							srcs/socket/ASocket.cpp			\
 							srcs/socket/SocketListen.cpp	\

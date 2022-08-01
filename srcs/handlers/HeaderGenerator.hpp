@@ -9,10 +9,10 @@ class HeaderGenerator : public Handler
 
 public:
     HeaderGenerator(IHandler *next_handler = NULL);
-    virtual void handle(const Location &config, const HTTPRequest &input, HTTPMessage &output);
+    virtual void handle(const Location &config, const HTTPRequest &input, HTTPResponse &output);
 
 private:
-    bool generateHeader(const HTTPRequest &input, HTTPMessage &output) const;
+    bool generateHeader(const HTTPRequest &input, HTTPResponse &output) const;
 
 };
 

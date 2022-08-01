@@ -5,7 +5,7 @@
 #include "handlers/FileReader.hpp"
 #include "handlers/CGIReader.hpp"
 #include "handlers/HeaderGenerator.hpp"
-#include "socket/SocketSession.hpp"
+#include "utils/log.hpp"
 
 // ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
 // | | | | | | | | | | | | | | | | | | |
@@ -26,11 +26,12 @@ namespace handlers
 
     void *run(void *task_void)
     {
+        // TODO: проверить, что в ответе нет статуса 500
         HandlerTask *task = reinterpret_cast<HandlerTask *>(task_void);
         logger::info << task->session->request().start_line() << logger::end;
 
         // TODO: need to find and pass proper location or server config
-        start_handler->handle(task->config, task->session->request(), task->session->output);
+        start_handler->handle(task->config, task->session->request(), task->session->response());
 
         logger::debug << "I know you came from port: " << ntohs(task->session->port()) << logger::end;
         logger::debug << "Your server config:\n" << task->config << logger::end;

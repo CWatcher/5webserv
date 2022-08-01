@@ -5,6 +5,7 @@
 # include "utils/thread_pool.hpp"
 # include "config/ServerConfig.hpp"
 # include "socket/ASocket.hpp"
+# include "utils/log.hpp"
 
 # include <map>
 # include <sys/poll.h>
