@@ -4,26 +4,26 @@
 HeaderGenerator::HeaderGenerator(IHandler *next_handler)
     : Handler(next_handler) {}
 
-void HeaderGenerator::handle(const Location &config, const HTTPRequest &input, HTTPResponse &output)
+void HeaderGenerator::handle(const Location &location, const HTTPRequest &request, HTTPResponse &response)
 {
-    if (generateHeader(input, output))
-        Handler::handle(config, input, output);
+    if (generateHeader(request, response))
+        Handler::handle(location, request, response);
 }
 
-bool HeaderGenerator::generateHeader(const HTTPRequest &input, HTTPResponse &output) const
+bool HeaderGenerator::generateHeader(const HTTPRequest &request, HTTPResponse &response) const
 {
-    (void)input;
-    (void)output;
+    (void)request;
+    (void)response;
     // do all work
-    output.addHeader("Date", "Wed, 18 Feb 2021 11:20:59 GMT");
-    output.addHeader("Server", "Apache");
-    output.addHeader("X-Powered-By", "webserv");
-    output.addHeader("Last-Modified", "Wed, 11 Feb 2009 11\", 2\"0\", 5\"9 GMT");
-    output.addHeader("Content-Type", "text/html; charset=utf-8");
-    output.addHeader("Content-Length", "14");
-    output.addHeader("Connection", "close");
+    response.addHeader("Date", "Wed, 18 Feb 2021 11:20:59 GMT");
+    response.addHeader("Server", "Apache");
+    response.addHeader("X-Powered-By", "webserv");
+    response.addHeader("Last-Modified", "Wed, 11 Feb 2009 11\", 2\"0\", 5\"9 GMT");
+    response.addHeader("Content-Type", "text/html; charset=utf-8");
+    response.addHeader("Content-Length", "14");
+    response.addHeader("Connection", "close");
 
-    output.buildResponse("<h1>HELLO WOR!D</h1>\n", 21);
+    response.buildResponse("<h1>HELLO WOR!D</h1>\n", 21);
 
     return true;
 }

@@ -4,16 +4,16 @@
 CGIReader::CGIReader(IHandler *next_handler)
     : Handler(next_handler) {}
 
-void CGIReader::handle(const Location &config, const HTTPRequest &input, HTTPResponse &output)
+void CGIReader::handle(const Location &location, const HTTPRequest &request, HTTPResponse &response)
 {
-    if (runScript(input, output))
-        Handler::handle(config, input, output);
+    if (runScript(request, response))
+        Handler::handle(location, request, response);
 }
 
-bool CGIReader::runScript(const HTTPRequest &input, HTTPResponse &output) const
+bool CGIReader::runScript(const HTTPRequest &request, HTTPResponse &response) const
 {
-    (void)input;
-    (void)output;
+    (void)request;
+    (void)response;
     // do all work
 
     return true;

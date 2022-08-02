@@ -148,12 +148,11 @@ void Server::addProcessTask(ASocket *socket)
     HTTPRequest         &request = session->request();
     const VirtualServer &config = _config.getVirtualServer(session->ip(), session->port(), request.getHeaderHostName());
 
-    // здесь uri должен быть в нормальном виде
-    // сделать все пути с маленькой буквы в Location?
-    request.setLocation(VirtualServer::getLocation(config, request.uri()));
+    // здесь uri должен быть в нормальном виде, в парсере?
     try
     {
-        _thread_pool.push_task(handlers::run, new HandlerTask(config, session));
+        HandlerTask*    new_task = new HandlerTask(VirtualServer::getLocation(config, request.uri()), session);
+        _thread_pool.push_task(handlers::run, new_task);
     }
     catch(const std::bad_alloc& e)
     {

@@ -4,10 +4,10 @@
 HeaderParser::HeaderParser(IHandler *next_handler)
     : Handler(next_handler) {}
 
-void HeaderParser::handle(const Location &config, const HTTPRequest &input, HTTPResponse &output)
+void HeaderParser::handle(const Location &location, const HTTPRequest &request, HTTPResponse &response)
 {
-    if (parseHeader(input))
-        Handler::handle(config, input, output);
+    if (parseHeader(request))
+        Handler::handle(location, request, response);
 }
 
 bool HeaderParser::parseHeader(const HTTPRequest &input) const

@@ -7,7 +7,7 @@
 class HTTPRequest : public HTTPMessage
 {
 public:
-    HTTPRequest() : _start_line(), _method(), _uri(), _header_size(0), _body_size(0), _location(NULL) {}
+    HTTPRequest() : _start_line(), _method(), _uri(), _header_size(0), _body_size(0) {}
 
     virtual void        addData(const char* data, size_t n);
 
@@ -18,8 +18,6 @@ public:
     const std::string   &uri() const {return _uri;}
     const std::string   &method() const {return _method;}
     const std::string   &start_line() const {return _start_line;}
-    const Location      *location() const {return _location;}
-    void                setLocation(const Location &location) {_location = &location;}
 
 private:
     void                                parseHeader();
@@ -33,6 +31,5 @@ private:
     std::string     _uri;
     size_t          _header_size;
     size_t          _body_size;
-    const Location  *_location;
 };
 # endif

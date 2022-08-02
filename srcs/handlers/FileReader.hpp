@@ -9,10 +9,10 @@ class FileReader : public Handler
 
 public:
     FileReader(IHandler *next_handler = NULL);
-    virtual void handle(const Location &config, const HTTPRequest &input, HTTPResponse &output);
+    virtual void handle(const Location &location, const HTTPRequest &request, HTTPResponse &response);
 
 private:
-    bool readFile(const HTTPRequest &input, HTTPResponse &output) const;
+    bool readFile(const HTTPRequest &request, HTTPResponse &response) const;
 
 };
 

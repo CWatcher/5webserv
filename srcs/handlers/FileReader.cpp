@@ -4,16 +4,16 @@
 FileReader::FileReader(IHandler *next_handler)
     : Handler(next_handler) {}
 
-void FileReader::handle(const Location &config, const HTTPRequest &input, HTTPResponse &output)
+void FileReader::handle(const Location &location, const HTTPRequest &request, HTTPResponse &response)
 {
-    if (readFile(input, output))
-        Handler::handle(config, input, output);
+    if (readFile(request, response))
+        Handler::handle(location, request, response);
 }
 
-bool FileReader::readFile(const HTTPRequest &input, HTTPResponse &output) const
+bool FileReader::readFile(const HTTPRequest &request, HTTPResponse &response) const
 {
-    (void)input;
-    (void)output;
+    (void)request;
+    (void)response;
     // do all work
 
     return true;

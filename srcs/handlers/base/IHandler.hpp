@@ -11,7 +11,7 @@ class IHandler
 public:
     virtual ~IHandler() {};
 
-    virtual void handle(const Location &config, const HTTPRequest &input, HTTPResponse &output) = 0;
+    virtual void handle(const Location &location, const HTTPRequest &request, HTTPResponse &response) = 0;
 };
 
 
