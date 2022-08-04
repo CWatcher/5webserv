@@ -14,8 +14,10 @@ public:
     int                 status() const {return _status;}
     void                setStatus(int status) {_status = status;}
     const std::string   &raw_data() const {return _raw_data;}
+    void                setContentType();
 
 private:
-    int _status;
+    int                                             _status; //??
+    static const std::map<std::string, std::string> _types;
 };
 #endif
