@@ -146,12 +146,11 @@ void Server::addProcessTask(ASocket *socket)
 {
     SocketSession       *session = static_cast<SocketSession *>(socket);
     HTTPRequest         &request = session->request();
-    const VirtualServer &config = _config.getVirtualServer(session->ip(), session->port(), request.getHeaderHostName());
+    const VirtualServer &v_server = _config.getVirtualServer(session->ip(), session->port(), request.getHeaderHostName());
 
-    // здесь uri должен быть в нормальном виде, в парсере?
     try
     {
-        HandlerTask*    new_task = new HandlerTask(VirtualServer::getLocation(config, request.uri()), session);
+        HandlerTask*    new_task = new HandlerTask(VirtualServer::getLocation(v_server, request.uri()), session);
         _thread_pool.push_task(handlers::run, new_task);
     }
     catch(const std::bad_alloc& e)

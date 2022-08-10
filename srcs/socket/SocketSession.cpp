@@ -10,23 +10,10 @@ SocketSession::SocketSession(int fd, in_addr_t from_listen_ip, in_port_t from_li
 
 int     SocketSession::action()
 {
-    size_t  ret;
-
     if (_state == SocketState::Read)
-        try
-        {
-            ret = actionRead();
-        }
-        catch (const std::bad_alloc &e)
-        {
-            _response.setStatus(500);
-            //что делать дальше? дочитать запрос?
-            logger::error << "SocketSession: actionRead: " << e.what() << logger::end;
-        }
+        actionRead();
     else
-        ret = actionWrite();
-    if (ret == -1ul)
-        logger::error << "SocketSession: recv/send: " << logger::cerror << logger::end;
+        actionWrite();
     return -1;
 }
 
@@ -47,18 +34,24 @@ size_t  SocketSession::actionRead()
         logger::debug << "Read from socket (bytes): " << bytes_read << logger::end;
 
     if (bytes_read == -1)
-    {
-        //очистить буффер и отключить клиента или ничего не делать?
-    }
-    else if (bytes_read == 0)
+        logger::error << "SocketSession: actionRead: recv: " << logger::cerror << logger::end;
+    if (bytes_read <= 0)
         _state = SocketState::Disconnect;
     else
     {
-        _request.addData(temp_buffer, bytes_read);
-        if (_request.hasEndOfMessage())
+        try
         {
-            _state = SocketState::Process;
-            logger::info << "Got end of HTTP message from socket " << _fd << logger::end;
+            _request.addData(temp_buffer, bytes_read);
+            if (_request.hasEndOfMessage())
+            {
+                _state = SocketState::Process;
+                logger::info << "Got end of HTTP message from socket " << _fd << logger::end;
+            }
+        }
+        catch (const std::bad_alloc &e)
+        {
+            logger::error << "HTTPRequest: addData: " << e.what() << logger::end;
+            _state = SocketState::Disconnect;
         }
     }
     return bytes_read;
@@ -85,8 +78,12 @@ size_t  SocketSession::actionWrite()
     logger::debug << "actionWrite: Trying to write to socket " << _fd << logger::end;
     bytes_written = send(_fd, start, left_to_write, MSG_NOSIGNAL | MSG_DONTWAIT);
     logger::debug << "actionWrite: Written to socket (bytes): " << bytes_written << logger::end;
-
-    if (bytes_written > 0)
+    if (bytes_written == -1)
+    {
+        _state = SocketState::Disconnect;
+        logger::error << "SocketSession: actionWrite: send: " << logger::cerror << logger::end;
+    }
+    else if (bytes_written > 0)
     {
         _written_total += bytes_written;
         if (_written_total == _response.raw_data().size())

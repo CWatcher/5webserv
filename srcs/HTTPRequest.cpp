@@ -66,15 +66,17 @@ void	HTTPRequest::parseHeader()
     {
         _header_size = header_end + 4;
         _header = getHeaderMapFromRaw();
-        parseStartingLine();
+        parseStartLine();
         logger::debug << __FUNCTION__ << ": " << "HTTP request header found" << logger::end;
     }
     else
         logger::debug << __FUNCTION__ << ": " << "HTTP request header not found yet" << logger::end;
 }
 
-void HTTPRequest::parseStartingLine()
+void HTTPRequest::parseStartLine()
 {
+    //что будет в uri и method, если в starting line будет не 3 слова???
+
     _start_line = _raw_data.substr(0, _raw_data.find('\n'));
     size_t delimiter_index = _start_line.find(' ');
     _method = _start_line.substr(0, delimiter_index);
@@ -82,6 +84,13 @@ void HTTPRequest::parseStartingLine()
     {
         ++delimiter_index;
         _uri = _start_line.substr(delimiter_index, _start_line.find(' ', delimiter_index) - delimiter_index);
+    }
+
+    size_t  double_slash = _uri.find("//");
+    while (double_slash != std::string::npos)
+    {
+        _uri.replace(double_slash, 2, "/");
+        double_slash = _uri.find("//");
     }
 }
 

@@ -15,13 +15,14 @@ public:
     const std::string   *getHeaderValue(const std::string &header_key) const;
     const std::string   getHeaderHostName() const;
 
-    const std::string   &uri() const {return _uri;}
-    const std::string   &method() const {return _method;}
     const std::string   &start_line() const {return _start_line;}
+    const std::string   &method() const {return _method;}
+    const std::string   &uri() const {return _uri;}
+    size_t              body_size() const {return _body_size;}
 
 private:
     void                                parseHeader();
-    void                                parseStartingLine();
+    void                                parseStartLine();
     std::map<std::string, std::string>  getHeaderMapFromRaw();
     std::pair<std::string, std::string> getHeaderPairFromLine(const std::string &line);
 
