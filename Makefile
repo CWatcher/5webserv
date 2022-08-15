@@ -17,6 +17,7 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp					\
 							srcs/Server.cpp					\
 							srcs/HTTPRequest.cpp			\
 							srcs/HTTPResponse.cpp			\
+							srcs/SimpleHahdler.cpp			\
 															\
 							srcs/socket/ASocket.cpp			\
 							srcs/socket/SocketListen.cpp	\

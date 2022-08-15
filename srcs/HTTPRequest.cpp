@@ -75,6 +75,9 @@ void	HTTPRequest::parseHeader()
 
 void HTTPRequest::parseStartLine()
 {
+    // добавить в парсинг
+    _http = "HTTP/1.1";
+    // _start_line не нужна как переменная класса?
     //что будет в uri и method, если в starting line будет не 3 слова???
 
     _start_line = _raw_data.substr(0, _raw_data.find('\n'));
