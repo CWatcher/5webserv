@@ -6,6 +6,8 @@
 #include "handlers/runner/runner.hpp"
 #include "utils/syntax.hpp"
 
+#include "SimpleHandler.hpp"
+
 int Server::poll_timeout = 30 * 1000;
 
 Server::Server(ServerConfig &config)
@@ -147,16 +149,21 @@ void Server::addProcessTask(ASocket *socket)
     SocketSession       *session = static_cast<SocketSession *>(socket);
     HTTPRequest         &request = session->request();
     const VirtualServer &v_server = _config.getVirtualServer(session->ip(), session->port(), request.getHeaderHostName());
+    const Location      &location = VirtualServer::getLocation(v_server, request.uri());
+    SimpleHandler       handler(location, session->request());
 
-    try
-    {
-        HandlerTask*    new_task = new HandlerTask(VirtualServer::getLocation(v_server, request.uri()), session);
-        _thread_pool.push_task(handlers::run, new_task);
-    }
-    catch(const std::bad_alloc& e)
-    {
-        logger::error << "Server: unable add new Task" << e.what() << logger::end;
-        return ;
-    }
-    logger::info << "Server: addProcessTask: sent to Task queue, socket " << session->fd() << logger::end;
+    handler.fillResponse(session->response());
+    session->setStateToWrite();
+
+    // try
+    // {
+    //     HandlerTask*    new_task = new HandlerTask(VirtualServer::getLocation(v_server, request.uri()), session);
+    //     _thread_pool.push_task(handlers::run, new_task);
+    // }
+    // catch(const std::bad_alloc& e)
+    // {
+    //     logger::error << "Server: unable add new Task" << e.what() << logger::end;
+    //     return ;
+    // }
+    // logger::info << "Server: addProcessTask: sent to Task queue, socket " << session->fd() << logger::end;
 }

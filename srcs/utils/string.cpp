@@ -26,3 +26,16 @@ std::string	strLowerCaseCopy(const std::string &str)
 	std::for_each(str_copy.begin(), str_copy.end(), tolower);
 	return str_copy;
 }
+
+std::string	&strRemoveDoubled(std::string &str, char c)
+{
+	const char	twins[] = {c, c, '\0'};
+	size_t		doubled = str.find(twins);
+
+	while (doubled != std::string::npos)
+	{
+		str.erase(doubled, 1);
+		doubled = str.find(twins);
+	}
+	return str;
+}

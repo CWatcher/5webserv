@@ -89,12 +89,7 @@ void HTTPRequest::parseStartLine()
         _uri = _start_line.substr(delimiter_index, _start_line.find(' ', delimiter_index) - delimiter_index);
     }
 
-    size_t  double_slash = _uri.find("//");
-    while (double_slash != std::string::npos)
-    {
-        _uri.replace(double_slash, 2, "/");
-        double_slash = _uri.find("//");
-    }
+    strRemoveDoubled(_uri, '/');
 }
 
 std::map<std::string, std::string>	HTTPRequest::getHeaderMapFromRaw()

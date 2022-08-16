@@ -12,7 +12,8 @@ static const std::pair<std::string, std::string> types_init_list[] =
     std::make_pair("bmp", "image/bmp"),
     std::make_pair("css", "text/css"),
     std::make_pair("csv", "text/csv"),
-    std::make_pair("html", "text/html"),
+    std::make_pair("html", "text/html; charset=utf-8"),
+    std::make_pair("txt", "text/html"),
     std::make_pair("plain", "text/plain"),
     std::make_pair("xml", "text/xml"),
 };
@@ -67,14 +68,14 @@ const std::pair<HTTPStatus, std::string>    http_status_init_list[] =
     std::make_pair(HTTP_VERSION_NOT_SUPPORTED, "HTTP Version Not Supported")
 };
 
-const std::map<HTTPStatus, std::string>	http_status_(http_status_init_list, http_status_init_list + sizeof(http_status_init_list) / sizeof(http_status_init_list[0]));
+const std::map<HTTPStatus, std::string> HTTPResponse::http_status_msg(http_status_init_list, http_status_init_list + sizeof(http_status_init_list) / sizeof(http_status_init_list[0]));
 
 void	HTTPResponse::buildResponse(const char* body, size_t n, HTTPStatus status)
 {
     std::stringstream   ss;
 
     ss << status;
-    _raw_data += "HTTP/1.1 " + ss.str() + " " + http_status_.find(status)->second + "\n";
+    _raw_data += "HTTP/1.1 " + ss.str() + " " + http_status_msg.find(status)->second + "\n";
     for (std::map<std::string, std::string>::const_iterator it = _header.begin(); it != _header.end(); ++it)
     {
         _raw_data += it->first;
@@ -98,5 +99,8 @@ void    HTTPResponse::setContentType(const std::string &file_type)
 
 void    HTTPResponse::setContentLength(size_t n)
 {
-    (void)n;
+    std::stringstream   ss;
+
+    ss << n;
+    addHeader("Content-Length", ss.str());
 }
