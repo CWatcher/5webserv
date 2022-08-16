@@ -17,14 +17,6 @@ const Location&   VirtualServer::getLocation(const VirtualServer& server, const 
     return server;
 }
 
-// static void    show_locations(std::ostream& o, const Location& l)
-// {
-//     o << l.path << '{';
-//     for (std::map<std::string, Location>::const_iterator it = l.locations.begin(); it != l.locations.end(); ++it)
-//         show_locations(o, it->second);
-//     o << '}';
-// }
-
 std::ostream&    operator<<(std::ostream& o, const Location& l)
 {
     o << "root: " << l.root;

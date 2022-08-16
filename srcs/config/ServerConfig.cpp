@@ -132,6 +132,8 @@ void    ServerConfig::completeServer(VirtualServer& server)
         server.autoindex = AUTOINDEX_DFL;
     if (server.body_size == std::numeric_limits<unsigned>::max())
         server.body_size = BODY_SIZE_DFL;
+    if (server.methods.empty())
+        server.methods.insert(METHOD_DFL);
     if (server.listen.empty())
     {
         in_addr_t   host = inet_addr(HOST_DFL);
