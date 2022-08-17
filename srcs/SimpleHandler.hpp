@@ -24,17 +24,17 @@ private:
     void    error(HTTPStatus status, HTTPResponse& response);
     void    redirect(unsigned status, HTTPResponse& response);
 
-    void    readFile(HTTPResponse& response);
-    void    autoindex(HTTPResponse& response);
+    void    getFile(HTTPResponse& response);
+    void    getAutoindex(HTTPResponse& response);
 
 private:
     const Location&     location_;
     const HTTPRequest&  request_;
 
     std::string         path_;
-    //query stritn, path translated, ...
-    //cgi
-    //file name, type ??
+    std::string         file_name_;
+    std::string         type_;
+    //query stritn, path translated, cgi ...
 
     class HTTPError : public std::exception
     {

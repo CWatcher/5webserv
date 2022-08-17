@@ -152,6 +152,8 @@ void Server::addProcessTask(ASocket *socket)
     const Location      &location = VirtualServer::getLocation(v_server, request.uri());
     SimpleHandler       handler(location, session->request());
 
+    logger::debug << "I know you came from port: " << ntohs(session->port()) << logger::end;
+    logger::debug << "Your server config:\n" << location << logger::end;
     handler.fillResponse(session->response());
     session->setStateToWrite();
 

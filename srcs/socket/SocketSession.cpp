@@ -90,6 +90,7 @@ size_t  SocketSession::actionWrite()
         {
             logger::info << "actionWrite: HTTP response sent. Switching to read socket " << _fd << logger::end;
             _request = HTTPRequest();
+            _response = HTTPResponse();
             _state = SocketState::Read;
         }
         else

@@ -1,5 +1,6 @@
+#include "string.hpp"
+
 #include <algorithm>
-#include <string>
 
 std::string	&strTrim(std::string &str)
 {

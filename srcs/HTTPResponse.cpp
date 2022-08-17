@@ -10,12 +10,11 @@ static const std::pair<std::string, std::string> types_init_list[] =
     std::make_pair("png", "image/png"),
     std::make_pair("tiff", "image/tiff"),
     std::make_pair("bmp", "image/bmp"),
-    std::make_pair("css", "text/css"),
-    std::make_pair("csv", "text/csv"),
+    std::make_pair("css", "text/css; charset=utf-8"),
+    std::make_pair("csv", "text/csv; charset=utf-8"),
     std::make_pair("html", "text/html; charset=utf-8"),
-    std::make_pair("txt", "text/html"),
-    std::make_pair("plain", "text/plain"),
-    std::make_pair("xml", "text/xml"),
+    std::make_pair("txt", "text/html; charset=utf-8"),
+    std::make_pair("xml", "text/xml; charset=utf-8"),
 };
 
 const std::map<std::string, std::string>    HTTPResponse::_mime_type(types_init_list, types_init_list + sizeof(types_init_list) / sizeof(types_init_list[0]));
@@ -77,12 +76,13 @@ void    HTTPResponse::buildResponse(const char* body, size_t n, HTTPStatus statu
     _raw_data.append(body, n);
 }
 
-void    HTTPResponse::buildResponse(std::string& body, HTTPStatus status)
-{
-    setContentLength(body.length());
-    buildHeader(status);
-    _raw_data += body;
-}
+// void    HTTPResponse::buildResponse(std::string& body, HTTPStatus status)
+// {
+//     setContentLength(body.length());
+//     setContentType("html");
+//     buildHeader(status);
+//     _raw_data.append(body.begin(), body.end());
+// }
 
 void    HTTPResponse::buildHeader(HTTPStatus status)
 {
