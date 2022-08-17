@@ -1,5 +1,6 @@
 #include "ServerConfig.hpp"
 #include "utils/log.hpp"
+#include "utils/string.hpp"
 
 #include <stdexcept>
 #include <sstream>
@@ -202,6 +203,7 @@ void    ServerConfig::parseLocation(Location& parent)
     Location    location;
 
     location.path = getValue("location", '{');
+    strRemoveDoubled(location.path, '/');
     block_ = "location '" + location.path + "':";
     if (location.path.compare(0, parent.path.size(), parent.path) != 0)
             throw bad_config(block_ + " is outside location '" + parent.path + "'");
@@ -217,6 +219,7 @@ void    ServerConfig::parseRoot(Location& parent)
     if (!parent.root.empty())
         throw bad_config(block_ + " root duplicate");
     parent.root = getValue("root");
+    strRemoveDoubled(parent.root, '/');
 }
 
 void    ServerConfig::parseIndex(Location& parent)
@@ -252,7 +255,7 @@ void    ServerConfig::parseErrorPage(Location& parent)
         code = strToUInt(*it, "error_page");
         if (code < 400 || code > 599)
              throw bad_config(block_ + " error_page bad value '" + *it + "'");
-        parent.error_page[code] = values.back();
+        parent.error_page[code] = strRemoveDoubled(values.back(), '/');
     }
 }
 
@@ -283,6 +286,7 @@ void    ServerConfig::parseDirectoryPage(Location& parent)
     if (!parent.directory_page.empty())
         throw bad_config(block_ + " directory_page duplicate");
     parent.directory_page = getValue("directory_page");
+    strRemoveDoubled(parent.directory_page, '/');
 }
 
 void    ServerConfig::parseUploadStore(Location& parent)
@@ -290,6 +294,7 @@ void    ServerConfig::parseUploadStore(Location& parent)
     if (!parent.upload_store.empty())
         throw bad_config(block_ + " upload_store duplicate");
     parent.upload_store = getValue("upload_store");
+    strRemoveDoubled(parent.upload_store, '/');
 }
 
 void    ServerConfig::parseCgi(Location& parent)
@@ -298,7 +303,7 @@ void    ServerConfig::parseCgi(Location& parent)
 
     if (values.size() != 2)
         throw bad_config(block_ + " cgi need two values");
-    if (!parent.cgi.insert(std::make_pair(values[0], values[1])).second)
+    if (!parent.cgi.insert(std::make_pair(values[0], strRemoveDoubled(values[1], '/'))).second)
         throw bad_config(block_ + " cgi '" + values[0] + "' duplicate");
 }
 
@@ -316,7 +321,7 @@ void    ServerConfig::parseReturn(Location& parent)
     if (parent.redirect.second.empty())
     {
         parent.redirect.first = code;
-        parent.redirect.second = values.back();
+        parent.redirect.second = strRemoveDoubled(values.back(), '/');
     }
 }
 

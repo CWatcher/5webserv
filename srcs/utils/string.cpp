@@ -3,8 +3,8 @@
 
 std::string	&strTrim(std::string &str)
 {
-	const size_t	startpos = str.find_first_not_of(" \t");
-	const size_t	endpos = str.find_last_not_of(" \t");
+	const size_t	startpos = str.find_first_not_of(" \t\v\r\n");
+	const size_t	endpos = str.find_last_not_of(" \t\v\r\n");
 
 	if (startpos == std::string::npos)
 		str.erase();
@@ -37,5 +37,12 @@ std::string	&strRemoveDoubled(std::string &str, char c)
 		str.erase(doubled, 1);
 		doubled = str.find(twins);
 	}
+	return str;
+}
+
+std::string	&strCompleteWith(std::string &str, char c)
+{
+	if (*--str.end() != c)
+		str.push_back(c);
 	return str;
 }
