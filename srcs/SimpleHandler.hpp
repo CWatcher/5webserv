@@ -24,6 +24,9 @@ private:
     void    error(HTTPStatus status, HTTPResponse& response);
     void    redirect(unsigned status, HTTPResponse& response);
 
+    void    readFile(HTTPResponse& response);
+    void    autoindex(HTTPResponse& response);
+
 private:
     const Location&     location_;
     const HTTPRequest&  request_;

@@ -9,7 +9,10 @@ class HTTPResponse : public HTTPMessage
 public:
     HTTPResponse() : HTTPMessage() {}
 
-    virtual void        buildResponse(const char* body = NULL, size_t n = 0, HTTPStatus status = OK);
+    void                buildResponse(const char* body = NULL, size_t n = 0, HTTPStatus status = OK);
+    void                buildResponse(std::string& body, HTTPStatus status = OK);
+    void                buildHeader(HTTPStatus status);
+
     void                addHeader(const std::string &key, const std::string &value) {_header[key] = value;}
 
     const std::string   &raw_data() const {return _raw_data;}

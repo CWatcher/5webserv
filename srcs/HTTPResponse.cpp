@@ -70,7 +70,21 @@ const std::pair<HTTPStatus, std::string>    http_status_init_list[] =
 
 const std::map<HTTPStatus, std::string> HTTPResponse::http_status_msg(http_status_init_list, http_status_init_list + sizeof(http_status_init_list) / sizeof(http_status_init_list[0]));
 
-void	HTTPResponse::buildResponse(const char* body, size_t n, HTTPStatus status)
+void    HTTPResponse::buildResponse(const char* body, size_t n, HTTPStatus status)
+{
+    setContentLength(n);
+    buildHeader(status);
+    _raw_data.append(body, n);
+}
+
+void    HTTPResponse::buildResponse(std::string& body, HTTPStatus status)
+{
+    setContentLength(body.length());
+    buildHeader(status);
+    _raw_data += body;
+}
+
+void    HTTPResponse::buildHeader(HTTPStatus status)
 {
     std::stringstream   ss;
 
@@ -84,7 +98,6 @@ void	HTTPResponse::buildResponse(const char* body, size_t n, HTTPStatus status)
         _raw_data.push_back('\n');
     }
     _raw_data.push_back('\n');
-    _raw_data.append(body, n);
 }
 
 void    HTTPResponse::setContentType(const std::string &file_type)

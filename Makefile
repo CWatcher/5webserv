@@ -35,7 +35,8 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp					\
 							srcs/handlers/HeaderValidator.cpp	\
 																\
 							srcs/utils/log.cpp					\
-							srcs/utils/string.cpp
+							srcs/utils/string.cpp				\
+							srcs/utils/stat.cpp
 
 $(call add/subproj,$(PROJECT_NAME),debugbase)
 debugbase_CXXFLAGS       += -O0 -g3
