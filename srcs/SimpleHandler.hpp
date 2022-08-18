@@ -48,5 +48,6 @@ private:
     typedef void (SimpleHandler::*handler)(HTTPResponse&);
     static const std::pair<std::string, handler>    handlers_init_list_[];
     static const std::map<std::string, handler>     handlers_;
+    static const std::map<HTTPStatus, std::string>  http_status_;
 };
 #endif

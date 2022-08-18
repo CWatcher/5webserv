@@ -2,7 +2,6 @@
 # define HTTPRESPONSE_HPP
 
 # include "http/HTTPMessage.hpp"
-# include "http/HTTPStatus.hpp"
 
 # include <iterator>
 
@@ -11,12 +10,11 @@ class HTTPResponse : public HTTPMessage
 public:
     HTTPResponse() : HTTPMessage() {}
 
-    void                buildResponse(const char* body = NULL, size_t n = 0, HTTPStatus status = OK);
-    void                buildResponse(std::string& body, HTTPStatus status = OK);
+    void                buildResponse(const char* body = NULL, size_t n = 0, const std::string& status_line = "200 OK");
     template <class InputIterator>
-    void                buildResponse(InputIterator first, InputIterator last, HTTPStatus status = OK)
+    void                buildResponse(InputIterator first, InputIterator last, const std::string& status_line = "200 OK")
     {
-        buildHeader(status);
+        buildHeader(status_line);
         _raw_data.append(first, last);
     }
 
@@ -26,9 +24,9 @@ public:
     void                setContentType(const std::string &file_type);
     void                setContentLength(size_t n);
 
-    static const std::map<HTTPStatus, std::string>  http_status_msg;
 private:
-    void                buildHeader(HTTPStatus status);
+    void                buildHeader(const std::string& status_line );
+
 private:
     static const std::map<std::string, std::string> _mime_type;
 };
