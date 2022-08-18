@@ -2,8 +2,8 @@
 #ifndef SOCKETSESSION_HPP
 # define SOCKETSESSION_HPP
 
-# include "HTTPRequest.hpp"
-# include "HTTPResponse.hpp"
+# include "http/HTTPRequest.hpp"
+# include "http/HTTPResponse.hpp"
 # include "socket/ASocket.hpp"
 
 class SocketSession : public ASocket

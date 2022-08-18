@@ -2,8 +2,8 @@
 #ifndef IHANDLER_HPP
 # define IHANDLER_HPP
 
-# include "HTTPRequest.hpp"
-# include "HTTPResponse.hpp"
+# include "http/HTTPRequest.hpp"
+# include "http/HTTPResponse.hpp"
 # include "config/ServerConfig.hpp"
 
 class IHandler

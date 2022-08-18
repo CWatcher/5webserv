@@ -1,8 +1,8 @@
 #ifndef HTTPRESPONSE_HPP
 # define HTTPRESPONSE_HPP
 
-# include "HTTPMessage.hpp"
-# include "HTTPStatus.hpp"
+# include "http/HTTPMessage.hpp"
+# include "http/HTTPStatus.hpp"
 
 # include <iterator>
 

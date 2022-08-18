@@ -15,8 +15,8 @@ BUILD        ?= debug
 $(call add/project,$(PROJECT_NAME))
 $(PROJECT_NAME)_SRCS     += srcs/main.cpp					\
 							srcs/Server.cpp					\
-							srcs/HTTPRequest.cpp			\
-							srcs/HTTPResponse.cpp			\
+							srcs/http/HTTPRequest.cpp		\
+							srcs/http/HTTPResponse.cpp		\
 							srcs/SimpleHahdler.cpp			\
 															\
 							srcs/socket/ASocket.cpp			\

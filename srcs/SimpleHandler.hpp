@@ -1,9 +1,9 @@
 #ifndef SIMPLEHANDLER_HPP
 # define SIMPLEHANDLER_HPP
 
-# include "HTTPResponse.hpp"
-# include "HTTPRequest.hpp"
-# include "HTTPStatus.hpp"
+# include "http/HTTPResponse.hpp"
+# include "http/HTTPRequest.hpp"
+# include "http/HTTPStatus.hpp"
 # include "config/ServerConfig.hpp"
 
 # include <exception>
