@@ -47,3 +47,15 @@ std::string	&strCompleteWith(std::string &str, char c)
 		str.push_back(c);
 	return str;
 }
+
+bool		strEndsWith(const std::string &str, const std::string &suffix)
+{
+	if (str.length() < suffix.length())
+		return false;
+
+	std::string::const_reverse_iterator	it2 = str.rbegin();
+	for (std::string::const_reverse_iterator it1 = suffix.rbegin(); it1 != suffix.rend(); ++it1, ++it2)
+		if (*it1 != *it2)
+			return false;
+	return true;
+}

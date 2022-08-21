@@ -9,5 +9,6 @@ std::string	&strLowerCase(std::string &str);
 std::string	strLowerCaseCopy(const std::string &str);
 std::string	&strRemoveDoubled(std::string &str, char c);
 std::string	&strCompleteWith(std::string &str, char c);
+bool		strEndsWith(const std::string &str, const std::string &suffix);
 
 #endif

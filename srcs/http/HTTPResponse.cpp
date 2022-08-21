@@ -26,14 +26,6 @@ void    HTTPResponse::buildResponse(const char* body, size_t n, const std::strin
     _raw_data.append(body, n);
 }
 
-// void    HTTPResponse::buildResponse(std::string& body, HTTPStatus status)
-// {
-//     setContentLength(body.length());
-//     setContentType("html");
-//     buildHeader(status);
-//     _raw_data.append(body.begin(), body.end());
-// }
-
 void    HTTPResponse::buildHeader(const std::string& status_line)
 {
     _raw_data += "HTTP/1.1 " + status_line + '\n';
