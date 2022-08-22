@@ -1,9 +1,7 @@
 #include "SimpleHandler.hpp"
-#include "utils/string.hpp"
 #include "utils/log.hpp"
 
 #include "dirent.h"
-#include <sstream>
 
 static const std::pair<HTTPStatus, std::string>    http_status_init_list[] =
 {
@@ -89,6 +87,8 @@ SimpleHandler::SimpleHandler(const Location& loc, const HTTPRequest& req) : loca
     }
 
     file_info_ = FileInfo(location_.root + pure_uri_);
+    if (file_info_.isDirectory() && *--pure_uri_.end() != '/')
+        pure_uri_.push_back('/');
 
     logger::debug << "SimpleHandler: uri=" << pure_uri_ <<\
         " query_string=" << query_string_ <<\
@@ -177,7 +177,7 @@ void    SimpleHandler::getDirectory(HTTPResponse& response)
 {
     for (std::vector<std::string>::const_iterator file = location_.index.begin(); file != location_.index.end(); ++file)
     {
-        FileInfo    index_file_info_ = FileInfo(location_.root + '/' + *file);
+        FileInfo    index_file_info_ = FileInfo(location_.root + pure_uri_ + *file);
         if (index_file_info_.isExists() && index_file_info_.isFile() && index_file_info_.isReadble())
         {
             file_info_ = index_file_info_;
@@ -196,25 +196,22 @@ void    SimpleHandler::getDirectory(HTTPResponse& response)
 void    SimpleHandler::getAutoindex(HTTPResponse& response)
 {
     std::string body;
-    std::string path = file_info_.path();
     DIR*        dir = ::opendir(file_info_.path().c_str());
     dirent*     item;
 
     if (dir == NULL)
         throw SimpleHandler::HTTPError(INTERNAL_SERVER_ERROR);
 
-    strCompleteWith(pure_uri_, '/');
     body += "<html>\n<head><style>td{padding-right: 3em}th{text-align: left;}</style><title>📁";
     body += pure_uri_;
     body += "</title></head>\n<body bgcolor=lightgray text=dimgray><h1>📁";
     body += pure_uri_;
     body += "</h1><hr>\n<table><tr><th>name</th><th allign=right>last modification</th><th allign=left>size</th></tr>";
 
-    strCompleteWith(path, '/');
     while ((item = ::readdir(dir)) != NULL)
     {
         std::string name(item->d_name);
-        FileInfo    item_info(path + name);
+        FileInfo    item_info(file_info_.path() + name);
 
         if (item->d_type & DT_DIR)
             name += '/';

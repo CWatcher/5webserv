@@ -8,7 +8,7 @@
 class FileInfo
 {
 public:
-    FileInfo(const std::string &path) : ret_(::stat(path.c_str(), &stat_)),  path_(path) {}
+    FileInfo(const std::string &path);
     FileInfo() {}
 
     bool            isExists() const {return ret_ == 0;}

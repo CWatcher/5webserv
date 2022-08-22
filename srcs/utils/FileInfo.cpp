@@ -2,6 +2,12 @@
 
 #include <sstream>
 
+FileInfo::FileInfo(const std::string &path) : ret_(::stat(path.c_str(), &stat_)),  path_(path)
+{
+    if (isDirectory() && *--path_.end() != '/')
+        path_.push_back('/');
+}
+
 std::string FileInfo::dateStr() const
 {
     char    date[21];

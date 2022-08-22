@@ -7,8 +7,6 @@
 # include "config/ServerConfig.hpp"
 # include "utils/FileInfo.hpp"
 
-# include <exception>
-
 class SimpleHandler
 {
 public:

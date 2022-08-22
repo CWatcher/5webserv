@@ -9,8 +9,9 @@
 
 server {
 	index index.html test_index.html Webserv.pdf;
-	autoindex on;
+	#autoindex on;
 	cgi py aaaaaaaaaaaaaa;
+	location /dir2 {autoindex on;}
 }
 
 
