@@ -54,7 +54,6 @@ server_name name1 name2 localhost;
 		}
 
 	}
-	directory_page eeeeeeeeeeeee;
 	upload_store aaaaaaaaaaa;
 # a в этом нет
 	location /bbb {}

@@ -31,7 +31,6 @@ std::ostream&    operator<<(std::ostream& o, const Location& l)
     o << std::endl << "methods: ";
     cforeach(std::set<std::string>, l.methods, it)
         o << *it << ' ';
-    o << std::endl << "directory_page: " << l.directory_page;
     o << std::endl << "upload_store: " << l.upload_store;
     o << std::endl << "redirect: ";
     if (!l.redirect.second.empty())
