@@ -17,7 +17,6 @@ const std::pair<std::string, ServerConfig::parser> ServerConfig::init_list_[] =
     std::make_pair("body_size", &ServerConfig::parseBodySize),
     std::make_pair("return", &ServerConfig::parseReturn),
     std::make_pair("methods", &ServerConfig::parseMethods),
-    std::make_pair("directory_page", &ServerConfig::parseDirectoryPage),
     std::make_pair("upload_store", &ServerConfig::parseUploadStore),
     std::make_pair("cgi", &ServerConfig::parseCgi),
     std::make_pair("location", &ServerConfig::parseLocation),
@@ -158,8 +157,6 @@ void    ServerConfig::completeLocation(const Location& parent, Location& locatio
         location.body_size = parent.body_size;
     if (location.methods.empty())
         location.methods = parent.methods;
-    if (location.directory_page.empty())
-        location.directory_page = parent.directory_page;
     if (location.upload_store.empty())
         location.upload_store = parent.upload_store;
     for (std::map<std::string, std::string>::const_iterator it = parent.cgi.begin(); it != parent.cgi.end(); ++it)
@@ -279,14 +276,6 @@ void    ServerConfig::parseMethods(Location& parent)
             throw bad_config(block_ + " methods bad value '" + *method + "'");
         parent.methods.insert(*method);
     }
-}
-
-void    ServerConfig::parseDirectoryPage(Location& parent)
-{
-    if (!parent.directory_page.empty())
-        throw bad_config(block_ + " directory_page duplicate");
-    parent.directory_page = getValue("directory_page");
-    strRemoveDoubled(parent.directory_page, '/');
 }
 
 void    ServerConfig::parseUploadStore(Location& parent)

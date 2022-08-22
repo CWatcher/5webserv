@@ -39,7 +39,6 @@ private:
     void                        parseBodySize(Location& parent);
     void                        parseMethods(Location& parent);
     void                        parseReturn(Location& parent);
-    void                        parseDirectoryPage(Location& parent);
     void                        parseUploadStore(Location& parent);
     void                        parseCgi(Location& parent);
     void                        parseLocation(Location& parent);

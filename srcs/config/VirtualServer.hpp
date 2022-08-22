@@ -20,7 +20,6 @@ struct Location
     unsigned                            body_size;
     std::pair<unsigned, std::string>    redirect;
     std::set<std::string>               methods;
-    std::string                         directory_page;
     std::string                         upload_store;
     std::map<std::string, std::string>  cgi;
     std::string                         parent;
