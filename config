@@ -8,7 +8,9 @@
 # сервер со всеми параметрами по умолчанию
 
 server {
+	index index.html test_index.html Webserv.pdf;
 	autoindex on;
+	cgi py aaaaaaaaaaaaaa;
 }
 
 

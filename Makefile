@@ -36,7 +36,7 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp					\
 																\
 							srcs/utils/log.cpp					\
 							srcs/utils/string.cpp				\
-							srcs/utils/stat.cpp
+							srcs/utils/FileInfo.cpp
 
 $(call add/subproj,$(PROJECT_NAME),debugbase)
 debugbase_CXXFLAGS       += -O0 -g3

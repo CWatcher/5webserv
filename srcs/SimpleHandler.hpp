@@ -5,13 +5,14 @@
 # include "http/HTTPRequest.hpp"
 # include "http/HTTPStatus.hpp"
 # include "config/ServerConfig.hpp"
+# include "utils/FileInfo.hpp"
 
 # include <exception>
 
 class SimpleHandler
 {
 public:
-    SimpleHandler(const Location& loc, const HTTPRequest& req) : location_(loc), request_(req) {}
+    SimpleHandler(const Location& loc, const HTTPRequest& req);
 
     void    fillResponse(HTTPResponse&  response);
 
@@ -25,16 +26,20 @@ private:
     void    redirect(unsigned status, HTTPResponse& response);
 
     void    getFile(HTTPResponse& response);
+    void    getDirectory(HTTPResponse& response);
     void    getAutoindex(HTTPResponse& response);
+
+    void    cgiHandler(HTTPResponse& response);
 
 private:
     const Location&     location_;
     const HTTPRequest&  request_;
 
-    std::string         path_;
-    std::string         file_name_;
-    std::string         type_;
-    //query stritn, path translated, cgi ...
+    FileInfo            file_info_;
+    std::string         pure_uri_;
+    std::string         query_string_;
+    std::string         path_info_;
+    // std::string         cgi_path;
 
     class HTTPError : public std::exception
     {
