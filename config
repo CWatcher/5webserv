@@ -8,10 +8,13 @@
 # сервер со всеми параметрами по умолчанию
 
 server {
+	methods GET DELETE;
 	index index.html test_index.html Webserv.pdf;
 	#autoindex on;
 	cgi py aaaaaaaaaaaaaa;
-	location /dir2 {autoindex on;}
+	location /dir2 {
+		index abcd;
+	 autoindex on;}
 }
 
 

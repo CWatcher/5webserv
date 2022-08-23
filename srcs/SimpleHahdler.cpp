@@ -2,6 +2,8 @@
 #include "utils/log.hpp"
 
 #include "dirent.h"
+#include <cstdio>
+#include <unistd.h>
 
 static const std::pair<HTTPStatus, std::string>    http_status_init_list[] =
 {
@@ -245,7 +247,28 @@ void    SimpleHandler::post(HTTPResponse&  response)
 void    SimpleHandler::del(HTTPResponse&  response)
 {
     logger::debug << "SimpleHandler: DELETE " << file_info_.path() << logger::end;
-    (void)response;
+
+    if (!file_info_.isExists())
+        throw SimpleHandler::HTTPError(NOT_FOUND);
+
+    int ret;
+    if (file_info_.isFile())
+        ret = ::remove(file_info_.path().c_str());
+    else if (file_info_.isDirectory())
+        ret = ::rmdir(file_info_.path().c_str());
+    else
+        throw SimpleHandler::HTTPError(NOT_FOUND);
+
+    if (ret)
+    {
+        if (errno == EACCES)
+            throw SimpleHandler::HTTPError(FORBIDDEN);
+        if (file_info_.isDirectory() && errno == ENOTEMPTY)
+            throw SimpleHandler::HTTPError(CONFLICT);
+        throw SimpleHandler::HTTPError(INTERNAL_SERVER_ERROR);
+    }
+
+    response.buildResponse(NULL, NULL, http_status_.find(NO_CONTENT)->second);
 }
 
 void    SimpleHandler::error(HTTPStatus status, HTTPResponse& response)
