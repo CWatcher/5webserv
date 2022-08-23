@@ -310,7 +310,7 @@ void    ServerConfig::parseReturn(Location& parent)
     if (parent.redirect.second.empty())
     {
         parent.redirect.first = code;
-        parent.redirect.second = strRemoveDoubled(values.back(), '/');
+        parent.redirect.second = values.back();
     }
 }
 
