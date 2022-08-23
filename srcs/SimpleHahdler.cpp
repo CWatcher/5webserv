@@ -320,6 +320,7 @@ void    SimpleHandler::redirect(HTTPResponse& response)
     logger::debug << "SimpleHandler: redirect " << status << ' ' << url << logger::end;
 
     response.addHeader("Location", url);
+    response.setContentLength(0);
     response.buildResponse(NULL, NULL, http_status_.find(status)->second);
 }
 
