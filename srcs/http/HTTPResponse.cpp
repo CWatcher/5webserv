@@ -28,15 +28,15 @@ void    HTTPResponse::buildResponse(const char* body, size_t n, const std::strin
 
 void    HTTPResponse::buildHeader(const std::string& status_line)
 {
-    _raw_data += "HTTP/1.1 " + status_line + '\n';
+    _raw_data += "HTTP/1.1 " + status_line + "\r\n";
     for (std::map<std::string, std::string>::const_iterator it = _header.begin(); it != _header.end(); ++it)
     {
         _raw_data += it->first;
         _raw_data += " : ";
         _raw_data += it->second;
-        _raw_data.push_back('\n');
+        _raw_data += "\r\n";
     }
-    _raw_data.push_back('\n');
+    _raw_data += "\r\n";
 }
 
 void    HTTPResponse::setContentType(const std::string &file_type)
