@@ -21,7 +21,7 @@ private:
 
     void    validateRequest();
     void    error(HTTPStatus status, HTTPResponse& response);
-    void    redirect(unsigned status, HTTPResponse& response);
+    void    redirect(HTTPResponse& response);
 
     void    getFile(HTTPResponse& response);
     void    getDirectory(HTTPResponse& response);

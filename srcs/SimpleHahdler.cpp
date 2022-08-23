@@ -109,7 +109,8 @@ void    SimpleHandler::fillResponse(HTTPResponse& response)
                 throw SimpleHandler::HTTPError(BAD_REQUEST);
             if (request_.http() != "HTTP/1.1")
                 throw SimpleHandler::HTTPError(HTTP_VERSION_NOT_SUPPORTED);
-            //TO DO проверить заголовки, host должен быть обязательно? что ещё нужно проверить?
+            // Здесь проверить body_size?
+            //TO DO проверить заголовки, host должен быть обязательно (нет может быть пустым!)? что ещё нужно проверить?
                 // throw SimpleHandler::HTTPError(BAD_REQUEST);
 
             std::map<std::string, SimpleHandler::handler>::const_iterator handler = handlers_.find(request_.method());
@@ -120,7 +121,7 @@ void    SimpleHandler::fillResponse(HTTPResponse& response)
             (this->*handler->second)(response);
         }
         else
-            redirect(location_.redirect.first, response);
+            redirect(response);
     }
     catch(const SimpleHandler::HTTPError& e)
     {
@@ -239,8 +240,16 @@ void    SimpleHandler::getAutoindex(HTTPResponse& response)
 
 void    SimpleHandler::post(HTTPResponse&  response)
 {
-    //проверить body size
     logger::debug << "SimpleHandler: POST " << file_info_.path() << logger::end;
+
+    //проверить body size
+    std::map<std::string, std::string>::const_iterator  cgi = location_.cgi.find(file_info_.type());
+    if (cgi != location_.cgi.end())
+    {
+        cgiHandler(response);
+        return;
+    }
+
     (void)response;
 }
 
@@ -303,10 +312,15 @@ void    SimpleHandler::error(HTTPStatus status, HTTPResponse& response)
     response.buildResponse(body.begin(), body.end(), status_line);
 }
 
-void    SimpleHandler::redirect(unsigned status, HTTPResponse& response)
+void    SimpleHandler::redirect(HTTPResponse& response)
 {
-    (void) response;
-    (void) status;
+    HTTPStatus          status = static_cast<HTTPStatus>(location_.redirect.first);
+    const std::string   url = location_.redirect.second;
+
+    logger::debug << "SimpleHandler: redirect " << status << ' ' << url << logger::end;
+
+    response.addHeader("Location", url);
+    response.buildResponse(NULL, NULL, http_status_.find(status)->second);
 }
 
 void    SimpleHandler::cgiHandler(HTTPResponse& response)
