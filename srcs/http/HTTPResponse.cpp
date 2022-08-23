@@ -32,7 +32,7 @@ void    HTTPResponse::buildHeader(const std::string& status_line)
     for (std::map<std::string, std::string>::const_iterator it = _header.begin(); it != _header.end(); ++it)
     {
         _raw_data += it->first;
-        _raw_data += " : ";
+        _raw_data += ": ";
         _raw_data += it->second;
         _raw_data += "\r\n";
     }
