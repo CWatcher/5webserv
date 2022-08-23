@@ -13,8 +13,13 @@ server {
 	#autoindex on;
 	cgi py aaaaaaaaaaaaaa;
 	location /dir2 {
-		index abcd;
+		#index abcd;
 	 autoindex on;}
+	location /dir1
+	{
+		return https://ya.ru;
+	}
+	error_page 404 custom_error.html;
 }
 
 
