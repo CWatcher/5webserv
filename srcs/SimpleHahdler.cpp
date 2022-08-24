@@ -283,6 +283,8 @@ void    SimpleHandler::del(HTTPResponse&  response)
 
 void    SimpleHandler::error(HTTPStatus status, HTTPResponse& response)
 {
+    response = HTTPResponse();
+
     std::string                                     body;
     const std::string&                              status_line = http_status_.find(status)->second;
     std::map<unsigned, std::string>::const_iterator it = location_.error_page.find(status);

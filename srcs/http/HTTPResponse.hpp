@@ -8,7 +8,7 @@
 class HTTPResponse : public HTTPMessage
 {
 public:
-    HTTPResponse() : HTTPMessage() {}
+    HTTPResponse();
 
     void                buildResponse(const char* body = NULL, size_t n = 0, const std::string& status_line = "200 OK");
     template <class InputIterator>

@@ -19,6 +19,12 @@ static const std::pair<std::string, std::string> types_init_list[] =
 
 const std::map<std::string, std::string>    HTTPResponse::_mime_type(types_init_list, types_init_list + sizeof(types_init_list) / sizeof(types_init_list[0]));
 
+HTTPResponse::HTTPResponse() : HTTPMessage()
+{
+    _header["Server"] = "webserv";
+    _header["Connection"] = "keep-alive";
+}
+
 void    HTTPResponse::buildResponse(const char* body, size_t n, const std::string& status_line)
 {
     setContentLength(n);
