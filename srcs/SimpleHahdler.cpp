@@ -2,7 +2,6 @@
 #include "utils/log.hpp"
 
 #include "dirent.h"
-#include <cstdio>
 #include <unistd.h>
 
 static const std::pair<HTTPStatus, std::string>    http_status_init_list[] =
@@ -89,7 +88,7 @@ SimpleHandler::SimpleHandler(const Location& loc, const HTTPRequest& req) : loca
     }
 
     file_info_ = FileInfo(location_.root + pure_uri_);
-    if (file_info_.isDirectory() && *--pure_uri_.end() != '/')
+    if (file_info_.isInfoValid() && file_info_.isDirectory() && *--pure_uri_.end() != '/')
         pure_uri_.push_back('/');
 
     logger::debug << "SimpleHandler: uri=" << pure_uri_ <<\
@@ -139,9 +138,9 @@ void    SimpleHandler::get(HTTPResponse&  response)
 {
     logger::debug << "SimpleHandler: GET " << file_info_.path() << logger::end;
 
-    if (!file_info_.isExists())
+    if (file_info_.isNotExists())
         throw SimpleHandler::HTTPError(NOT_FOUND);
-    if (!file_info_.isReadble())
+    if (file_info_.isNoInfo() || !file_info_.isReadble())
         throw SimpleHandler::HTTPError(FORBIDDEN);
 
     if (file_info_.isFile())
@@ -171,7 +170,7 @@ void    SimpleHandler::getFile(HTTPResponse& response)
 
     std::noskipws(file);
     if (file_info_.size() == 0)
-        response.buildResponse(std::istream_iterator<char>(file), std::istream_iterator<char>(), "204 No Content");
+        response.buildResponse(std::istream_iterator<char>(file), std::istream_iterator<char>(), http_status_.find(NO_CONTENT)->second);
     else
         response.buildResponse(std::istream_iterator<char>(file), std::istream_iterator<char>());
 }
@@ -181,7 +180,7 @@ void    SimpleHandler::getDirectory(HTTPResponse& response)
     for (std::vector<std::string>::const_iterator file = location_.index.begin(); file != location_.index.end(); ++file)
     {
         FileInfo    index_file_info_ = FileInfo(location_.root + pure_uri_ + *file);
-        if (index_file_info_.isExists() && index_file_info_.isFile() && index_file_info_.isReadble())
+        if (index_file_info_.isInfoValid() && index_file_info_.isFile() && index_file_info_.isReadble())
         {
             file_info_ = index_file_info_;
             getFile(response);
@@ -257,8 +256,10 @@ void    SimpleHandler::del(HTTPResponse&  response)
 {
     logger::debug << "SimpleHandler: DELETE " << file_info_.path() << logger::end;
 
-    if (!file_info_.isExists())
+    if (file_info_.isNotExists())
         throw SimpleHandler::HTTPError(NOT_FOUND);
+    if (file_info_.isNoInfo())
+        throw SimpleHandler::HTTPError(FORBIDDEN);
 
     int ret;
     if (file_info_.isFile())
@@ -272,7 +273,7 @@ void    SimpleHandler::del(HTTPResponse&  response)
     {
         if (errno == EACCES)
             throw SimpleHandler::HTTPError(FORBIDDEN);
-        if (file_info_.isDirectory() && errno == ENOTEMPTY)
+        if (errno == ENOTEMPTY)
             throw SimpleHandler::HTTPError(CONFLICT);
         throw SimpleHandler::HTTPError(INTERNAL_SERVER_ERROR);
     }

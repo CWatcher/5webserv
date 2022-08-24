@@ -2,9 +2,9 @@
 
 #include <sstream>
 
-FileInfo::FileInfo(const std::string &path) : ret_(::stat(path.c_str(), &stat_)),  path_(path)
+FileInfo::FileInfo(const std::string &path) : ret_(::stat(path.c_str(), &stat_)), error_(errno), path_(path)
 {
-    if (isDirectory() && *--path_.end() != '/')
+    if (ret_ == 0 && isDirectory() && *--path_.end() != '/')
         path_.push_back('/');
 }
 
@@ -12,12 +12,16 @@ std::string FileInfo::dateStr() const
 {
     char    date[21];
 
+    if (ret_ == -1)
+        return "?";
     ::strftime(date, 21, "%d-%b-%Y %H:%M", ::gmtime(&stat_.st_mtim.tv_sec));
     return date;
 }
 
 std::string FileInfo::sizeStr() const
 {
+    if (ret_ == -1)
+        return "?";
     if (isFile())
     {
         std::stringstream   ss;
