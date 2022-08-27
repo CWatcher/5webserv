@@ -1,8 +1,11 @@
 #include "SimpleHandler.hpp"
 #include "utils/log.hpp"
+#include "utils/string.hpp"
 
 #include "dirent.h"
 #include <unistd.h>
+#include <algorithm>
+#include <sstream>
 
 static const std::pair<HTTPStatus, std::string>    http_status_init_list[] =
 {
@@ -44,6 +47,7 @@ static const std::pair<HTTPStatus, std::string>    http_status_init_list[] =
     std::make_pair(UNSUPPORTED_MEDIA_TYPE, "415 Unsupported Media Type"),
     std::make_pair(REQUESTED_RANGE_NOT_SATISFIABLE, "416 Requested Range Not Satisfiable"),
     std::make_pair(EXPECTATION_FAILED, "417 Expectation Failed"),
+    std::make_pair(I_M_A_TEAPOT, "418 I'm a teapot"),
     std::make_pair(INTERNAL_SERVER_ERROR, "500 Internal Server Error"),
     std::make_pair(NOT_IMPLEMENTED, "501 Not Implemented"),
     std::make_pair(BAD_GATEWAY, "502 Bad Gateway"),
@@ -160,7 +164,7 @@ void    SimpleHandler::getFile(HTTPResponse& response)
         return;
     }
 
-    std::ifstream                                       file(file_info_.path().c_str(), std::ifstream::binary);
+    std::ifstream                                       file(file_info_.path().c_str(), std::ios::binary);
 
     if (!file.is_open())
         throw SimpleHandler::HTTPError(INTERNAL_SERVER_ERROR);
@@ -240,45 +244,99 @@ void    SimpleHandler::getAutoindex(HTTPResponse& response)
 void    SimpleHandler::post(HTTPResponse&  response)
 {
     logger::debug << "SimpleHandler: POST " << file_info_.path() << logger::end;
-    std::clog << request_.raw_data() << "\n" << request_.body_size() << "\n";
 
     if (location_.body_size != 0 && request_.body_size() > location_.body_size)
         throw SimpleHandler::HTTPError(PAYLOAD_TOO_LARGE);
 
-
     std::map<std::string, std::string>::const_iterator  cgi = location_.cgi.find(file_info_.type());
-    if (cgi != location_.cgi.end())
+
+    if (!location_.upload_store.empty())
+        postFile(response);
+    else if (cgi != location_.cgi.end())
     {
+        if (file_info_.isNotExists())
+            throw SimpleHandler::HTTPError(NOT_FOUND);
+        if (file_info_.isNoInfo() || !file_info_.isReadble())
+            throw SimpleHandler::HTTPError(FORBIDDEN);
         cgiHandler(response);
-        return;
+    }
+    else
+        throw SimpleHandler::HTTPError(BAD_REQUEST);
+}
+
+void    SimpleHandler::postFile(HTTPResponse& response)
+{
+    const std::string   type = request_.getHeaderValue("Content-Type");
+    std::string         boundary = getKeyValue(type, "boundary").second;
+    if (type.find("multipart/form-data") == std::string::npos || boundary.empty())
+        throw SimpleHandler::HTTPError(BAD_REQUEST);
+    boundary = "--" + boundary;
+
+    std::string         delim = "\r\n\r\n";
+    const char*         body_end = request_.body() + request_.body_size();
+    const char*         data_start = std::search(request_.body(), body_end, delim.begin(), delim.end());
+    const char*         data_end = std::search(data_start, body_end, boundary.begin(), boundary.end());
+    if (data_start == body_end || data_end == body_end)
+        throw SimpleHandler::HTTPError(BAD_REQUEST);
+
+    std::string         filename = getFileName(std::string(request_.body() + boundary.size() + 4, data_start));
+    if (filename.empty())
+        throw SimpleHandler::HTTPError(BAD_REQUEST);
+    std::string         new_path = location_.upload_store + '/' + filename;
+    std::ofstream       new_file(new_path.c_str(), std::ios::binary);
+    if (new_file.fail())
+        throw SimpleHandler::HTTPError(FORBIDDEN);
+
+    data_start += 4;
+    new_file.write(data_start, data_end - data_start);
+    if (!new_file.good())
+        throw SimpleHandler::HTTPError(INTERNAL_SERVER_ERROR);
+    new_file.close();
+
+    std::string msg = "Success";
+    response.setContentLength(msg.length());
+    response.addHeader("Location", "???");
+    response.buildResponse(msg.begin(), msg.end(), http_status_.find(CREATED)->second);
+
+    logger::debug << "file " << filename << " uploaded to " << new_path << logger::end;
+}
+
+std::pair<std::string, std::string> SimpleHandler::getKeyValue(const std::string& str, const std::string& key)
+{
+    const std::vector<std::string>      params = strSplit(str, ';');
+    std::pair<std::string, std::string> key_value;
+
+    for (std::vector<std::string>::const_iterator it = params.begin(); it != params.end(); ++it)
+    {
+        if (it->find(key) != std::string::npos)
+        {
+            size_t  f = it->find('=');
+
+            if (f != std::string::npos)
+                key_value.second = it->substr(f + 1);
+            key_value.first = key;
+            break;
+        }
     }
 
-    // Загрузка файла. Что делать если пришёл другой POST запрос?
-    // const std::string   content_type = request_.getHeaderValue("Content-Type");
-    // if (content_type->find("multipart/form-data") != std::string::npos)
-    // {
-    //     std::string  text = "boundary=";
-    //     std::string boundary = content_type->substr(content_type->find(text) + text.length());
+    return key_value;
+}
 
-    //     // Нужно избавиться от этого, копирование всего тела запроса, стереть заголовок в raw_data?
-    //     std::string body(request_.body(), request_.body() + request_.body_size());
-    //     size_t      body_header_size = body.find("\r\n\r\n");
+std::string     SimpleHandler::getFileName(const std::string& head) const
+{
+    std::stringstream   ss(head);
+    std::string         line;
+    std::string         filename;
 
-    //     std::clog << body << std::endl;
-    //     text = "filename=";
-    //     size_t      first = body.find(text, body_header_size) + text.length();
-    //     size_t      last = body.find("\"", body_header_size);
-    //     std::string filename = body.substr(first, last);
+    while (std::getline(ss, line))
+    {
+        filename = getKeyValue(line, "filename").second;
+        if (!filename.empty())
+            strTrim(filename, "\"");
+        break;
+    }
 
-    //     // std::clog << filename << "AAAAAAAAAAAAAAAAAAAAAA\n";
-
-
-    //     // std::clog << body;
-
-    // }
-
-    throw SimpleHandler::HTTPError(SWITCHING_PROTOCOL);
-
+    return filename;
 }
 
 void    SimpleHandler::del(HTTPResponse&  response)
@@ -321,7 +379,7 @@ void    SimpleHandler::error(HTTPStatus status, HTTPResponse& response)
     if (it != location_.error_page.end())
     {
         std::string     path = location_.root + '/' + it->second;
-        std::ifstream   page_file(path.c_str(), std::ifstream::binary);
+        std::ifstream   page_file(path.c_str(), std::ios::binary);
         FileInfo        page_file_info(path);
 
         if (page_file.is_open())
@@ -356,7 +414,7 @@ void    SimpleHandler::redirect(HTTPResponse& response)
     response.buildResponse(NULL, NULL, http_status_.find(status)->second);
 }
 
-void    SimpleHandler::cgiHandler(HTTPResponse& response)
+void    SimpleHandler::cgiHandler(HTTPResponse& response) const
 {
     logger::debug << "CGI for ." << file_info_.type() << logger::end;
 

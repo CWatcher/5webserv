@@ -8,7 +8,6 @@ class HTTPRequest : public HTTPMessage
 {
 public:
     HTTPRequest() : _start_line(), _method(), _uri(), _header_size(0), _body_size(0) {}
-const std::string   raw_data() const {return _raw_data;}////////////
     virtual void        addData(const char* data, size_t n);
 
     bool                hasEndOfMessage();

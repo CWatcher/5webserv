@@ -3,10 +3,10 @@
 #include <algorithm>
 #include <sstream>
 
-std::string	&strTrim(std::string &str)
+std::string	&strTrim(std::string &str, const char *s)
 {
-	const size_t	startpos = str.find_first_not_of(" \t\v\r\n");
-	const size_t	endpos = str.find_last_not_of(" \t\v\r\n");
+	const size_t	startpos = str.find_first_not_of(s);
+	const size_t	endpos = str.find_last_not_of(s);
 
 	if (startpos == std::string::npos)
 		str.erase();

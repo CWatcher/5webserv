@@ -12,22 +12,25 @@ class SimpleHandler
 public:
     SimpleHandler(const Location& loc, const HTTPRequest& req);
 
-    void    fillResponse(HTTPResponse&  response);
+    void                fillResponse(HTTPResponse& response);
 
 private:
-    void    get(HTTPResponse&  response);
-    void    post(HTTPResponse&  response);
-    void    del(HTTPResponse&  response);
+    void                get(HTTPResponse& response);
+    void                post(HTTPResponse& response);
+    void                del(HTTPResponse& response);
 
-    void    validateRequest();
-    void    error(HTTPStatus status, HTTPResponse& response);
-    void    redirect(HTTPResponse& response);
+    void                validateRequest();
+    void                error(HTTPStatus status, HTTPResponse& response);
+    void                redirect(HTTPResponse& response);
 
-    void    getFile(HTTPResponse& response);
-    void    getDirectory(HTTPResponse& response);
-    void    getAutoindex(HTTPResponse& response);
+    void                getFile(HTTPResponse& response);
+    void                getDirectory(HTTPResponse& response);
+    void                getAutoindex(HTTPResponse& response);
+    void                postFile(HTTPResponse& response);
+    std::string         getFileName(const std::string& head) const;
+    void                cgiHandler(HTTPResponse& response) const;
 
-    void    cgiHandler(HTTPResponse& response);
+    static std::pair<std::string, std::string>  getKeyValue(const std::string& str, const std::string& key);
 
 private:
     const Location&     location_;
@@ -37,7 +40,6 @@ private:
     std::string         pure_uri_;
     std::string         query_string_;
     std::string         path_info_;
-    // std::string         cgi_path;
 
     class HTTPError : public std::exception
     {

@@ -5,7 +5,7 @@
 # include <string>
 # include <vector>
 
-std::string					&strTrim(std::string &str);
+std::string					&strTrim(std::string &str, const char* s = " \t\v\r\n");
 std::string					&strLowerCase(std::string &str);
 std::string					strLowerCaseCopy(const std::string &str);
 std::string					&strRemoveDoubled(std::string &str, char c);

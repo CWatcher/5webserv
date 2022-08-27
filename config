@@ -10,7 +10,6 @@
 server {
 	methods GET DELETE;
 	index index.html test_index.html Webserv.pdf;
-	#autoindex on;
 	cgi py aaaaaaaaaaaaaa;
 	location /dir2 {
 		#index abcd;
@@ -19,7 +18,16 @@ server {
 	{
 		return https://ya.ru;
 	}
-	error_page 404 custom_error.html;
+
+	location /upload
+	{
+		autoindex on;
+		methods GET POST;
+		#абсолютный путь до папки загрузки, папка должна существоватьц
+		upload_store /mnt/f/Programming/21/webserv/www/upload;
+	}
+
+	#error_page 404 custom_error.html;
 }
 
 
