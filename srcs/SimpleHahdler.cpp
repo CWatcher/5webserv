@@ -39,7 +39,7 @@ static const std::pair<HTTPStatus, std::string>    http_status_init_list[] =
     std::make_pair(GONE, "410 Gone"),
     std::make_pair(LENGTH_REQUIRED, "411 Length Required"),
     std::make_pair(PRECONDITION_FAILED, "412 Precondition Failed"),
-    std::make_pair(REQUEST_ENTITY_TOO_LARGE, "413 Request Entity Too Large"),
+    std::make_pair(PAYLOAD_TOO_LARGE, "413 Payload Too Large"),
     std::make_pair(REQUEST_URI_TOO_LONG, "414 Request-URI Too Long"),
     std::make_pair(UNSUPPORTED_MEDIA_TYPE, "415 Unsupported Media Type"),
     std::make_pair(REQUESTED_RANGE_NOT_SATISFIABLE, "416 Requested Range Not Satisfiable"),
@@ -154,13 +154,13 @@ void    SimpleHandler::get(HTTPResponse&  response)
 void    SimpleHandler::getFile(HTTPResponse& response)
 {
     std::map<std::string, std::string>::const_iterator  cgi = location_.cgi.find(file_info_.type());
-    std::ifstream                                       file(file_info_.path().c_str(), std::ifstream::binary);
-
     if (cgi != location_.cgi.end())
     {
         cgiHandler(response);
         return;
     }
+
+    std::ifstream                                       file(file_info_.path().c_str(), std::ifstream::binary);
 
     if (!file.is_open())
         throw SimpleHandler::HTTPError(INTERNAL_SERVER_ERROR);
@@ -204,7 +204,7 @@ void    SimpleHandler::getAutoindex(HTTPResponse& response)
     if (dir == NULL)
         throw SimpleHandler::HTTPError(INTERNAL_SERVER_ERROR);
 
-    body += "<html>\n<head><style>td{padding-right: 3em}th{text-align: left;}</style><title>📁";
+    body += "<head><meta charset=\"utf-8\"><style>td{padding-right: 3em}th{text-align: left;}</style><title>📁";
     body += pure_uri_;
     body += "</title></head>\n<body bgcolor=lightgray text=dimgray><h1>📁";
     body += pure_uri_;
@@ -240,8 +240,12 @@ void    SimpleHandler::getAutoindex(HTTPResponse& response)
 void    SimpleHandler::post(HTTPResponse&  response)
 {
     logger::debug << "SimpleHandler: POST " << file_info_.path() << logger::end;
+    std::clog << request_.raw_data() << "\n" << request_.body_size() << "\n";
 
-    //проверить body size
+    if (location_.body_size != 0 && request_.body_size() > location_.body_size)
+        throw SimpleHandler::HTTPError(PAYLOAD_TOO_LARGE);
+
+
     std::map<std::string, std::string>::const_iterator  cgi = location_.cgi.find(file_info_.type());
     if (cgi != location_.cgi.end())
     {
@@ -249,7 +253,32 @@ void    SimpleHandler::post(HTTPResponse&  response)
         return;
     }
 
-    (void)response;
+    // Загрузка файла. Что делать если пришёл другой POST запрос?
+    // const std::string   content_type = request_.getHeaderValue("Content-Type");
+    // if (content_type->find("multipart/form-data") != std::string::npos)
+    // {
+    //     std::string  text = "boundary=";
+    //     std::string boundary = content_type->substr(content_type->find(text) + text.length());
+
+    //     // Нужно избавиться от этого, копирование всего тела запроса, стереть заголовок в raw_data?
+    //     std::string body(request_.body(), request_.body() + request_.body_size());
+    //     size_t      body_header_size = body.find("\r\n\r\n");
+
+    //     std::clog << body << std::endl;
+    //     text = "filename=";
+    //     size_t      first = body.find(text, body_header_size) + text.length();
+    //     size_t      last = body.find("\"", body_header_size);
+    //     std::string filename = body.substr(first, last);
+
+    //     // std::clog << filename << "AAAAAAAAAAAAAAAAAAAAAA\n";
+
+
+    //     // std::clog << body;
+
+    // }
+
+    throw SimpleHandler::HTTPError(SWITCHING_PROTOCOL);
+
 }
 
 void    SimpleHandler::del(HTTPResponse&  response)
@@ -304,7 +333,7 @@ void    SimpleHandler::error(HTTPStatus status, HTTPResponse& response)
     }
     if (body.empty())
     {
-        body += "<html>\n<head><title>";
+        body += "<html>\n<head><meta charset=\"utf-8\"><title>";
         body += status_line;
         body += "</title></head>\n<body bgcolor=lightgray text=dimgray><center><h1>";
         body += status_line;
@@ -329,6 +358,15 @@ void    SimpleHandler::redirect(HTTPResponse& response)
 
 void    SimpleHandler::cgiHandler(HTTPResponse& response)
 {
-    (void) response;
     logger::debug << "CGI for ." << file_info_.type() << logger::end;
+
+    std::string body;
+
+    body +="<!DOCTYPE html><html>\n<body bgcolor=lightgray text=dimgray><center><h1>CGI for *.";
+    body += file_info_.type();
+    body += "</h1></center><hr><center>webserv</center></body>\n</html>";
+
+    response.setContentLength(body.length());
+    response.setContentType("html");
+    response.buildResponse(body.begin(), body.end());
 }

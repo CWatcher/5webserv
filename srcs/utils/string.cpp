@@ -1,6 +1,7 @@
 #include "string.hpp"
 
 #include <algorithm>
+#include <sstream>
 
 std::string	&strTrim(std::string &str)
 {
@@ -10,7 +11,7 @@ std::string	&strTrim(std::string &str)
 	if (startpos == std::string::npos)
 		str.erase();
 	else
-		str = str.substr(startpos, endpos + 1);
+		str = str.substr(startpos, endpos - startpos + 1);
 	return str;
 }
 
@@ -48,7 +49,7 @@ std::string	&strCompleteWith(std::string &str, char c)
 	return str;
 }
 
-bool		strEndsWith(const std::string &str, const std::string &suffix)
+bool	strEndsWith(const std::string &str, const std::string &suffix)
 {
 	if (str.length() < suffix.length())
 		return false;
@@ -58,4 +59,19 @@ bool		strEndsWith(const std::string &str, const std::string &suffix)
 		if (*it1 != *it2)
 			return false;
 	return true;
+}
+
+std::vector<std::string>	strSplit(const std::string &str, char delim)
+{
+	std::stringstream			ss(str);
+	std::string					word;
+	std::vector<std::string>	splitted;
+
+	while (std::getline(ss, word, delim))
+	{
+		strTrim(word);
+		splitted.push_back(word);
+	}
+
+	return splitted;
 }

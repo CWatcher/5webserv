@@ -18,7 +18,6 @@ void    HTTPRequest::addData(const char* data, size_t n)
 bool    HTTPRequest::hasEndOfMessage()
 {
     const bool          hasHeader = !_header.empty();
-    const std::string   *content_length_str;
     long int            content_length;
     bool                end_found;
 
@@ -26,12 +25,12 @@ bool    HTTPRequest::hasEndOfMessage()
         end_found = hasHeader;
     else if (hasHeader && (_raw_data.compare(0, 4, "POST") || _raw_data.compare(0, 3, "PUT")))
     {
-        content_length_str = getHeaderValue("Content-Length");
-        if (content_length_str == NULL)
+        const std::string   content_length_str = getHeaderValue("Content-Length");
+        if (content_length_str.empty())
             end_found = true;
         else
         {
-            content_length = std::strtol(content_length_str->c_str(), NULL, 10);
+            content_length = std::strtol(content_length_str.c_str(), NULL, 10);
             if (errno || content_length < 0)
             {
                 logger::error << __FUNCTION__ << ": " << strerror(errno) << logger::end;
@@ -47,15 +46,15 @@ bool    HTTPRequest::hasEndOfMessage()
     return end_found;
 }
 
-const std::string   *HTTPRequest::getHeaderValue(const std::string &header_key) const
+std::string HTTPRequest::getHeaderValue(const std::string &header_key) const
 {
     std::map<std::string, std::string>::const_iterator  found;
 
     found = _header.find(strLowerCaseCopy(header_key));
     if (found != _header.end())
-        return &found->second;
+        return found->second;
     else
-        return NULL;
+        return "";
 }
 
 void	HTTPRequest::parseHeader()
@@ -139,10 +138,10 @@ std::pair<std::string, std::string>	HTTPRequest::getHeaderPairFromLine(const std
 
 const   std::string HTTPRequest::getHeaderHostName() const
 {
-    const std::string *host = getHeaderValue("Host");
+    const std::string host = getHeaderValue("Host");
 
-    if (host == NULL)
-        return std::string();
+    if (host.empty())
+        return "";
 
-    return host->substr(0, host->find(':'));
+    return host.substr(0, host.find(':'));
 }
