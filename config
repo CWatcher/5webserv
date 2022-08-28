@@ -1,11 +1,17 @@
 # https://docs.google.com/spreadsheets/d/1XZdfuUlACFeA5fPuh8J15eKgNshtirq-eh3oi3ZnhmM
+
+# Значения по умолчанию
+# root: ./www
+# index: index.html
+# body_size: 0(unlimited)
+# methods: GET
+# listen: 0.0.0.0 80
+
+
 # methods - по умолчанию все методы отключены, дочерние блоки переопределяют методы родительского блока
 # cgi - дочерние блоки дополняют параметры родительского блока, пути для одного и того типа должны быть одинаковые
 # error_page - в дочернем блоке список ошибок дополняется новыми ошибками
 # все остальные параметры переоределяются в дочерних блоках
-
-
-# сервер со всеми параметрами по умолчанию
 
 server {
 	methods GET DELETE;
@@ -30,63 +36,16 @@ server {
 	#error_page 404 custom_error.html;
 }
 
-
- server
-		  {
-#будем слушать несколько хостов и портов
-	 listen 127.0.0.1 345;listen 365
-	  ;
-
-server_name name1 name2 localhost;
-
-	index aaa bbb ccc;
-	methods GET;
-	autoindex on;
-	root new/rooot;
-
-	body_size 5646654;
-#несколько страниц ошибок
-	error_page 412 523 500 er1.html;
-	error_page 503 er2.html;
-#редирект с одним параметром, будет 302 код
-	return www.ya.ru;
-#ещё один, не должен переписать предыдущий
-	return 303 www.google.com;
-#в этом location переопределяются параметры
-	cgi php php;
-	location /aaa {
-		methods DELETE;
-		root a/rooot;
-		autoindex off;
-		body_size 1234;
-		#дополнение списка ошибок блока родителя
-		error_page 505 506 er3.html;
-		return 303 www.google.com;
-
-		cgi py jjjjjjjj;
-		#все параметры кроме return и methods будут как у aaa
-		location /aaa/ddd{
-			methods POST;
-			cgi go go;
-		}
-
-	}
-	upload_store aaaaaaaaaaa;
-# a в этом нет
-	location /bbb {}
+server {
+	listen	0.0.0.0 1234;
+	listen	0.0.0.0 1235;
+	index	server1.html;
+	root	./server1;
 }
 
-
-# много вложенных location
 server {
-	server_name nested;
-	location /aaa{
-		location /aaa/bbb{
-			location /aaa/bbb/ccc{body_size 777;}
-		}
-		location /aaa/ddd { location /aaa/ddd/eee{ location /aaa/ddd/eee/fff{ root roooooot; location /aaa/ddd/eee/fff/xxx {}}}}
-		location /aaa/eee { methods POST;}
-		location /aaabbb {}
-	}
-
+	listen	0.0.0.0 4321;
+	listen	0.0.0.0 4322;
+	index	server2.html;
+	root	./server2;
 }
