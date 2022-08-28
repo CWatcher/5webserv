@@ -48,7 +48,7 @@ ServerConfig::ServerConfig(const char *filename) : block_("server:")
 
 const VirtualServer& ServerConfig::getVirtualServer(in_addr_t host, in_port_t port, const std::string& name) const
 {
-    std::vector<VirtualServer>::const_iterator server = servers_.begin();
+    std::vector<VirtualServer>::const_iterator server = servers_.end();
 
     for(std::vector<VirtualServer>::const_iterator it = servers_.begin(); it != servers_.end(); it++)
     {
