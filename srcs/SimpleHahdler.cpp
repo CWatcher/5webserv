@@ -105,6 +105,8 @@ void    SimpleHandler::fillResponse(HTTPResponse& response)
 {
     try
     {
+        if (request_.getHeaderValue("Connection") == "close")
+            response.addHeader("Connection", "close");
         if (location_.redirect.second.empty())
         {
             if (request_.http() != "HTTP/1.1")
@@ -119,7 +121,6 @@ void    SimpleHandler::fillResponse(HTTPResponse& response)
         }
         else
             redirect(response);
-        //keep-alive close
     }
     catch(const SimpleHandler::HTTPError& e)
     {
@@ -300,9 +301,9 @@ void    SimpleHandler::postFile(HTTPResponse& response)
 
 std::string     SimpleHandler::getFormFileName(const char* form_header_first, const char* form_header_last)
 {
-    std::string     form_header(form_header_first, form_header_last);
-    size_t          f = form_header.find("filename=\"");
-    std::string     filename;
+    const std::string   form_header(form_header_first, form_header_last);
+    size_t              f = form_header.find("filename=\"");
+    std::string         filename;
 
     if (f != std::string::npos)
         try

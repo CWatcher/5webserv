@@ -19,7 +19,6 @@ int     SocketSession::action()
 
 void    SocketSession::setStateToWrite()
 {
-    _written_total = 0;
     _state = SocketState::Write;
 }
 
@@ -89,9 +88,13 @@ size_t  SocketSession::actionWrite()
         if (_written_total == _response.raw_data().size())
         {
             logger::info << "actionWrite: HTTP response sent. Switching to read socket " << _fd << logger::end;
+            _written_total = 0;
             _request = HTTPRequest();
             _response = HTTPResponse();
-            _state = SocketState::Read;
+            if (_request.getHeaderValue("Connection") == "close")
+                _state = SocketState::Disconnect;
+            else
+                _state = SocketState::Read;
         }
         else
             logger::debug << "actionWrite: Left to write (bytes): " << left_to_write - bytes_written << logger::end;
