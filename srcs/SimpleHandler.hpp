@@ -19,7 +19,6 @@ private:
     void                post(HTTPResponse& response);
     void                del(HTTPResponse& response);
 
-    void                validateRequest();
     void                error(HTTPStatus status, HTTPResponse& response);
     void                redirect(HTTPResponse& response);
 
@@ -27,10 +26,9 @@ private:
     void                getDirectory(HTTPResponse& response);
     void                getAutoindex(HTTPResponse& response);
     void                postFile(HTTPResponse& response);
-    std::string         getFileName(const std::string& head) const;
     void                cgiHandler(HTTPResponse& response) const;
 
-    static std::pair<std::string, std::string>  getKeyValue(const std::string& str, const std::string& key);
+    static std::string  getFormFileName(const char* form_header_first, const char* form_header_last);
 
 private:
     const Location&     location_;

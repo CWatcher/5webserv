@@ -107,14 +107,8 @@ void    SimpleHandler::fillResponse(HTTPResponse& response)
     {
         if (location_.redirect.second.empty())
         {
-            // Проверка корректности запроса
-            if (request_.method().empty() && request_.uri().empty() && request_.http().empty())
-                throw SimpleHandler::HTTPError(BAD_REQUEST);
             if (request_.http() != "HTTP/1.1")
                 throw SimpleHandler::HTTPError(HTTP_VERSION_NOT_SUPPORTED);
-            // Здесь проверить body_size?
-            //TO DO проверить заголовки, host должен быть обязательно (нет может быть пустым!)? что ещё нужно проверить?
-                // throw SimpleHandler::HTTPError(BAD_REQUEST);
 
             std::map<std::string, SimpleHandler::handler>::const_iterator handler = handlers_.find(request_.method());
             if (handlers_.find(request_.method()) == handlers_.end())
@@ -125,6 +119,7 @@ void    SimpleHandler::fillResponse(HTTPResponse& response)
         }
         else
             redirect(response);
+        //keep-alive close
     }
     catch(const SimpleHandler::HTTPError& e)
     {
@@ -208,7 +203,7 @@ void    SimpleHandler::getAutoindex(HTTPResponse& response)
     if (dir == NULL)
         throw SimpleHandler::HTTPError(INTERNAL_SERVER_ERROR);
 
-    body += "<head><meta charset=\"utf-8\"><style>td{padding-right: 3em}th{text-align: left;}</style><title>📁";
+    body += "<html>\n<head><meta charset=\"utf-8\"><style>td{padding-right: 3em}th{text-align: left;}</style><title>📁";
     body += pure_uri_;
     body += "</title></head>\n<body bgcolor=lightgray text=dimgray><h1>📁";
     body += pure_uri_;
@@ -250,9 +245,7 @@ void    SimpleHandler::post(HTTPResponse&  response)
 
     std::map<std::string, std::string>::const_iterator  cgi = location_.cgi.find(file_info_.type());
 
-    if (!location_.upload_store.empty())
-        postFile(response);
-    else if (cgi != location_.cgi.end())
+    if (cgi != location_.cgi.end())
     {
         if (file_info_.isNotExists())
             throw SimpleHandler::HTTPError(NOT_FOUND);
@@ -260,82 +253,72 @@ void    SimpleHandler::post(HTTPResponse&  response)
             throw SimpleHandler::HTTPError(FORBIDDEN);
         cgiHandler(response);
     }
+    else if (request_.isFormData())
+        postFile(response);
     else
         throw SimpleHandler::HTTPError(BAD_REQUEST);
 }
 
 void    SimpleHandler::postFile(HTTPResponse& response)
 {
-    const std::string   type = request_.getHeaderValue("Content-Type");
-    std::string         boundary = getKeyValue(type, "boundary").second;
-    if (type.find("multipart/form-data") == std::string::npos || boundary.empty())
-        throw SimpleHandler::HTTPError(BAD_REQUEST);
-    boundary = "--" + boundary;
+    std::ofstream   new_file;
+    std::string     filename;
+    std::string     message;
+    std::string     boundary = request_.getHeaderParameter("Content-Type", "boundary").insert(0, "--");
+    std::string     delim = "\r\n\r\n";
+    const char*     form_data_start = std::search(request_.beginBody(), request_.endBody(), delim.begin(), delim.end());
+    const char*     form_data_end = std::search(form_data_start, request_.endBody(), boundary.begin(), boundary.end());
 
-    std::string         delim = "\r\n\r\n";
-    const char*         body_end = request_.body() + request_.body_size();
-    const char*         data_start = std::search(request_.body(), body_end, delim.begin(), delim.end());
-    const char*         data_end = std::search(data_start, body_end, boundary.begin(), boundary.end());
-    if (data_start == body_end || data_end == body_end)
+    if (boundary.length() == 2 || form_data_start == request_.endBody() || form_data_end == request_.endBody())
         throw SimpleHandler::HTTPError(BAD_REQUEST);
 
-    std::string         filename = getFileName(std::string(request_.body() + boundary.size() + 4, data_start));
-    if (filename.empty())
-        throw SimpleHandler::HTTPError(BAD_REQUEST);
-    std::string         new_path = location_.upload_store + '/' + filename;
-    std::ofstream       new_file(new_path.c_str(), std::ios::binary);
+    filename = getFormFileName(request_.beginBody() + boundary.size() + 2, form_data_start);
+    new_file.open((location_.root + '/' + filename).c_str(), std::ios::binary);
     if (new_file.fail())
         throw SimpleHandler::HTTPError(FORBIDDEN);
 
-    data_start += 4;
-    new_file.write(data_start, data_end - data_start);
+    form_data_start += 4;
+    form_data_end -= 2;
+    new_file.write(form_data_start, form_data_end - form_data_start);
+    new_file.close();
     if (!new_file.good())
         throw SimpleHandler::HTTPError(INTERNAL_SERVER_ERROR);
-    new_file.close();
 
-    std::string msg = "Success";
-    response.setContentLength(msg.length());
-    response.addHeader("Location", "???");
-    response.buildResponse(msg.begin(), msg.end(), http_status_.find(CREATED)->second);
+    message +="<html>\n<head><meta charset=\"utf-8\"><title>";
+    message += filename;
+    message += "</title></head>\n<body bgcolor=lightgray text=dimgray><center><h1>";
+    message += filename;
+    message += " uploaded </h1></center><hr><center>webserv</center></body>\n</html>";
 
-    logger::debug << "file " << filename << " uploaded to " << new_path << logger::end;
+    response.setContentLength(message.length());
+    response.setContentType("html");
+    response.addHeader("Location", pure_uri_ + filename);
+    response.buildResponse(message.begin(), message.end(), http_status_.find(CREATED)->second);
+
+    logger::debug << "file " << filename << " uploaded to " << location_.path << logger::end;
 }
 
-std::pair<std::string, std::string> SimpleHandler::getKeyValue(const std::string& str, const std::string& key)
+std::string     SimpleHandler::getFormFileName(const char* form_header_first, const char* form_header_last)
 {
-    const std::vector<std::string>      params = strSplit(str, ';');
-    std::pair<std::string, std::string> key_value;
+    std::string     form_header(form_header_first, form_header_last);
+    size_t          f = form_header.find("filename=\"");
+    std::string     filename;
 
-    for (std::vector<std::string>::const_iterator it = params.begin(); it != params.end(); ++it)
-    {
-        if (it->find(key) != std::string::npos)
+    if (f != std::string::npos)
+        try
         {
-            size_t  f = it->find('=');
+            size_t  first = f + 10;
+            size_t  last = form_header.find("\"", first);
 
-            if (f != std::string::npos)
-                key_value.second = it->substr(f + 1);
-            key_value.first = key;
-            break;
+            filename = form_header.substr(first, last - first);
         }
-    }
+        catch (std::out_of_range&)
+        {
+            throw SimpleHandler::HTTPError(BAD_REQUEST);
+        }
 
-    return key_value;
-}
-
-std::string     SimpleHandler::getFileName(const std::string& head) const
-{
-    std::stringstream   ss(head);
-    std::string         line;
-    std::string         filename;
-
-    while (std::getline(ss, line))
-    {
-        filename = getKeyValue(line, "filename").second;
-        if (!filename.empty())
-            strTrim(filename, "\"");
-        break;
-    }
-
+    if (filename.empty())
+        throw SimpleHandler::HTTPError(BAD_REQUEST);
     return filename;
 }
 

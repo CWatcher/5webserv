@@ -8,18 +8,24 @@ class HTTPRequest : public HTTPMessage
 {
 public:
     HTTPRequest() : _start_line(), _method(), _uri(), _header_size(0), _body_size(0) {}
-    virtual void        addData(const char* data, size_t n);
+
+    void                addData(const char* data, size_t n);
 
     bool                hasEndOfMessage();
     std::string         getHeaderValue(const std::string &header_key) const;
-    const std::string   getHeaderHostName() const;
+    std::string         getHeaderHostName() const;
+    std::string         getHeaderParameter(const std::string& key, const std::string& param) const;
 
     const std::string   &start_line() const {return _start_line;}
     const std::string   &method() const {return _method;}
     const std::string   &uri() const {return _uri;}
     const std::string   &http() const {return _http;}
-    const char*         body() const {return _raw_data.data() + _header_size;}
     size_t              body_size() const {return _body_size;}
+    const char*         beginBody() const {return _raw_data.data() + _header_size;}
+    const char*         endBody() const {return beginBody() + _body_size;}
+
+    bool                isFormData() const {return getHeaderValue("Content-Type").find("multipart/form-data") != std::string::npos;}
+    bool                isChuncked() const {return getHeaderValue("Transfer-Encoding").find("chunked") != std::string::npos;;}
 
 private:
     void                                parseHeader();

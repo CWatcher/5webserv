@@ -136,7 +136,7 @@ std::pair<std::string, std::string>	HTTPRequest::getHeaderPairFromLine(const std
     return std::make_pair(key, value);
 }
 
-const   std::string HTTPRequest::getHeaderHostName() const
+std::string HTTPRequest::getHeaderHostName() const
 {
     const std::string host = getHeaderValue("Host");
 
@@ -144,4 +144,27 @@ const   std::string HTTPRequest::getHeaderHostName() const
         return "";
 
     return host.substr(0, host.find(':'));
+}
+
+std::string HTTPRequest::getHeaderParameter(const std::string& key, const std::string& param) const
+{
+    std::map<std::string, std::string>::const_iterator  found;
+
+    found = _header.find(strLowerCaseCopy(key));
+    if (found == _header.end())
+        return "";
+
+    const std::vector<std::string>                      parameters = strSplit(found->second, ';');
+    for (std::vector<std::string>::const_iterator it = parameters.begin(); it != parameters.end(); ++it)
+        if (it->find(param) != std::string::npos)
+            try
+            {
+                return it->substr(it->find('=') + 1);
+            }
+            catch(const std::out_of_range&)
+            {
+                return "";
+            }
+
+    return "";
 }
