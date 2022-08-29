@@ -92,10 +92,8 @@ SimpleHandler::SimpleHandler(const Location& loc, const HTTPRequest& req) : loca
     }
 
     file_info_ = FileInfo(location_.root + pure_uri_);
-    if (file_info_.isInfoValid() && file_info_.isDirectory() && *--pure_uri_.end() != '/')
-        pure_uri_.push_back('/');
 
-    logger::debug << "SimpleHandler: uri=" << pure_uri_ <<\
+    logger::debug << "SimpleHandler: pure_uri=" << pure_uri_ <<\
         " query_string=" << query_string_ <<\
         " path_info=" << path_info_ <<\
         " path=" << file_info_.path() << logger::end;
@@ -111,11 +109,6 @@ void    SimpleHandler::fillResponse(HTTPResponse& response)
         {
             if (request_.http() != "HTTP/1.1")
                 throw SimpleHandler::HTTPError(HTTP_VERSION_NOT_SUPPORTED);
-
-            if (file_info_.isNotExists())
-                throw SimpleHandler::HTTPError(NOT_FOUND);
-            if (file_info_.isNoInfo())
-                throw SimpleHandler::HTTPError(FORBIDDEN);
 
             std::map<std::string, SimpleHandler::handler>::const_iterator handler = handlers_.find(request_.method());
             if (handlers_.find(request_.method()) == handlers_.end())
@@ -142,8 +135,10 @@ void    SimpleHandler::fillResponse(HTTPResponse& response)
 
 void    SimpleHandler::get(HTTPResponse&  response)
 {
-    logger::debug << "SimpleHandler: GET " << file_info_.path() << logger::end;
+    logger::debug << "SimpleHandler: GET " << pure_uri_ << " at " << file_info_.path() << logger::end;
 
+    if (file_info_.isNotExists())
+        throw SimpleHandler::HTTPError(NOT_FOUND);
     if (!file_info_.isReadble())
         throw SimpleHandler::HTTPError(FORBIDDEN);
 
@@ -181,10 +176,12 @@ void    SimpleHandler::getFile(HTTPResponse& response)
 
 void    SimpleHandler::getDirectory(HTTPResponse& response)
 {
+    if (*--pure_uri_.end() != '/')
+        pure_uri_.push_back('/');
     for (std::vector<std::string>::const_iterator file = location_.index.begin(); file != location_.index.end(); ++file)
     {
         FileInfo    index_file_info_ = FileInfo(location_.root + pure_uri_ + *file);
-        if (index_file_info_.isInfoValid() && index_file_info_.isFile() && index_file_info_.isReadble())
+        if (index_file_info_.isFile() && index_file_info_.isReadble())
         {
             file_info_ = index_file_info_;
             getFile(response);
@@ -243,7 +240,7 @@ void    SimpleHandler::getAutoindex(HTTPResponse& response)
 
 void    SimpleHandler::post(HTTPResponse&  response)
 {
-    logger::debug << "SimpleHandler: POST " << file_info_.path() << logger::end;
+    logger::debug << "SimpleHandler: POST " << pure_uri_ << logger::end;
 
     if (location_.body_size != 0 && request_.body_size() > location_.body_size)
         throw SimpleHandler::HTTPError(PAYLOAD_TOO_LARGE);
@@ -252,12 +249,18 @@ void    SimpleHandler::post(HTTPResponse&  response)
 
     if (cgi != location_.cgi.end())
     {
+        if (file_info_.isNotExists())
+            throw SimpleHandler::HTTPError(NOT_FOUND);
         if (!file_info_.isReadble())
             throw SimpleHandler::HTTPError(FORBIDDEN);
         cgiHandler(response);
     }
-    else if (request_.isFormData())
+    else if (!location_.upload_store.empty() && request_.isFormData())
+    {
+        if (pure_uri_ != location_.path)
+            throw SimpleHandler::HTTPError(NOT_FOUND);
         postFile(response);
+    }
     else
         throw SimpleHandler::HTTPError(BAD_REQUEST);
 }
@@ -276,7 +279,7 @@ void    SimpleHandler::postFile(HTTPResponse& response)
         throw SimpleHandler::HTTPError(BAD_REQUEST);
 
     filename = getFormFileName(request_.beginBody() + boundary.size() + 2, form_data_start);
-    new_file.open((file_info_.path() + filename).c_str(), std::ios::binary);
+    new_file.open((location_.upload_store + "/" + filename).c_str(), std::ios::binary);
     if (!new_file.is_open())
         throw SimpleHandler::HTTPError(FORBIDDEN);
 
@@ -298,7 +301,7 @@ void    SimpleHandler::postFile(HTTPResponse& response)
 
     response.setContentLength(message.length());
     response.setContentType("html");
-    response.addHeader("Location", pure_uri_ + filename);
+    response.addHeader("Location", pure_uri_ + (*--pure_uri_.end() == '/' ? "" : "/") + filename);
     response.buildResponse(message.begin(), message.end(), http_status_.find(CREATED)->second);
 
     logger::debug << "file " << filename << " uploaded to " << location_.path << logger::end;
@@ -330,16 +333,18 @@ std::string     SimpleHandler::getFormFileName(const char* form_header_first, co
 
 void    SimpleHandler::del(HTTPResponse&  response)
 {
-    logger::debug << "SimpleHandler: DELETE " << file_info_.path() << logger::end;
+    logger::debug << "SimpleHandler: DELETE " << pure_uri_ << " at " << file_info_.path() << logger::end;
+
+    if (file_info_.isNotExists())
+        throw SimpleHandler::HTTPError(NOT_FOUND);
 
     int ret;
-
     if (file_info_.isFile())
         ret = ::remove(file_info_.path().c_str());
     else if (file_info_.isDirectory())
         ret = ::rmdir(file_info_.path().c_str());
     else
-        throw SimpleHandler::HTTPError(NOT_FOUND);
+        throw SimpleHandler::HTTPError(FORBIDDEN);
 
     if (ret)
     {

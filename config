@@ -8,44 +8,56 @@
 # listen: 0.0.0.0 80
 
 
-# methods - по умолчанию все методы отключены, дочерние блоки переопределяют методы родительского блока
+# methods - дочерние блоки переопределяют методы родительского блока
 # cgi - дочерние блоки дополняют параметры родительского блока, пути для одного и того типа должны быть одинаковые
 # error_page - в дочернем блоке список ошибок дополняется новыми ошибками
 # все остальные параметры переоределяются в дочерних блоках
 
+# пути до index и error_page файлов относительно root
+
 server {
-	methods GET DELETE;
-	index index.html test_index.html Webserv.pdf;
-	cgi py aaaaaaaaaaaaaa;
-	location /dir2 {
-		#index abcd;
-	 autoindex on;}
+	index index.html test_index.html abcd.txt my_index.html;
+	root ./www/server0;
+	error_page 403 custom_error.html;
+
+	location /redirect
+	{
+		return 301 https://ya.ru;
+	}
+
 	location /dir1
 	{
-		return https://ya.ru;
+		autoindex on;
+	}
+
+	location /dir2 {}
+
+	location /delete
+	{
+		methods GET DELETE;
+		error_page 409 custom_error.html;
+		autoindex on;
 	}
 
 	location /upload
 	{
+		methods POST GET;
 		autoindex on;
-		methods GET POST;
-		#абсолютный путь до папки загрузки, папка должна существоватьц
-		upload_store /mnt/f/Programming/21/webserv/www/upload;
+		upload_store ./www/server0/upload;
+		#чтобы работал GET нужен корректный root
 	}
-
-	#error_page 404 custom_error.html;
 }
 
 server {
 	listen	0.0.0.0 1234;
 	listen	0.0.0.0 1235;
 	index	server1.html;
-	root	./server1;
+	root	./www/server1;
 }
 
 server {
 	listen	0.0.0.0 4321;
 	listen	0.0.0.0 4322;
 	index	server2.html;
-	root	./server2;
+	root	./www/server2;
 }
