@@ -20,7 +20,7 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp					\
 							srcs/SimpleHahdler.cpp			\
 															\
 							srcs/socket/ASocket.cpp			\
-							srcs/socket/SocketListen.cpp	\
+							srcs/socket/ListenSocket.cpp	\
 							srcs/socket/SocketSession.cpp	\
 																\
 							srcs/config/VirtualServer.cpp		\
