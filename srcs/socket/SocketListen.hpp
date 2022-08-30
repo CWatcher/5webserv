@@ -1,6 +1,4 @@
-
-#ifndef SOCKETLISTEN_HPP
-# define SOCKETLISTEN_HPP
+#pragma once
 
 # include "socket/ASocket.hpp"
 
@@ -13,5 +11,3 @@ public:
 
     static int ConnectionsLimit;
 };
-
-#endif
