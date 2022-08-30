@@ -3,11 +3,11 @@
 
 #include <sys/socket.h>
 
-SocketSession::SocketSession(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port)
+SessionSocket::SessionSocket(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port)
     : ASocket(fd, from_listen_ip, from_listen_port),
     _written_total(0) {}
 
-int     SocketSession::action()
+int     SessionSocket::action()
 {
     if (_state == SocketState::Read)
         actionRead();
@@ -16,12 +16,12 @@ int     SocketSession::action()
     return -1;
 }
 
-void    SocketSession::setStateToWrite()
+void    SessionSocket::setStateToWrite()
 {
     _state = SocketState::Write;
 }
 
-size_t  SocketSession::actionRead()
+size_t  SessionSocket::actionRead()
 {
     char	temp_buffer[8192];
     ssize_t	bytes_read;
@@ -32,7 +32,7 @@ size_t  SocketSession::actionRead()
         logger::debug << "Read from socket (bytes): " << bytes_read << logger::end;
 
     if (bytes_read == -1)
-        logger::error << "SocketSession: actionRead: recv: " << logger::cerror << logger::end;
+        logger::error << "SessionSocket: actionRead: recv: " << logger::cerror << logger::end;
     if (bytes_read <= 0)
         _state = SocketState::Disconnect;
     else
@@ -55,7 +55,7 @@ size_t  SocketSession::actionRead()
     return bytes_read;
 }
 
-size_t  SocketSession::actionWrite()
+size_t  SessionSocket::actionWrite()
 {
     const char		*start = _response.raw_data().data() + _written_total;
     const size_t	left_to_write = _response.raw_data().size() - _written_total;
@@ -79,7 +79,7 @@ size_t  SocketSession::actionWrite()
     if (bytes_written == -1)
     {
         _state = SocketState::Disconnect;
-        logger::error << "SocketSession: actionWrite: send: " << logger::cerror << logger::end;
+        logger::error << "SessionSocket: actionWrite: send: " << logger::cerror << logger::end;
     }
     else if (bytes_written > 0)
     {

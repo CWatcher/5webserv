@@ -130,7 +130,7 @@ void Server::eventAction(ASocket *socket)
     if (return_value != -1)
         try
         {
-            _sockets[return_value] = new SocketSession(return_value, socket->ip(), socket->port());
+            _sockets[return_value] = new SessionSocket(return_value, socket->ip(), socket->port());
         }
         catch(const std::bad_alloc& e)
         {
@@ -147,7 +147,7 @@ void Server::eventAction(ASocket *socket)
 
 void Server::addProcessTask(ASocket *socket)
 {
-    SocketSession       *session = static_cast<SocketSession *>(socket);
+    SessionSocket       *session = static_cast<SessionSocket *>(socket);
     HTTPRequest         &request = session->request();
     const VirtualServer &v_server = _config.getVirtualServer(session->ip(), session->port(), request.getHeaderHostName());
     const Location      &location = VirtualServer::getLocation(v_server, request.uri());

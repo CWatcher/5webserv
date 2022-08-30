@@ -4,10 +4,10 @@
 # include "http/HTTPResponse.hpp"
 # include "socket/ASocket.hpp"
 
-class SocketSession : public ASocket
+class SessionSocket : public ASocket
 {
 public:
-    explicit            SocketSession(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port);
+    explicit            SessionSocket(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port);
 
     virtual int         action();
     void                setStateToWrite();
