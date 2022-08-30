@@ -2,10 +2,10 @@
 
 # include "socket/ASocket.hpp"
 
-class SocketListen : public ASocket
+class ListenSocket : public ASocket
 {
 public:
-    SocketListen(in_addr_t ip, in_port_t port, int connections_limit = ConnectionsLimit);
+    ListenSocket(in_addr_t ip, in_port_t port, int connections_limit = ConnectionsLimit);
 
     virtual int action();
 

@@ -22,7 +22,7 @@ Server::Server(const char *filename): _config(filename)
         {
             try
             {
-                ASocket  *socket_listen = new SocketListen(ip, *port);
+                ASocket  *socket_listen = new ListenSocket(ip, *port);
                 _sockets[socket_listen->fd()] = socket_listen;
             }
             catch (const std::exception &e)

@@ -4,9 +4,9 @@
 
 #include <arpa/inet.h>
 
-int SocketListen::ConnectionsLimit = 1024;
+int ListenSocket::ConnectionsLimit = 1024;
 
-SocketListen::SocketListen(in_addr_t ip, in_port_t port, int connections_limit)
+ListenSocket::ListenSocket(in_addr_t ip, in_port_t port, int connections_limit)
     : ASocket(socket(AF_INET, SOCK_STREAM, IPPROTO_IP), ip, port)
 {
     const int   sockopt_value = 1;
@@ -44,7 +44,7 @@ SocketListen::SocketListen(in_addr_t ip, in_port_t port, int connections_limit)
     logger::info << "Enabled listen on: " << addr_str << ':' << ntohs(port) << logger::end;
 }
 
-int SocketListen::action()
+int ListenSocket::action()
 {
     sockaddr_in	client_address;
     socklen_t	address_len = sizeof(client_address);
