@@ -1,6 +1,4 @@
-
-#ifndef SOCKETSESSION_HPP
-# define SOCKETSESSION_HPP
+#pragma once
 
 # include "http/HTTPRequest.hpp"
 # include "http/HTTPResponse.hpp"
@@ -25,5 +23,3 @@ private:
     HTTPRequest         _request;
     HTTPResponse        _response;
 };
-
-#endif
