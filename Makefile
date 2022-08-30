@@ -21,7 +21,7 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp					\
 															\
 							srcs/socket/ASocket.cpp			\
 							srcs/socket/ListenSocket.cpp	\
-							srcs/socket/SocketSession.cpp	\
+							srcs/socket/SessionSocket.cpp	\
 																\
 							srcs/config/VirtualServer.cpp		\
 							srcs/config/ServerConfig.cpp		\
