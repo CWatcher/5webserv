@@ -15,7 +15,7 @@
 class Server
 {
 public:
-    explicit Server(ServerConfig &config);
+    explicit Server(const char *filename);
     ~Server();
 
     void    mainLoopRun();
@@ -32,7 +32,7 @@ private:
     void    eventAction(ASocket *socket);
     void    addProcessTask(ASocket *session);
 
-    ServerConfig             &_config;
+    ServerConfig             _config;
     std::map<int, ASocket *> _sockets;
     ft::thread_pool          _thread_pool;
 };

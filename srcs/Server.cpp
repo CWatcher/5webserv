@@ -10,10 +10,9 @@
 
 int Server::poll_timeout = 30 * 1000;
 
-Server::Server(ServerConfig &config)
-    : _config(config)
+Server::Server(const char *filename): _config(filename)
 {
-    std::map<in_addr_t, std::set<in_port_t> > listened = config.getListened();
+    std::map<in_addr_t, std::set<in_port_t> > listened = _config.getListened();
 
     for(std::map<in_addr_t, std::set<in_port_t> >::const_iterator it = listened.begin();
         it != listened.end(); ++it)
@@ -34,6 +33,8 @@ Server::Server(ServerConfig &config)
             }
         }
     }
+
+    std::clog << _config;
 }
 
 Server::~Server()
