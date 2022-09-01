@@ -90,6 +90,7 @@ SimpleHandler::SimpleHandler(const Location& loc, const HTTPRequest& req, const 
             while (pure_uri_[f] != '/')
                 ++f;
             path_info_ = pure_uri_.substr(f);
+            pure_uri_.erase(f);
             break;
         }
     }
@@ -422,44 +423,43 @@ void    SimpleHandler::cgiHandler(HTTPResponse& response) const
     response.buildResponse(body.begin(), body.end());
 
     std::vector<std::string>  envp_data;
+    std::stringstream         converter;
     std::string               tmp;
-
-// "CONTENT_LENGTH"
-// "CONTENT_TYPE"
-// "GATEWAY_INTERFACE"
-// "PATH_INFO"
-// "PATH_TRANSLATED"
-// "QUERY_STRING"
-// "REMOTE_ADDR"
-// "REQUEST_METHOD"
-// "SCRIPT_NAME"
-// "SERVER_NAME"
-// "SERVER_PORT"
-// "SERVER_PROTOCOL"
-// "SERVER_SOFTWARE"
 
     tmp = request_.getHeaderValue("Content-Length");
     if (!tmp.empty())
         envp_data.push_back(tmp + "CONTENT_LENGTH=");
+
     tmp = request_.getHeaderValue("Content-Type");
     if (!tmp.empty())
         envp_data.push_back("CONTENT_TYPE=" + tmp);
+
     envp_data.push_back("GATEWAY_INTERFACE=CGI/1.1");
+
     if (!path_info_.empty())
+    {
         envp_data.push_back("PATH_INFO=" + path_info_);
-    if (!path_info_.empty())
         envp_data.push_back("PATH_TRANSLATED=" + location_.root + path_info_);
+    }
+
     if (!query_string_.empty())
         envp_data.push_back("QUERY_STRING=" + query_string_);
+
     tmp = "REMOTE_ADDR=";
     envp_data.push_back(tmp + ::inet_ntoa(remote_addr_));
+
     envp_data.push_back("REQUEST_METHOD=" + request_.method());
     envp_data.push_back("SCRIPT_NAME=" + pure_uri_);
 
-//ADDR env_data.push_back("SERVER_NAME=" + request_.getHeaderHostName());
-// SERVER_PORT	Номер порта сервера.
+    tmp = "SERVER_NAME=";
+    envp_data.push_back(tmp + ::inet_ntoa(server_.sin_addr));
+
+    converter << ::ntohs(server_.sin_port);
+    envp_data.push_back("SERVER_PORT=" + converter.str());
+
     envp_data.push_back("SERVER_PROTOCOL=HTTP/1.1");
     envp_data.push_back("SERVER_SOFTWARE=webserv");
 
-    //переменные из заголовков
+    cforeach(std::vector<std::string>, envp_data, var)
+        std::clog << *var << std::endl;
 }
