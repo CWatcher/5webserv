@@ -17,11 +17,12 @@ public:
     ASocket(int fd, in_addr_t ip, in_port_t port);
     virtual	~ASocket();
 
-    virtual int     action(sockaddr_in & remote_addr) = 0;
-    int             fd() const;
-    in_addr_t       serverIp() const;
-    in_port_t       serverPort() const;
-    SocketState::_  state() const;
+    virtual int         action(in_addr &remote_addr) = 0;
+    int                 fd() const;
+    in_addr_t           serverIp() const;
+    in_port_t           serverPort() const;
+    const sockaddr_in   &server() const;
+    SocketState::_      state() const;
 
 private:
     ASocket();

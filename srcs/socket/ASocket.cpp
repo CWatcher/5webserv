@@ -27,6 +27,11 @@ in_port_t   ASocket::serverPort() const
     return _server.sin_port;
 }
 
+const sockaddr_in &ASocket::server() const
+{
+    return _server;
+}
+
 SocketState::_    ASocket::state() const
 {
     return _state;

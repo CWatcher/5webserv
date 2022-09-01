@@ -33,7 +33,7 @@ namespace handlers
         // TODO: need to find and pass proper location or server config
         start_handler->handle(task->location, task->session->request(), task->session->response());
 
-        logger::debug << "I know you came from port: " << ntohs(task->session->port()) << logger::end;
+        logger::debug << "I know you came from port: " << ntohs(task->session->serverPort()) << logger::end;
         logger::debug << "Your server config:\n" << task->location << logger::end;
 
         task->session->setStateToWrite();

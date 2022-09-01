@@ -44,19 +44,21 @@ ListenSocket::ListenSocket(in_addr_t ip, in_port_t port, int connections_limit)
     logger::info << "Enabled listen on: " << addr_str << ':' << ntohs(port) << logger::end;
 }
 
-int ListenSocket::action(sockaddr_in &remote_addr)
+int ListenSocket::action(in_addr &remote_addr)
 {
-    socklen_t	remote_addr_len = sizeof(remote_addr);
+    sockaddr_in client_addr;
+    socklen_t	client_addr_len = sizeof(client_addr);
     int			new_fd;
 
     logger::debug << "Accepting on port: " << ntohs(_server.sin_port) << " (socket " << _fd << ")" << logger::end;
-    new_fd = accept(_fd, (sockaddr *)&remote_addr, &remote_addr_len);
+    new_fd = accept(_fd, (sockaddr *)&client_addr, &client_addr_len);
 
     if (new_fd == -1)
         logger::error << "Accept error on port " << ntohs(_server.sin_port) << " (socket " << _fd << ")" << logger::end;
     else
         logger::info << "Connected new client: socket " << new_fd
-            << " (" << inet_ntoa(remote_addr.sin_addr)
-            << ":" << ntohs(remote_addr.sin_port) << ")" << logger::end;
+            << " (" << inet_ntoa(client_addr.sin_addr)
+            << ":" << ntohs(client_addr.sin_port) << ")" << logger::end;
+    remote_addr = client_addr.sin_addr;
     return new_fd;
 }

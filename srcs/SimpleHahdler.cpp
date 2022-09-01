@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <algorithm>
 #include <sstream>
+#include <arpa/inet.h>
 
 static const std::pair<HTTPStatus, std::string>    http_status_init_list[] =
 {
@@ -65,7 +66,11 @@ const std::pair<std::string, SimpleHandler::handler>    SimpleHandler::handlers_
 
 const std::map<std::string, SimpleHandler::handler> SimpleHandler::handlers_(handlers_init_list_, handlers_init_list_ + sizeof(handlers_init_list_)/ sizeof(handlers_init_list_[0]));
 
-SimpleHandler::SimpleHandler(const Location& loc, const HTTPRequest& req) : location_(loc), request_(req)
+SimpleHandler::SimpleHandler(const Location& loc, const HTTPRequest& req, const sockaddr_in& server, const in_addr& remote_addr) :
+    server_(server),
+    remote_addr_(remote_addr),
+    location_(loc),
+    request_(req)
 {
     size_t  f;
 
@@ -416,29 +421,45 @@ void    SimpleHandler::cgiHandler(HTTPResponse& response) const
     response.setContentType("html");
     response.buildResponse(body.begin(), body.end());
 
-    std::vector<std::string> env_data;
+    std::vector<std::string>  envp_data;
+    std::string               tmp;
 
-//                              "CONTENT_LENGTH" | "CONTENT_TYPE" | "GATEWAY_INTERFACE" |
-//                            "PATH_INFO" | "PATH_TRANSLATED" |
-//                            "QUERY_STRING" | "REMOTE_ADDR" |
-//                            "REMOTE_HOST" | "REQUEST_METHOD" |
-//                            "SCRIPT_NAME" | "SERVER_NAME" |
-//                            "SERVER_PORT" | "SERVER_PROTOCOL" |
-//                            "SERVER_SOFTWARE"
-    env_data.push_back("CONTENT_LENGTH=" + request_.getHeaderValue("Content-Length"));
-    env_data.push_back("CONTENT_TYPE=" + request_.getHeaderValue("Content-Type"));
-    env_data.push_back("GATEWAY_INTERFACE=CGI/1.1");
-// PATH_INFO Дополнительная информация о пути, которую передал клиент. Другими словами, доступ к шлюзу может быть осуществлен по виртуальному пути, за которым следует некоторая дополнительная информация. Эта информация передается в PATH_INFO.
-// PATH_TRANSLATED Сервер передает преобразованную версию PATH_INFO, которая включает в себя путь, преобразованный из виртуального в физический.
-    env_data.push_back("QUERY_STRING=" + query_string_);
-// REMOTE_ADDR	IP-адрес клиента.
-// REMOTE_HOST	Имя DNS клиента. ""
-    env_data.push_back("REQUEST_METHOD=" + request_.method());
-    env_data.push_back("SCRIPT_NAME=" + pure_uri_);
-// SERVER_NAME	DNS-имя сервера или, при невозможности определить имя, его IP-адрес.
+// "CONTENT_LENGTH"
+// "CONTENT_TYPE"
+// "GATEWAY_INTERFACE"
+// "PATH_INFO"
+// "PATH_TRANSLATED"
+// "QUERY_STRING"
+// "REMOTE_ADDR"
+// "REQUEST_METHOD"
+// "SCRIPT_NAME"
+// "SERVER_NAME"
+// "SERVER_PORT"
+// "SERVER_PROTOCOL"
+// "SERVER_SOFTWARE"
+
+    tmp = request_.getHeaderValue("Content-Length");
+    if (!tmp.empty())
+        envp_data.push_back(tmp + "CONTENT_LENGTH=");
+    tmp = request_.getHeaderValue("Content-Type");
+    if (!tmp.empty())
+        envp_data.push_back("CONTENT_TYPE=" + tmp);
+    envp_data.push_back("GATEWAY_INTERFACE=CGI/1.1");
+    if (!path_info_.empty())
+        envp_data.push_back("PATH_INFO=" + path_info_);
+    if (!path_info_.empty())
+        envp_data.push_back("PATH_TRANSLATED=" + location_.root + path_info_);
+    if (!query_string_.empty())
+        envp_data.push_back("QUERY_STRING=" + query_string_);
+    tmp = "REMOTE_ADDR=";
+    envp_data.push_back(tmp + ::inet_ntoa(remote_addr_));
+    envp_data.push_back("REQUEST_METHOD=" + request_.method());
+    envp_data.push_back("SCRIPT_NAME=" + pure_uri_);
+
+//ADDR env_data.push_back("SERVER_NAME=" + request_.getHeaderHostName());
 // SERVER_PORT	Номер порта сервера.
-    env_data.push_back("SERVER_PROTOCOL=HTTP/1.1");
-    env_data.push_back("SERVER_SOFTWARE=webserv");
+    envp_data.push_back("SERVER_PROTOCOL=HTTP/1.1");
+    envp_data.push_back("SERVER_SOFTWARE=webserv");
 
     //переменные из заголовков
 }

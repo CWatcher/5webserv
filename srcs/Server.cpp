@@ -125,8 +125,8 @@ bool Server::eventCheck(const pollfd *poll_fd)
 
 void Server::eventAction(ASocket *socket)
 {
-    sockaddr_in remote_addr;
-    int         return_value = socket->action(remote_addr);
+    in_addr remote_addr;
+    int     return_value = socket->action(remote_addr);
 
     if (return_value != -1)
         try
@@ -152,7 +152,7 @@ void Server::addProcessTask(ASocket *socket)
     HTTPRequest         &request = session->request();
     const VirtualServer &v_server = _config.getVirtualServer(session->serverIp(), session->serverPort(), request.getHeaderHostName());
     const Location      &location = VirtualServer::getLocation(v_server, request.uri());
-    SimpleHandler       handler(location, session->request());
+    SimpleHandler       handler(location, session->request(), session->server(), session->remoteAddr());
 
     logger::debug << "I know you came from port: " << ntohs(session->serverPort()) << logger::end;
     logger::debug << "Your server config:\n" << location << logger::end;

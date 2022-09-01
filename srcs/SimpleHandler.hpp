@@ -10,7 +10,7 @@
 class SimpleHandler
 {
 public:
-    SimpleHandler(const Location& loc, const HTTPRequest& req);
+    SimpleHandler(const Location& loc, const HTTPRequest& req, const sockaddr_in& server, const in_addr& remote_addr);
 
     void                fillResponse(HTTPResponse& response);
 
@@ -31,13 +31,16 @@ private:
     static std::string  getFormFileName(const char* form_header_first, const char* form_header_last);
 
 private:
+    const sockaddr_in&  server_;
+    const in_addr&      remote_addr_;
     const Location&     location_;
     const HTTPRequest&  request_;
 
-    FileInfo            file_info_;
     std::string         pure_uri_;
     std::string         query_string_;
     std::string         path_info_;
+
+    FileInfo            file_info_;
 
     class HTTPError : public std::exception
     {
