@@ -5,8 +5,6 @@ enum HTTPStatus
 {
     CONTINUE = 100,
     SWITCHING_PROTOCOL,
-    PROCESSING,
-    EARLY_HINTS,
     OK = 200,
     CREATED,
     ACCEPTED,

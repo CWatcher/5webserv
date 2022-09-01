@@ -11,8 +11,6 @@ static const std::pair<HTTPStatus, std::string>    http_status_init_list[] =
 {
     std::make_pair(SWITCHING_PROTOCOL, "101 Switching Protocol"),
     std::make_pair(CONTINUE, "100 Continue"),
-    std::make_pair(PROCESSING, "102 Processing"),
-    std::make_pair(EARLY_HINTS,	"103 Early Hints"),
     std::make_pair(OK, "200 OK"),
     std::make_pair(CREATED,	"201 Created"),
     std::make_pair(ACCEPTED, "202 Accepted"),
@@ -176,7 +174,7 @@ void    SimpleHandler::getFile(HTTPResponse& response)
 
 void    SimpleHandler::getDirectory(HTTPResponse& response)
 {
-    if (*--pure_uri_.end() != '/')
+    if (*pure_uri_.rbegin() != '/')
         pure_uri_.push_back('/');
     for (std::vector<std::string>::const_iterator file = location_.index.begin(); file != location_.index.end(); ++file)
     {
@@ -417,4 +415,30 @@ void    SimpleHandler::cgiHandler(HTTPResponse& response) const
     response.setContentLength(body.length());
     response.setContentType("html");
     response.buildResponse(body.begin(), body.end());
+
+    std::vector<std::string> env_data;
+
+//                              "CONTENT_LENGTH" | "CONTENT_TYPE" | "GATEWAY_INTERFACE" |
+//                            "PATH_INFO" | "PATH_TRANSLATED" |
+//                            "QUERY_STRING" | "REMOTE_ADDR" |
+//                            "REMOTE_HOST" | "REQUEST_METHOD" |
+//                            "SCRIPT_NAME" | "SERVER_NAME" |
+//                            "SERVER_PORT" | "SERVER_PROTOCOL" |
+//                            "SERVER_SOFTWARE"
+    env_data.push_back("CONTENT_LENGTH=" + request_.getHeaderValue("Content-Length"));
+    env_data.push_back("CONTENT_TYPE=" + request_.getHeaderValue("Content-Type"));
+    env_data.push_back("GATEWAY_INTERFACE=CGI/1.1");
+// PATH_INFO Дополнительная информация о пути, которую передал клиент. Другими словами, доступ к шлюзу может быть осуществлен по виртуальному пути, за которым следует некоторая дополнительная информация. Эта информация передается в PATH_INFO.
+// PATH_TRANSLATED Сервер передает преобразованную версию PATH_INFO, которая включает в себя путь, преобразованный из виртуального в физический.
+    env_data.push_back("QUERY_STRING=" + query_string_);
+// REMOTE_ADDR	IP-адрес клиента.
+// REMOTE_HOST	Имя DNS клиента. ""
+    env_data.push_back("REQUEST_METHOD=" + request_.method());
+    env_data.push_back("SCRIPT_NAME=" + pure_uri_);
+// SERVER_NAME	DNS-имя сервера или, при невозможности определить имя, его IP-адрес.
+// SERVER_PORT	Номер порта сервера.
+    env_data.push_back("SERVER_PROTOCOL=HTTP/1.1");
+    env_data.push_back("SERVER_SOFTWARE=webserv");
+
+    //переменные из заголовков
 }

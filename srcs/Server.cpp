@@ -125,12 +125,13 @@ bool Server::eventCheck(const pollfd *poll_fd)
 
 void Server::eventAction(ASocket *socket)
 {
-    int return_value = socket->action();
+    sockaddr_in remote_addr;
+    int         return_value = socket->action(remote_addr);
 
     if (return_value != -1)
         try
         {
-            _sockets[return_value] = new SocketSession(return_value, socket->ip(), socket->port());
+            _sockets[return_value] = new SocketSession(return_value, socket->serverIp(), socket->serverPort(), remote_addr);
         }
         catch(const std::bad_alloc& e)
         {
@@ -149,11 +150,11 @@ void Server::addProcessTask(ASocket *socket)
 {
     SocketSession       *session = static_cast<SocketSession *>(socket);
     HTTPRequest         &request = session->request();
-    const VirtualServer &v_server = _config.getVirtualServer(session->ip(), session->port(), request.getHeaderHostName());
+    const VirtualServer &v_server = _config.getVirtualServer(session->serverIp(), session->serverPort(), request.getHeaderHostName());
     const Location      &location = VirtualServer::getLocation(v_server, request.uri());
     SimpleHandler       handler(location, session->request());
 
-    logger::debug << "I know you came from port: " << ntohs(session->port()) << logger::end;
+    logger::debug << "I know you came from port: " << ntohs(session->serverPort()) << logger::end;
     logger::debug << "Your server config:\n" << location << logger::end;
     handler.fillResponse(session->response());
     session->setStateToWrite();

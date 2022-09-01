@@ -4,11 +4,13 @@
 
 #include <sys/socket.h>
 
-SocketSession::SocketSession(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port)
-    : ASocket(fd, from_listen_ip, from_listen_port),
-    _written_total(0) {}
+SocketSession::SocketSession(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port, sockaddr_in &remote_addr) :
+    ASocket(fd, from_listen_ip, from_listen_port),
+    _remote(remote_addr),
+    _written_total(0)
+{}
 
-int     SocketSession::action()
+int     SocketSession::action(sockaddr_in &)
 {
     if (_state == SocketState::Read)
         actionRead();

@@ -15,13 +15,12 @@ class ASocket
 {
 public:
     ASocket(int fd, in_addr_t ip, in_port_t port);
-    ASocket(const ASocket &src);
     virtual	~ASocket();
 
-    virtual int     action() = 0;
+    virtual int     action(sockaddr_in & remote_addr) = 0;
     int             fd() const;
-    int             ip() const;
-    int             port() const;
+    in_addr_t       serverIp() const;
+    in_port_t       serverPort() const;
     SocketState::_  state() const;
 
 private:
@@ -30,8 +29,7 @@ private:
 
 protected:
     const int       _fd;
-    const in_addr_t _ip;
-    const in_port_t _port;
+    sockaddr_in     _server;
     SocketState::_  _state;
 };
 

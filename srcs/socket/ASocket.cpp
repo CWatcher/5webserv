@@ -6,28 +6,25 @@
 
 ASocket::ASocket(int fd, in_addr_t ip, in_port_t port)
     : _fd(fd),
-    _ip(ip),
-    _port(port),
-    _state(SocketState::Read) {}
-
-ASocket::ASocket(const ASocket &src)
-    : _fd(src._fd),
-    _ip(src._ip),
-    _port(src._port) {}
+    _state(SocketState::Read)
+{
+    _server.sin_port = port;
+    _server.sin_addr.s_addr = ip;
+}
 
 int ASocket::fd() const
 {
     return _fd;
 }
 
-int ASocket::ip() const
+in_addr_t   ASocket::serverIp() const
 {
-    return _ip;
+    return _server.sin_addr.s_addr;
 }
 
-int ASocket::port() const
+in_port_t   ASocket::serverPort() const
 {
-    return _port;
+    return _server.sin_port;
 }
 
 SocketState::_    ASocket::state() const
