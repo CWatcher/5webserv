@@ -427,19 +427,6 @@ void    SimpleHandler::cgiQuery(HTTPResponse& response, const std::string& cgi_p
         runCgi(cgi_path, cgi_out_file);
     else
         processCgi(cgi_pid, cgi_out_file, response);
-
-
-    logger::debug << "CGI for ." << file_info_.type() << logger::end;
-
-    std::string body;
-
-    body +="<!DOCTYPE html><html>\n<body bgcolor=lightgray text=dimgray><center><h1>CGI for *.";
-    body += file_info_.type();
-    body += "</h1></center><hr><center>webserv</center></body>\n</html>";
-
-    response.setContentLength(body.length());
-    response.setContentType("html");
-    response.buildResponse(body.begin(), body.end());
 }
 
 void    SimpleHandler::runCgi(const std::string& cgi_path, FILE* cgi_out_file) const
@@ -486,9 +473,31 @@ void    SimpleHandler::processCgi(pid_t cgi_pid, FILE* cgi_out_file, HTTPRespons
 
 void    SimpleHandler::makeCgiResponse(HTTPResponse& response, const char* cgi_data, size_t n) const
 {
-    (void)(response);
-    std::string s(cgi_data, cgi_data + n);
-    std::clog << s << std::endl;
+    const std::string   delim = "\n\n";
+    const char*         cgi_header_end = std::search(cgi_data, cgi_data + n, delim.begin(), delim.end());
+    std::string         cgi_header;
+    size_t              first, last;
+
+    if (cgi_header_end == cgi_data + n)
+        throw (BAD_GATEWAY);
+
+    cgi_header.append(cgi_data, cgi_header_end);
+    first = 0;
+    last = cgi_header.find(':');
+    while (last != std::string::npos)
+    {
+        std::string key = cgi_header.substr(first, last);
+        std::string value;
+
+        first = last + 1;
+        last = cgi_header.find(last, '\n');
+        value = cgi_header.substr(first, last);
+        strTrim(key);
+        strTrim(value);
+        response.addHeader(key, value);
+    }
+    response.setContentLength(n);
+    response.buildResponse(cgi_data, cgi_data + n);
 }
 
 void    SimpleHandler::makeCgiEnv(std::vector<char*>& envp) const
