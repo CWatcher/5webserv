@@ -477,6 +477,7 @@ void    SimpleHandler::makeCgiResponse(HTTPResponse& response, const char* cgi_d
     const char*         cgi_header_end = std::search(cgi_data, cgi_data + n, delim.begin(), delim.end());
     std::string         cgi_header;
     size_t              first, last;
+    std::string         status = "200 OK";
 
     if (cgi_header_end == cgi_data + n)
         throw (BAD_GATEWAY);
@@ -494,7 +495,16 @@ void    SimpleHandler::makeCgiResponse(HTTPResponse& response, const char* cgi_d
         value = cgi_header.substr(first, last);
         strTrim(key);
         strTrim(value);
-        response.addHeader(key, value);
+        if (strLowerCaseCopy(key) == "status")
+            status = value;
+        else
+            response.addHeader(key, value);
+        if (strLowerCaseCopy(key) == "content-length")
+        {
+            std::stringstream   ss;
+            ss << value;
+            ss >> n;
+        }
     }
     response.setContentLength(n);
     response.buildResponse(cgi_data, cgi_data + n);
