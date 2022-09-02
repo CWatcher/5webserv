@@ -1,7 +1,7 @@
 
 #include "Server.hpp"
 #include "socket/ListenSocket.hpp"
-#include "socket/SocketSession.hpp"
+#include "socket/SessionSocket.hpp"
 #include "old_handlers/base/HandlerTask.hpp"
 #include "old_handlers/runner/runner.hpp"
 #include "utils/syntax.hpp"
@@ -131,7 +131,7 @@ void Server::eventAction(ASocket *socket)
     if (return_value != -1)
         try
         {
-            _sockets[return_value] = new SocketSession(return_value, socket->ip(), socket->port(), remote_addr);
+            _sockets[return_value] = new SessionSocket(return_value, socket->ip(), socket->port(), remote_addr);
         }
         catch(const std::bad_alloc& e)
         {
@@ -148,7 +148,7 @@ void Server::eventAction(ASocket *socket)
 
 void Server::addProcessTask(ASocket *socket)
 {
-    SocketSession       *session = static_cast<SocketSession *>(socket);
+    SessionSocket       *session = static_cast<SessionSocket *>(socket);
     HTTPRequest         &request = session->request();
     const VirtualServer &v_server = _config.getVirtualServer(session->ip(), session->port(), request.getHeaderHostName());
     const Location      &location = VirtualServer::getLocation(v_server, request.uri());

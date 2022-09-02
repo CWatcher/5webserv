@@ -3,15 +3,15 @@
 # define HANDLERTASK_HPP
 
 # include "config/ServerConfig.hpp"
-# include "socket/SocketSession.hpp"
+# include "socket/SessionSocket.hpp"
 
 struct HandlerTask
 {
-    HandlerTask(const Location &loc, SocketSession *sess)
+    HandlerTask(const Location &loc, SessionSocket *sess)
         : location(loc), session(sess) {}
 
     const Location  &location;
-    SocketSession   *session;
+    SessionSocket   *session;
 };
 
 #endif

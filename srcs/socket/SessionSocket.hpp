@@ -1,14 +1,14 @@
-#ifndef SOCKETSESSION_HPP
-# define SOCKETSESSION_HPP
+#ifndef SESSIONSOCKET_HPP
+# define SESSIONSOCKET_HPP
 
 # include "http/HTTPRequest.hpp"
 # include "http/HTTPResponse.hpp"
 # include "socket/ASocket.hpp"
 
-class SocketSession : public ASocket
+class SessionSocket : public ASocket
 {
 public:
-    explicit        SocketSession(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port,const in_addr &remote_addr);
+    explicit        SessionSocket(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port,const in_addr &remote_addr);
 
     virtual int     action(in_addr &remote_addr);
     void            setStateToWrite();
