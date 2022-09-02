@@ -4,7 +4,7 @@
 
 FileInfo::FileInfo(const std::string &path) : ret_(::stat(path.c_str(), &stat_)), error_(errno), path_(path)
 {
-    if (ret_ == 0 && isDirectory() && *--path_.end() != '/')
+    if (ret_ == 0 && isDirectory() && *path_.rbegin() != '/')
         path_.push_back('/');
 }
 

@@ -17,7 +17,7 @@ std::string	&strTrim(std::string &str, const char *s)
 
 std::string	&strLowerCase(std::string &str)
 {
-	std::for_each(str.begin(), str.end(), tolower);
+	std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 	return str;
 }
 
@@ -25,7 +25,7 @@ std::string	strLowerCaseCopy(const std::string &str)
 {
 	std::string str_copy = str;
 
-	std::for_each(str_copy.begin(), str_copy.end(), tolower);
+	std::transform(str_copy.begin(), str_copy.end(), str_copy.begin(), ::tolower);
 	return str_copy;
 }
 
@@ -44,7 +44,7 @@ std::string	&strRemoveDoubled(std::string &str, char c)
 
 std::string	&strCompleteWith(std::string &str, char c)
 {
-	if (*--str.end() != c)
+	if (*str.rbegin() != c)
 		str.push_back(c);
 	return str;
 }

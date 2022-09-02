@@ -6,13 +6,15 @@
 #include <unistd.h>
 #include <algorithm>
 #include <sstream>
+#include <arpa/inet.h>
+#include <sys/wait.h>
+#include <signal.h>
+#include <sys/mman.h>
 
 static const std::pair<HTTPStatus, std::string>    http_status_init_list[] =
 {
     std::make_pair(SWITCHING_PROTOCOL, "101 Switching Protocol"),
     std::make_pair(CONTINUE, "100 Continue"),
-    std::make_pair(PROCESSING, "102 Processing"),
-    std::make_pair(EARLY_HINTS,	"103 Early Hints"),
     std::make_pair(OK, "200 OK"),
     std::make_pair(CREATED,	"201 Created"),
     std::make_pair(ACCEPTED, "202 Accepted"),
@@ -67,7 +69,12 @@ const std::pair<std::string, SimpleHandler::handler>    SimpleHandler::handlers_
 
 const std::map<std::string, SimpleHandler::handler> SimpleHandler::handlers_(handlers_init_list_, handlers_init_list_ + sizeof(handlers_init_list_)/ sizeof(handlers_init_list_[0]));
 
-SimpleHandler::SimpleHandler(const Location& loc, const HTTPRequest& req) : location_(loc), request_(req)
+SimpleHandler::SimpleHandler(const Location& loc, const HTTPRequest& req, in_addr_t server_ip, in_port_t server_port, const in_addr& remote_addr) :
+    location_(loc),
+    request_(req),
+    server_ip_(server_ip),
+    server_port_(server_port),
+    remote_addr_(remote_addr)
 {
     size_t  f;
 
@@ -87,6 +94,7 @@ SimpleHandler::SimpleHandler(const Location& loc, const HTTPRequest& req) : loca
             while (pure_uri_[f] != '/')
                 ++f;
             path_info_ = pure_uri_.substr(f);
+            pure_uri_.erase(f);
             break;
         }
     }
@@ -99,7 +107,7 @@ SimpleHandler::SimpleHandler(const Location& loc, const HTTPRequest& req) : loca
         " path=" << file_info_.path() << logger::end;
 }
 
-void    SimpleHandler::fillResponse(HTTPResponse& response)
+void    SimpleHandler::makeResponse(HTTPResponse& response)
 {
     try
     {
@@ -108,20 +116,20 @@ void    SimpleHandler::fillResponse(HTTPResponse& response)
         if (location_.redirect.second.empty())
         {
             if (request_.http() != "HTTP/1.1")
-                throw SimpleHandler::HTTPError(HTTP_VERSION_NOT_SUPPORTED);
+                throw HTTPError(HTTP_VERSION_NOT_SUPPORTED);
 
             std::map<std::string, SimpleHandler::handler>::const_iterator handler = handlers_.find(request_.method());
             if (handlers_.find(request_.method()) == handlers_.end())
-                throw SimpleHandler::HTTPError(NOT_IMPLEMENTED);
+                throw HTTPError(NOT_IMPLEMENTED);
             if (location_.methods.find(request_.method()) == location_.methods.end())
-                throw SimpleHandler::HTTPError(METHOD_NOT_ALLOWED);
+                throw HTTPError(METHOD_NOT_ALLOWED);
 
             (this->*handler->second)(response);
         }
         else
             redirect(response);
     }
-    catch(const SimpleHandler::HTTPError& e)
+    catch(const HTTPError& e)
     {
         logger::debug << "SimpleHandler: " << http_status_.find(e.status())->second << logger::end;
         error(e.status(), response);
@@ -138,31 +146,31 @@ void    SimpleHandler::get(HTTPResponse&  response)
     logger::debug << "SimpleHandler: GET " << pure_uri_ << " at " << file_info_.path() << logger::end;
 
     if (file_info_.isNotExists())
-        throw SimpleHandler::HTTPError(NOT_FOUND);
+        throw HTTPError(NOT_FOUND);
     if (!file_info_.isReadble())
-        throw SimpleHandler::HTTPError(FORBIDDEN);
+        throw HTTPError(FORBIDDEN);
 
     if (file_info_.isFile())
         getFile(response);
     else if (file_info_.isDirectory())
         getDirectory(response);
     else
-        throw SimpleHandler::HTTPError(FORBIDDEN);
+        throw HTTPError(FORBIDDEN);
 }
 
-void    SimpleHandler::getFile(HTTPResponse& response)
+void    SimpleHandler::getFile(HTTPResponse& response) const
 {
     std::map<std::string, std::string>::const_iterator  cgi = location_.cgi.find(file_info_.type());
     if (cgi != location_.cgi.end())
     {
-        cgiHandler(response);
+        cgiQuery(response, cgi->second);
         return;
     }
 
     std::ifstream                                       file(file_info_.path().c_str(), std::ios::binary);
 
     if (!file.is_open())
-        throw SimpleHandler::HTTPError(INTERNAL_SERVER_ERROR);
+        throw HTTPError(INTERNAL_SERVER_ERROR);
 
     response.setContentType(file_info_.type());
     response.setContentLength(file_info_.size());
@@ -176,7 +184,7 @@ void    SimpleHandler::getFile(HTTPResponse& response)
 
 void    SimpleHandler::getDirectory(HTTPResponse& response)
 {
-    if (*--pure_uri_.end() != '/')
+    if (*pure_uri_.rbegin() != '/')
         pure_uri_.push_back('/');
     for (std::vector<std::string>::const_iterator file = location_.index.begin(); file != location_.index.end(); ++file)
     {
@@ -193,7 +201,7 @@ void    SimpleHandler::getDirectory(HTTPResponse& response)
         getAutoindex(response);
         return;
     }
-    throw SimpleHandler::HTTPError(FORBIDDEN);
+    throw HTTPError(FORBIDDEN);
 }
 
 void    SimpleHandler::getAutoindex(HTTPResponse& response)
@@ -203,7 +211,7 @@ void    SimpleHandler::getAutoindex(HTTPResponse& response)
     dirent*     item;
 
     if (dir == NULL)
-        throw SimpleHandler::HTTPError(INTERNAL_SERVER_ERROR);
+        throw HTTPError(INTERNAL_SERVER_ERROR);
 
     body += "<html>\n<head><meta charset=\"utf-8\"><style>td{padding-right: 3em}th{text-align: left;}</style><title>📁";
     body += pure_uri_;
@@ -243,29 +251,29 @@ void    SimpleHandler::post(HTTPResponse&  response)
     logger::debug << "SimpleHandler: POST " << pure_uri_ << logger::end;
 
     if (location_.body_size != 0 && request_.body_size() > location_.body_size)
-        throw SimpleHandler::HTTPError(PAYLOAD_TOO_LARGE);
+        throw HTTPError(PAYLOAD_TOO_LARGE);
 
     std::map<std::string, std::string>::const_iterator  cgi = location_.cgi.find(file_info_.type());
 
     if (cgi != location_.cgi.end())
     {
         if (file_info_.isNotExists())
-            throw SimpleHandler::HTTPError(NOT_FOUND);
+            throw HTTPError(NOT_FOUND);
         if (!file_info_.isReadble())
-            throw SimpleHandler::HTTPError(FORBIDDEN);
-        cgiHandler(response);
+            throw HTTPError(FORBIDDEN);
+        cgiQuery(response, cgi->second);
     }
     else if (!location_.upload_store.empty() && request_.isFormData())
     {
         if (pure_uri_ != location_.path)
-            throw SimpleHandler::HTTPError(NOT_FOUND);
+            throw HTTPError(NOT_FOUND);
         postFile(response);
     }
     else
-        throw SimpleHandler::HTTPError(BAD_REQUEST);
+        throw HTTPError(BAD_REQUEST);
 }
 
-void    SimpleHandler::postFile(HTTPResponse& response)
+void    SimpleHandler::postFile(HTTPResponse& response) const
 {
     std::ofstream   new_file;
     std::string     filename;
@@ -276,12 +284,12 @@ void    SimpleHandler::postFile(HTTPResponse& response)
     const char*     form_data_end = std::search(form_data_start, request_.endBody(), boundary.begin(), boundary.end());
 
     if (boundary.length() == 2 || form_data_start == request_.endBody() || form_data_end == request_.endBody())
-        throw SimpleHandler::HTTPError(BAD_REQUEST);
+        throw HTTPError(BAD_REQUEST);
 
     filename = getFormFileName(request_.beginBody() + boundary.size() + 2, form_data_start);
     new_file.open((location_.upload_store + "/" + filename).c_str(), std::ios::binary);
     if (!new_file.is_open())
-        throw SimpleHandler::HTTPError(FORBIDDEN);
+        throw HTTPError(FORBIDDEN);
 
     form_data_start += 4;
     form_data_end -= 2;
@@ -289,7 +297,7 @@ void    SimpleHandler::postFile(HTTPResponse& response)
     if (!new_file.good())
     {
         new_file.close();
-        throw SimpleHandler::HTTPError(INTERNAL_SERVER_ERROR);
+        throw HTTPError(INTERNAL_SERVER_ERROR);
     }
     new_file.close();
 
@@ -323,11 +331,11 @@ std::string     SimpleHandler::getFormFileName(const char* form_header_first, co
         }
         catch (std::out_of_range&)
         {
-            throw SimpleHandler::HTTPError(BAD_REQUEST);
+            throw HTTPError(BAD_REQUEST);
         }
 
     if (filename.empty())
-        throw SimpleHandler::HTTPError(BAD_REQUEST);
+        throw HTTPError(BAD_REQUEST);
     return filename;
 }
 
@@ -336,7 +344,7 @@ void    SimpleHandler::del(HTTPResponse&  response)
     logger::debug << "SimpleHandler: DELETE " << pure_uri_ << " at " << file_info_.path() << logger::end;
 
     if (file_info_.isNotExists())
-        throw SimpleHandler::HTTPError(NOT_FOUND);
+        throw HTTPError(NOT_FOUND);
 
     int ret;
     if (file_info_.isFile())
@@ -344,15 +352,15 @@ void    SimpleHandler::del(HTTPResponse&  response)
     else if (file_info_.isDirectory())
         ret = ::rmdir(file_info_.path().c_str());
     else
-        throw SimpleHandler::HTTPError(FORBIDDEN);
+        throw HTTPError(FORBIDDEN);
 
     if (ret)
     {
         if (errno == EACCES)
-            throw SimpleHandler::HTTPError(FORBIDDEN);
+            throw HTTPError(FORBIDDEN);
         if (errno == ENOTEMPTY)
-            throw SimpleHandler::HTTPError(CONFLICT);
-        throw SimpleHandler::HTTPError(INTERNAL_SERVER_ERROR);
+            throw HTTPError(CONFLICT);
+        throw HTTPError(INTERNAL_SERVER_ERROR);
     }
 
     response.buildResponse(NULL, NULL, http_status_.find(NO_CONTENT)->second);
@@ -404,17 +412,156 @@ void    SimpleHandler::redirect(HTTPResponse& response)
     response.buildResponse(NULL, NULL, http_status_.find(status)->second);
 }
 
-void    SimpleHandler::cgiHandler(HTTPResponse& response) const
+void    SimpleHandler::cgiQuery(HTTPResponse& response, const std::string& cgi_path) const
 {
-    logger::debug << "CGI for ." << file_info_.type() << logger::end;
+    pid_t                       cgi_pid;
+    FILE*                       cgi_out_file = ::tmpfile();
 
-    std::string body;
+    if (cgi_out_file == NULL)
+        throw HTTPError(INTERNAL_SERVER_ERROR);
 
-    body +="<!DOCTYPE html><html>\n<body bgcolor=lightgray text=dimgray><center><h1>CGI for *.";
-    body += file_info_.type();
-    body += "</h1></center><hr><center>webserv</center></body>\n</html>";
+    cgi_pid = ::fork();
+    if (cgi_pid == -1)
+        throw HTTPError(INTERNAL_SERVER_ERROR);
+    else if (cgi_pid == 0)
+        runCgi(cgi_path, cgi_out_file);
+    else
+        processCgi(cgi_pid, cgi_out_file, response);
+}
 
-    response.setContentLength(body.length());
-    response.setContentType("html");
-    response.buildResponse(body.begin(), body.end());
+void    SimpleHandler::runCgi(const std::string& cgi_path, FILE* cgi_out_file) const
+{
+    std::vector<char*>          envp;
+    std::vector<char*>          argv;
+
+    if (::dup2(::fileno(cgi_out_file), STDOUT_FILENO) == -1)
+        ::raise(SIGKILL);
+    ::fclose(cgi_out_file);
+
+    makeCgiEnv(envp);
+    argv.push_back(::strdup(cgi_path.c_str()));
+    argv.push_back(::strdup(file_info_.path().c_str()));
+    argv.push_back(NULL);
+
+    ::execve(cgi_path.c_str(), &*argv.begin(), &*envp.begin());
+
+    logger::error << logger::cerror << logger::end;
+    ::raise(SIGKILL);
+}
+
+void    SimpleHandler::processCgi(pid_t cgi_pid, FILE* cgi_out_file, HTTPResponse& response) const
+{
+    int         status;
+    char        *cgi_data;
+    struct stat cgi_stat;
+
+    ::waitpid(cgi_pid, &status, 0);
+    if (!WIFEXITED(status))
+    {
+        fclose(cgi_out_file);
+        throw HTTPError(INTERNAL_SERVER_ERROR);
+    }
+    fflush(cgi_out_file);
+    ::fstat(::fileno(cgi_out_file), &cgi_stat);
+    cgi_data = reinterpret_cast<char *>(::mmap(NULL, cgi_stat.st_size, PROT_READ, MAP_SHARED, fileno(cgi_out_file), 0));
+    ::fclose(cgi_out_file);
+    if (cgi_data == NULL)
+        throw HTTPError(INTERNAL_SERVER_ERROR);
+    makeCgiResponse(response, cgi_data, cgi_stat.st_size);
+    ::munmap(cgi_data, cgi_stat.st_size);
+}
+
+void    SimpleHandler::makeCgiResponse(HTTPResponse& response, const char* cgi_data, size_t n) const
+{
+    const std::string   delim = "\n\n";
+    const char*         cgi_header_end = std::search(cgi_data, cgi_data + n, delim.begin(), delim.end());
+    std::string         cgi_header;
+    size_t              first, last;
+    std::string         status = "200 OK";
+
+    if (cgi_header_end == cgi_data + n)
+        throw (BAD_GATEWAY);
+
+    cgi_header.append(cgi_data, cgi_header_end);
+    first = 0;
+    last = cgi_header.find(':');
+    while (last != std::string::npos)
+    {
+        std::string key = cgi_header.substr(first, last);
+        std::string value;
+
+        first = last + 1;
+        last = cgi_header.find(last, '\n');
+        value = cgi_header.substr(first, last);
+        strTrim(key);
+        strTrim(value);
+        if (strLowerCaseCopy(key) == "status")
+            status = value;
+        else
+            response.addHeader(key, value);
+        if (strLowerCaseCopy(key) == "content-length")
+        {
+            std::stringstream   ss;
+            ss << value;
+            ss >> n;
+        }
+    }
+    response.setContentLength(n);
+    response.buildResponse(cgi_data, cgi_data + n);
+}
+
+void    SimpleHandler::makeCgiEnv(std::vector<char*>& envp) const
+{
+    std::vector<std::string>    envp_data;
+    std::stringstream           converter;
+    std::string                 tmp;
+
+    tmp = request_.getHeaderValue("Content-Length");
+    if (!tmp.empty())
+        envp_data.push_back(tmp + "CONTENT_LENGTH=");
+
+    tmp = request_.getHeaderValue("Content-Type");
+    if (!tmp.empty())
+        envp_data.push_back("CONTENT_TYPE=" + tmp);
+
+    envp_data.push_back("GATEWAY_INTERFACE=CGI/1.1");
+
+    if (!path_info_.empty())
+    {
+        envp_data.push_back("PATH_INFO=" + path_info_);
+        envp_data.push_back("PATH_TRANSLATED=" + location_.root + path_info_);
+    }
+
+    if (!query_string_.empty())
+        envp_data.push_back("QUERY_STRING=" + query_string_);
+
+    tmp = "REMOTE_ADDR=";
+    envp_data.push_back(tmp + ::inet_ntoa(remote_addr_));
+
+    envp_data.push_back("REQUEST_METHOD=" + request_.method());
+    envp_data.push_back("SCRIPT_NAME=" + pure_uri_);
+
+    tmp = "SERVER_NAME=";
+    in_addr server_addr;
+    server_addr.s_addr = server_ip_;
+    envp_data.push_back(tmp + ::inet_ntoa(server_addr));
+
+    converter << ::ntohs(server_port_);
+    envp_data.push_back("SERVER_PORT=" + converter.str());
+
+    envp_data.push_back("SERVER_PROTOCOL=HTTP/1.1");
+    envp_data.push_back("SERVER_SOFTWARE=webserv");
+
+    for (std::map<std::string, std::string>::const_iterator it = request_.header().begin();
+        it != request_.header().end(); ++it)
+    {
+        tmp = it->first;
+        std::replace(tmp.begin(), tmp.end(), '-', '_');
+        std::transform(tmp.begin(), tmp.end(), tmp.begin(), ::toupper);
+        envp_data.push_back("HTTP_" + tmp + '=' + it->second);
+    }
+
+    for (std::vector<std::string>::const_iterator it = envp_data.begin(); it != envp_data.end(); ++it)
+        envp.push_back(::strdup(it->c_str()));
+    envp.push_back(NULL);
 }

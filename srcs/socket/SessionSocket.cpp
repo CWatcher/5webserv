@@ -1,13 +1,16 @@
+
 #include "socket/SessionSocket.hpp"
 #include "utils/log.hpp"
 
 #include <sys/socket.h>
 
-SessionSocket::SessionSocket(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port)
-    : ASocket(fd, from_listen_ip, from_listen_port),
-    _written_total(0) {}
+SessionSocket::SessionSocket(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port, const in_addr &remote_addr) :
+    ASocket(fd, from_listen_ip, from_listen_port),
+    _remote_addr(remote_addr),
+    _written_total(0)
+{}
 
-int     SessionSocket::action()
+int     SessionSocket::action(in_addr &)
 {
     if (_state == SocketState::Read)
         actionRead();

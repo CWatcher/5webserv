@@ -26,13 +26,13 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp					\
 							srcs/config/VirtualServer.cpp		\
 							srcs/config/ServerConfig.cpp		\
 																\
-							srcs/handlers/runner/runner.cpp		\
-							srcs/handlers/base/Handler.cpp		\
-							srcs/handlers/CGIReader.cpp			\
-							srcs/handlers/FileReader.cpp		\
-							srcs/handlers/HeaderGenerator.cpp	\
-							srcs/handlers/HeaderParser.cpp		\
-							srcs/handlers/HeaderValidator.cpp	\
+							srcs/old_handlers/runner/runner.cpp		\
+							srcs/old_handlers/base/Handler.cpp		\
+							srcs/old_handlers/CGIReader.cpp			\
+							srcs/old_handlers/FileReader.cpp		\
+							srcs/old_handlers/HeaderGenerator.cpp	\
+							srcs/old_handlers/HeaderParser.cpp		\
+							srcs/old_handlers/HeaderValidator.cpp	\
 																\
 							srcs/utils/log.cpp					\
 							srcs/utils/string.cpp				\

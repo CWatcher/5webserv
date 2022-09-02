@@ -11,8 +11,8 @@ ListenSocket::ListenSocket(in_addr_t ip, in_port_t port, int connections_limit)
 {
     const int   sockopt_value = 1;
     sockaddr_in socket_address;
+    in_addr     addr;
     char        addr_str[40];
-    struct      in_addr addr;
 
     addr.s_addr = ip;
     inet_ntop(AF_INET, &addr, addr_str, 40);
@@ -44,20 +44,21 @@ ListenSocket::ListenSocket(in_addr_t ip, in_port_t port, int connections_limit)
     logger::info << "Enabled listen on: " << addr_str << ':' << ntohs(port) << logger::end;
 }
 
-int ListenSocket::action()
+int ListenSocket::action(in_addr &remote_addr)
 {
-    sockaddr_in	client_address;
-    socklen_t	address_len = sizeof(client_address);
+    sockaddr_in client_addr;
+    socklen_t	client_addr_len = sizeof(client_addr);
     int			new_fd;
 
     logger::debug << "Accepting on port: " << ntohs(_port) << " (socket " << _fd << ")" << logger::end;
-    new_fd = accept(_fd, (sockaddr *)&client_address, &address_len);
+    new_fd = accept(_fd, (sockaddr *)&client_addr, &client_addr_len);
 
     if (new_fd == -1)
         logger::error << "Accept error on port " << ntohs(_port) << " (socket " << _fd << ")" << logger::end;
     else
         logger::info << "Connected new client: socket " << new_fd
-            << " (" << inet_ntoa(client_address.sin_addr)
-            << ":" << ntohs(client_address.sin_port) << ")" << logger::end;
+            << " (" << inet_ntoa(client_addr.sin_addr)
+            << ":" << ntohs(client_addr.sin_port) << ")" << logger::end;
+    remote_addr = client_addr.sin_addr;
     return new_fd;
 }

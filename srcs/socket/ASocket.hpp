@@ -18,10 +18,10 @@ public:
     ASocket(const ASocket &src);
     virtual	~ASocket();
 
-    virtual int     action() = 0;
+    virtual int     action(in_addr &remote_addr) = 0;
     int             fd() const;
-    int             ip() const;
-    int             port() const;
+    in_addr_t       ip() const;
+    in_port_t       port() const;
     SocketState::_  state() const;
 
 private:
