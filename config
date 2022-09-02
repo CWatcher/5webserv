@@ -28,6 +28,7 @@ server {
 	location /dir1
 	{
 		autoindex on;
+		location /dir1/cgi {cgi py /usr/bin/python3;}
 	}
 
 	location /dir2 {}

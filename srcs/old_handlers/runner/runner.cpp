@@ -1,10 +1,10 @@
 
-#include "handlers/base/HandlerTask.hpp"
-#include "handlers/HeaderParser.hpp"
-#include "handlers/HeaderValidator.hpp"
-#include "handlers/FileReader.hpp"
-#include "handlers/CGIReader.hpp"
-#include "handlers/HeaderGenerator.hpp"
+#include "old_handlers/base/HandlerTask.hpp"
+#include "old_handlers/HeaderParser.hpp"
+#include "old_handlers/HeaderValidator.hpp"
+#include "old_handlers/FileReader.hpp"
+#include "old_handlers/CGIReader.hpp"
+#include "old_handlers/HeaderGenerator.hpp"
 #include "utils/log.hpp"
 
 // ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
@@ -33,7 +33,7 @@ namespace handlers
         // TODO: need to find and pass proper location or server config
         start_handler->handle(task->location, task->session->request(), task->session->response());
 
-        logger::debug << "I know you came from port: " << ntohs(task->session->serverPort()) << logger::end;
+        logger::debug << "I know you came from port: " << ntohs(task->session->port()) << logger::end;
         logger::debug << "Your server config:\n" << task->location << logger::end;
 
         task->session->setStateToWrite();

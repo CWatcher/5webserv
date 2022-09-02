@@ -10,9 +10,9 @@
 class SimpleHandler
 {
 public:
-    SimpleHandler(const Location& loc, const HTTPRequest& req, const sockaddr_in& server, const in_addr& remote_addr);
+    SimpleHandler(const Location& loc, const HTTPRequest& req, in_addr_t server_ip, in_port_t server_port, const in_addr& remote_addr);
 
-    void                fillResponse(HTTPResponse& response);
+    void                makeResponse(HTTPResponse& response);
 
 private:
     void                get(HTTPResponse& response);
@@ -22,19 +22,25 @@ private:
     void                error(HTTPStatus status, HTTPResponse& response);
     void                redirect(HTTPResponse& response);
 
-    void                getFile(HTTPResponse& response);
+    void                getFile(HTTPResponse& response) const;
     void                getDirectory(HTTPResponse& response);
     void                getAutoindex(HTTPResponse& response);
-    void                postFile(HTTPResponse& response);
-    void                cgiHandler(HTTPResponse& response) const;
+    void                postFile(HTTPResponse& response) const;
+
+    void                cgiQuery(HTTPResponse& response, const std::string& cgi_path) const;
+    void                runCgi(const std::string& cgi_path, FILE* cgi_out_file) const;
+    void                makeCgiEnv(std::vector<char*>& envp_data) const;
+    void                processCgi(pid_t cgi_pid, FILE* cgi_out_file, HTTPResponse& response) const;
+    void                makeCgiResponse(HTTPResponse& response, const char* cgi_data, size_t n) const;
 
     static std::string  getFormFileName(const char* form_header_first, const char* form_header_last);
 
 private:
-    const sockaddr_in&  server_;
-    const in_addr&      remote_addr_;
     const Location&     location_;
     const HTTPRequest&  request_;
+    const in_addr_t     server_ip_;
+    const in_port_t     server_port_;
+    const in_addr&      remote_addr_;
 
     std::string         pure_uri_;
     std::string         query_string_;

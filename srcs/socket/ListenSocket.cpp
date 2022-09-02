@@ -50,11 +50,11 @@ int ListenSocket::action(in_addr &remote_addr)
     socklen_t	client_addr_len = sizeof(client_addr);
     int			new_fd;
 
-    logger::debug << "Accepting on port: " << ntohs(_server.sin_port) << " (socket " << _fd << ")" << logger::end;
+    logger::debug << "Accepting on port: " << ntohs(_port) << " (socket " << _fd << ")" << logger::end;
     new_fd = accept(_fd, (sockaddr *)&client_addr, &client_addr_len);
 
     if (new_fd == -1)
-        logger::error << "Accept error on port " << ntohs(_server.sin_port) << " (socket " << _fd << ")" << logger::end;
+        logger::error << "Accept error on port " << ntohs(_port) << " (socket " << _fd << ")" << logger::end;
     else
         logger::info << "Connected new client: socket " << new_fd
             << " (" << inet_ntoa(client_addr.sin_addr)

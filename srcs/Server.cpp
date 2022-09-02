@@ -2,8 +2,8 @@
 #include "Server.hpp"
 #include "socket/ListenSocket.hpp"
 #include "socket/SocketSession.hpp"
-#include "handlers/base/HandlerTask.hpp"
-#include "handlers/runner/runner.hpp"
+#include "old_handlers/base/HandlerTask.hpp"
+#include "old_handlers/runner/runner.hpp"
 #include "utils/syntax.hpp"
 
 #include "SimpleHandler.hpp"
@@ -131,7 +131,7 @@ void Server::eventAction(ASocket *socket)
     if (return_value != -1)
         try
         {
-            _sockets[return_value] = new SocketSession(return_value, socket->serverIp(), socket->serverPort(), remote_addr);
+            _sockets[return_value] = new SocketSession(return_value, socket->ip(), socket->port(), remote_addr);
         }
         catch(const std::bad_alloc& e)
         {
@@ -150,13 +150,13 @@ void Server::addProcessTask(ASocket *socket)
 {
     SocketSession       *session = static_cast<SocketSession *>(socket);
     HTTPRequest         &request = session->request();
-    const VirtualServer &v_server = _config.getVirtualServer(session->serverIp(), session->serverPort(), request.getHeaderHostName());
+    const VirtualServer &v_server = _config.getVirtualServer(session->ip(), session->port(), request.getHeaderHostName());
     const Location      &location = VirtualServer::getLocation(v_server, request.uri());
-    SimpleHandler       handler(location, session->request(), session->server(), session->remoteAddr());
+    SimpleHandler       handler(location, session->request(), session->ip(), session->port(), session->remoteAddr());
 
-    logger::debug << "I know you came from port: " << ntohs(session->serverPort()) << logger::end;
+    logger::debug << "I know you came from port: " << ntohs(session->port()) << logger::end;
     logger::debug << "Your server config:\n" << location << logger::end;
-    handler.fillResponse(session->response());
+    handler.makeResponse(session->response());
     session->setStateToWrite();
 
     // try
