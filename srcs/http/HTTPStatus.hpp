@@ -1,8 +1,9 @@
 #ifndef HTTPSTATUS_HPP
 # define HTTPSTATUS_HPP
 
-enum HTTPStatus
+namespace HTTPStatus
 {
+enum _ {
     CONTINUE = 100,
     SWITCHING_PROTOCOL,
     OK = 200,
@@ -47,4 +48,5 @@ enum HTTPStatus
     GATEWAY_TIMEOUT,
     HTTP_VERSION_NOT_SUPPORTED
 };
+}
 #endif

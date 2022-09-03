@@ -4,12 +4,14 @@
 
 # include <netinet/in.h>
 
-namespace SocketState { enum _ {
+namespace SocketState {
+enum _ {
     Read,
     Write,
     Process,
     Disconnect
-}; }
+};
+}
 
 class ASocket
 {

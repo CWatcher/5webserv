@@ -11,54 +11,54 @@
 #include <signal.h>
 #include <sys/mman.h>
 
-static const std::pair<HTTPStatus, std::string>    http_status_init_list[] =
+static const std::pair<HTTPStatus::_, std::string>    http_status_init_list[] =
 {
-    std::make_pair(SWITCHING_PROTOCOL, "101 Switching Protocol"),
-    std::make_pair(CONTINUE, "100 Continue"),
-    std::make_pair(OK, "200 OK"),
-    std::make_pair(CREATED,	"201 Created"),
-    std::make_pair(ACCEPTED, "202 Accepted"),
-    std::make_pair(NON_AUTHORITATIVE_INFORMATION, "203 Non-Authoritative Information"),
-    std::make_pair(NO_CONTENT, "204 No Content"),
-    std::make_pair(RESET_CONTENT, "205 Reset Content"),
-    std::make_pair(PARTIAL_CONTENT, "206 Partial Content"),
-    std::make_pair(MULTIPLE_CHOICE, "300 Multiple Choice"),
-    std::make_pair(MOVED_PERMANENTLY, "301 Moved Permanently"),
-    std::make_pair(FOUND, "302 Found"),
-    std::make_pair(SEE_OTHER, "303 See Other"),
-    std::make_pair(NOT_MODIFIED, "304 Not Modified"),
-    std::make_pair(USE_PROXY, "305 Use Proxy"),
-    std::make_pair(SWITCH_PROXY, "306 Switch Proxy"),
-    std::make_pair(TEMPORARY_REDIRECT, "307 Temporary Redirect"),
-    std::make_pair(PERMANENT_REDIRECT, "308 Permanent Redirect"),
-    std::make_pair(BAD_REQUEST, "400 Bad Request"),
-    std::make_pair(UNAUTHORIZED, "401 Unauthorized"),
-    std::make_pair(PAYMENT_REQUIRED, "402 Payment Required"),
-    std::make_pair(FORBIDDEN, "403 Forbidden"),
-    std::make_pair(NOT_FOUND, "404 Not Found"),
-    std::make_pair(METHOD_NOT_ALLOWED, "405 Method Not Allowed"),
-    std::make_pair(NOT_ACCEPTABLE, "406 Not Acceptable"),
-    std::make_pair(PROXY_AUTHENTICATION_REQUIRED, "407 Proxy Authentication Required"),
-    std::make_pair(REQUEST_TIMEOUT, "408 Request Timeout"),
-    std::make_pair(CONFLICT, "409 Conflict"),
-    std::make_pair(GONE, "410 Gone"),
-    std::make_pair(LENGTH_REQUIRED, "411 Length Required"),
-    std::make_pair(PRECONDITION_FAILED, "412 Precondition Failed"),
-    std::make_pair(PAYLOAD_TOO_LARGE, "413 Payload Too Large"),
-    std::make_pair(REQUEST_URI_TOO_LONG, "414 Request-URI Too Long"),
-    std::make_pair(UNSUPPORTED_MEDIA_TYPE, "415 Unsupported Media Type"),
-    std::make_pair(REQUESTED_RANGE_NOT_SATISFIABLE, "416 Requested Range Not Satisfiable"),
-    std::make_pair(EXPECTATION_FAILED, "417 Expectation Failed"),
-    std::make_pair(I_M_A_TEAPOT, "418 I'm a teapot"),
-    std::make_pair(INTERNAL_SERVER_ERROR, "500 Internal Server Error"),
-    std::make_pair(NOT_IMPLEMENTED, "501 Not Implemented"),
-    std::make_pair(BAD_GATEWAY, "502 Bad Gateway"),
-    std::make_pair(SERVICE_UNAVAILABLE, "503 Service Unavailable"),
-    std::make_pair(GATEWAY_TIMEOUT, "504 Gateway Timeout"),
-    std::make_pair(HTTP_VERSION_NOT_SUPPORTED, "505 HTTP Version Not Supported")
+    std::make_pair(HTTPStatus::SWITCHING_PROTOCOL, "101 Switching Protocol"),
+    std::make_pair(HTTPStatus::CONTINUE, "100 Continue"),
+    std::make_pair(HTTPStatus::OK, "200 OK"),
+    std::make_pair(HTTPStatus::CREATED,	"201 Created"),
+    std::make_pair(HTTPStatus::ACCEPTED, "202 Accepted"),
+    std::make_pair(HTTPStatus::NON_AUTHORITATIVE_INFORMATION, "203 Non-Authoritative Information"),
+    std::make_pair(HTTPStatus::NO_CONTENT, "204 No Content"),
+    std::make_pair(HTTPStatus::RESET_CONTENT, "205 Reset Content"),
+    std::make_pair(HTTPStatus::PARTIAL_CONTENT, "206 Partial Content"),
+    std::make_pair(HTTPStatus::MULTIPLE_CHOICE, "300 Multiple Choice"),
+    std::make_pair(HTTPStatus::MOVED_PERMANENTLY, "301 Moved Permanently"),
+    std::make_pair(HTTPStatus::FOUND, "302 Found"),
+    std::make_pair(HTTPStatus::SEE_OTHER, "303 See Other"),
+    std::make_pair(HTTPStatus::NOT_MODIFIED, "304 Not Modified"),
+    std::make_pair(HTTPStatus::USE_PROXY, "305 Use Proxy"),
+    std::make_pair(HTTPStatus::SWITCH_PROXY, "306 Switch Proxy"),
+    std::make_pair(HTTPStatus::TEMPORARY_REDIRECT, "307 Temporary Redirect"),
+    std::make_pair(HTTPStatus::PERMANENT_REDIRECT, "308 Permanent Redirect"),
+    std::make_pair(HTTPStatus::BAD_REQUEST, "400 Bad Request"),
+    std::make_pair(HTTPStatus::UNAUTHORIZED, "401 Unauthorized"),
+    std::make_pair(HTTPStatus::PAYMENT_REQUIRED, "402 Payment Required"),
+    std::make_pair(HTTPStatus::FORBIDDEN, "403 Forbidden"),
+    std::make_pair(HTTPStatus::NOT_FOUND, "404 Not Found"),
+    std::make_pair(HTTPStatus::METHOD_NOT_ALLOWED, "405 Method Not Allowed"),
+    std::make_pair(HTTPStatus::NOT_ACCEPTABLE, "406 Not Acceptable"),
+    std::make_pair(HTTPStatus::PROXY_AUTHENTICATION_REQUIRED, "407 Proxy Authentication Required"),
+    std::make_pair(HTTPStatus::REQUEST_TIMEOUT, "408 Request Timeout"),
+    std::make_pair(HTTPStatus::CONFLICT, "409 Conflict"),
+    std::make_pair(HTTPStatus::GONE, "410 Gone"),
+    std::make_pair(HTTPStatus::LENGTH_REQUIRED, "411 Length Required"),
+    std::make_pair(HTTPStatus::PRECONDITION_FAILED, "412 Precondition Failed"),
+    std::make_pair(HTTPStatus::PAYLOAD_TOO_LARGE, "413 Payload Too Large"),
+    std::make_pair(HTTPStatus::REQUEST_URI_TOO_LONG, "414 Request-URI Too Long"),
+    std::make_pair(HTTPStatus::UNSUPPORTED_MEDIA_TYPE, "415 Unsupported Media Type"),
+    std::make_pair(HTTPStatus::REQUESTED_RANGE_NOT_SATISFIABLE, "416 Requested Range Not Satisfiable"),
+    std::make_pair(HTTPStatus::EXPECTATION_FAILED, "417 Expectation Failed"),
+    std::make_pair(HTTPStatus::I_M_A_TEAPOT, "418 I'm a teapot"),
+    std::make_pair(HTTPStatus::INTERNAL_SERVER_ERROR, "500 Internal Server Error"),
+    std::make_pair(HTTPStatus::NOT_IMPLEMENTED, "501 Not Implemented"),
+    std::make_pair(HTTPStatus::BAD_GATEWAY, "502 Bad Gateway"),
+    std::make_pair(HTTPStatus::SERVICE_UNAVAILABLE, "503 Service Unavailable"),
+    std::make_pair(HTTPStatus::GATEWAY_TIMEOUT, "504 Gateway Timeout"),
+    std::make_pair(HTTPStatus::HTTP_VERSION_NOT_SUPPORTED, "505 HTTP Version Not Supported")
 };
 
-const std::map<HTTPStatus, std::string> SimpleHandler::http_status_(http_status_init_list, http_status_init_list + sizeof(http_status_init_list) / sizeof(http_status_init_list[0]));
+const std::map<HTTPStatus::_, std::string> SimpleHandler::http_status_(http_status_init_list, http_status_init_list + sizeof(http_status_init_list) / sizeof(http_status_init_list[0]));
 
 const std::pair<std::string, SimpleHandler::handler>    SimpleHandler::handlers_init_list_[] =
 {
@@ -116,13 +116,13 @@ void    SimpleHandler::makeResponse(HTTPResponse& response)
         if (location_.redirect.second.empty())
         {
             if (request_.http() != "HTTP/1.1")
-                throw HTTPError(HTTP_VERSION_NOT_SUPPORTED);
+                throw HTTPError(HTTPStatus::HTTP_VERSION_NOT_SUPPORTED);
 
             std::map<std::string, SimpleHandler::handler>::const_iterator handler = handlers_.find(request_.method());
             if (handlers_.find(request_.method()) == handlers_.end())
-                throw HTTPError(NOT_IMPLEMENTED);
+                throw HTTPError(HTTPStatus::NOT_IMPLEMENTED);
             if (location_.methods.find(request_.method()) == location_.methods.end())
-                throw HTTPError(METHOD_NOT_ALLOWED);
+                throw HTTPError(HTTPStatus::METHOD_NOT_ALLOWED);
 
             (this->*handler->second)(response);
         }
@@ -137,7 +137,7 @@ void    SimpleHandler::makeResponse(HTTPResponse& response)
     catch(const std::exception& e)
     {
         logger::error << "SimpleHandler: " << logger::cerror << logger::end;
-        error(INTERNAL_SERVER_ERROR, response);
+        error(HTTPStatus::INTERNAL_SERVER_ERROR, response);
     }
 }
 
@@ -146,16 +146,16 @@ void    SimpleHandler::get(HTTPResponse&  response)
     logger::debug << "SimpleHandler: GET " << pure_uri_ << " at " << file_info_.path() << logger::end;
 
     if (file_info_.isNotExists())
-        throw HTTPError(NOT_FOUND);
+        throw HTTPError(HTTPStatus::NOT_FOUND);
     if (!file_info_.isReadble())
-        throw HTTPError(FORBIDDEN);
+        throw HTTPError(HTTPStatus::FORBIDDEN);
 
     if (file_info_.isFile())
         getFile(response);
     else if (file_info_.isDirectory())
         getDirectory(response);
     else
-        throw HTTPError(FORBIDDEN);
+        throw HTTPError(HTTPStatus::FORBIDDEN);
 }
 
 void    SimpleHandler::getFile(HTTPResponse& response) const
@@ -170,14 +170,14 @@ void    SimpleHandler::getFile(HTTPResponse& response) const
     std::ifstream                                       file(file_info_.path().c_str(), std::ios::binary);
 
     if (!file.is_open())
-        throw HTTPError(INTERNAL_SERVER_ERROR);
+        throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
 
     response.setContentType(file_info_.type());
     response.setContentLength(file_info_.size());
 
     std::noskipws(file);
     if (file_info_.size() == 0)
-        response.buildResponse(std::istream_iterator<char>(file), std::istream_iterator<char>(), http_status_.find(NO_CONTENT)->second);
+        response.buildResponse(std::istream_iterator<char>(file), std::istream_iterator<char>(), http_status_.find(HTTPStatus::NO_CONTENT)->second);
     else
         response.buildResponse(std::istream_iterator<char>(file), std::istream_iterator<char>());
 }
@@ -201,7 +201,7 @@ void    SimpleHandler::getDirectory(HTTPResponse& response)
         getAutoindex(response);
         return;
     }
-    throw HTTPError(FORBIDDEN);
+    throw HTTPError(HTTPStatus::FORBIDDEN);
 }
 
 void    SimpleHandler::getAutoindex(HTTPResponse& response)
@@ -211,7 +211,7 @@ void    SimpleHandler::getAutoindex(HTTPResponse& response)
     dirent*     item;
 
     if (dir == NULL)
-        throw HTTPError(INTERNAL_SERVER_ERROR);
+        throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
 
     body += "<html>\n<head><meta charset=\"utf-8\"><style>td{padding-right: 3em}th{text-align: left;}</style><title>📁";
     body += pure_uri_;
@@ -251,26 +251,26 @@ void    SimpleHandler::post(HTTPResponse&  response)
     logger::debug << "SimpleHandler: POST " << pure_uri_ << logger::end;
 
     if (location_.body_size != 0 && request_.body_size() > location_.body_size)
-        throw HTTPError(PAYLOAD_TOO_LARGE);
+        throw HTTPError(HTTPStatus::PAYLOAD_TOO_LARGE);
 
     std::map<std::string, std::string>::const_iterator  cgi = location_.cgi.find(file_info_.type());
 
     if (cgi != location_.cgi.end())
     {
         if (file_info_.isNotExists())
-            throw HTTPError(NOT_FOUND);
+            throw HTTPError(HTTPStatus::NOT_FOUND);
         if (!file_info_.isReadble())
-            throw HTTPError(FORBIDDEN);
+            throw HTTPError(HTTPStatus::FORBIDDEN);
         cgiQuery(response, cgi->second);
     }
     else if (!location_.upload_store.empty() && request_.isFormData())
     {
         if (pure_uri_ != location_.path)
-            throw HTTPError(NOT_FOUND);
+            throw HTTPError(HTTPStatus::NOT_FOUND);
         postFile(response);
     }
     else
-        throw HTTPError(BAD_REQUEST);
+        throw HTTPError(HTTPStatus::BAD_REQUEST);
 }
 
 void    SimpleHandler::postFile(HTTPResponse& response) const
@@ -284,12 +284,12 @@ void    SimpleHandler::postFile(HTTPResponse& response) const
     const char*     form_data_end = std::search(form_data_start, request_.endBody(), boundary.begin(), boundary.end());
 
     if (boundary.length() == 2 || form_data_start == request_.endBody() || form_data_end == request_.endBody())
-        throw HTTPError(BAD_REQUEST);
+        throw HTTPError(HTTPStatus::BAD_REQUEST);
 
     filename = getFormFileName(request_.beginBody() + boundary.size() + 2, form_data_start);
     new_file.open((location_.upload_store + "/" + filename).c_str(), std::ios::binary);
     if (!new_file.is_open())
-        throw HTTPError(FORBIDDEN);
+        throw HTTPError(HTTPStatus::FORBIDDEN);
 
     form_data_start += 4;
     form_data_end -= 2;
@@ -297,7 +297,7 @@ void    SimpleHandler::postFile(HTTPResponse& response) const
     if (!new_file.good())
     {
         new_file.close();
-        throw HTTPError(INTERNAL_SERVER_ERROR);
+        throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
     }
     new_file.close();
 
@@ -310,7 +310,7 @@ void    SimpleHandler::postFile(HTTPResponse& response) const
     response.setContentLength(message.length());
     response.setContentType("html");
     response.addHeader("Location", pure_uri_ + (*--pure_uri_.end() == '/' ? "" : "/") + filename);
-    response.buildResponse(message.begin(), message.end(), http_status_.find(CREATED)->second);
+    response.buildResponse(message.begin(), message.end(), http_status_.find(HTTPStatus::CREATED)->second);
 
     logger::debug << "file " << filename << " uploaded to " << location_.path << logger::end;
 }
@@ -331,11 +331,11 @@ std::string     SimpleHandler::getFormFileName(const char* form_header_first, co
         }
         catch (std::out_of_range&)
         {
-            throw HTTPError(BAD_REQUEST);
+            throw HTTPError(HTTPStatus::BAD_REQUEST);
         }
 
     if (filename.empty())
-        throw HTTPError(BAD_REQUEST);
+        throw HTTPError(HTTPStatus::BAD_REQUEST);
     return filename;
 }
 
@@ -344,7 +344,7 @@ void    SimpleHandler::del(HTTPResponse&  response)
     logger::debug << "SimpleHandler: DELETE " << pure_uri_ << " at " << file_info_.path() << logger::end;
 
     if (file_info_.isNotExists())
-        throw HTTPError(NOT_FOUND);
+        throw HTTPError(HTTPStatus::NOT_FOUND);
 
     int ret;
     if (file_info_.isFile())
@@ -352,21 +352,21 @@ void    SimpleHandler::del(HTTPResponse&  response)
     else if (file_info_.isDirectory())
         ret = ::rmdir(file_info_.path().c_str());
     else
-        throw HTTPError(FORBIDDEN);
+        throw HTTPError(HTTPStatus::FORBIDDEN);
 
     if (ret)
     {
         if (errno == EACCES)
-            throw HTTPError(FORBIDDEN);
+            throw HTTPError(HTTPStatus::FORBIDDEN);
         if (errno == ENOTEMPTY)
-            throw HTTPError(CONFLICT);
-        throw HTTPError(INTERNAL_SERVER_ERROR);
+            throw HTTPError(HTTPStatus::CONFLICT);
+        throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
     }
 
-    response.buildResponse(NULL, NULL, http_status_.find(NO_CONTENT)->second);
+    response.buildResponse(NULL, NULL, http_status_.find(HTTPStatus::NO_CONTENT)->second);
 }
 
-void    SimpleHandler::error(HTTPStatus status, HTTPResponse& response)
+void    SimpleHandler::error(HTTPStatus::_ status, HTTPResponse& response)
 {
     response = HTTPResponse();
 
@@ -402,7 +402,7 @@ void    SimpleHandler::error(HTTPStatus status, HTTPResponse& response)
 
 void    SimpleHandler::redirect(HTTPResponse& response)
 {
-    HTTPStatus          status = static_cast<HTTPStatus>(location_.redirect.first);
+    HTTPStatus::_       status = static_cast<HTTPStatus::_>(location_.redirect.first);
     const std::string   url = location_.redirect.second;
 
     logger::debug << "SimpleHandler: redirect " << status << ' ' << url << logger::end;
@@ -418,11 +418,11 @@ void    SimpleHandler::cgiQuery(HTTPResponse& response, const std::string& cgi_p
     FILE*                       cgi_out_file = ::tmpfile();
 
     if (cgi_out_file == NULL)
-        throw HTTPError(INTERNAL_SERVER_ERROR);
+        throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
 
     cgi_pid = ::fork();
     if (cgi_pid == -1)
-        throw HTTPError(INTERNAL_SERVER_ERROR);
+        throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
     else if (cgi_pid == 0)
         runCgi(cgi_path, cgi_out_file);
     else
@@ -459,14 +459,14 @@ void    SimpleHandler::processCgi(pid_t cgi_pid, FILE* cgi_out_file, HTTPRespons
     if (!WIFEXITED(status))
     {
         fclose(cgi_out_file);
-        throw HTTPError(INTERNAL_SERVER_ERROR);
+        throw HTTPError(HTTPStatus::BAD_GATEWAY);
     }
     fflush(cgi_out_file);
     ::fstat(::fileno(cgi_out_file), &cgi_stat);
     cgi_data = reinterpret_cast<char *>(::mmap(NULL, cgi_stat.st_size, PROT_READ, MAP_SHARED, fileno(cgi_out_file), 0));
     ::fclose(cgi_out_file);
     if (cgi_data == NULL)
-        throw HTTPError(INTERNAL_SERVER_ERROR);
+        throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
     makeCgiResponse(response, cgi_data, cgi_stat.st_size);
     ::munmap(cgi_data, cgi_stat.st_size);
 }
@@ -480,7 +480,7 @@ void    SimpleHandler::makeCgiResponse(HTTPResponse& response, const char* cgi_d
     std::string         status = "200 OK";
 
     if (cgi_header_end == cgi_data + n)
-        throw (BAD_GATEWAY);
+        throw (HTTPStatus::BAD_GATEWAY);
 
     cgi_header.append(cgi_data, cgi_header_end);
     first = 0;
@@ -502,6 +502,7 @@ void    SimpleHandler::makeCgiResponse(HTTPResponse& response, const char* cgi_d
         if (strLowerCaseCopy(key) == "content-length")
         {
             std::stringstream   ss;
+
             ss << value;
             ss >> n;
         }

@@ -19,7 +19,7 @@ private:
     void                post(HTTPResponse& response);
     void                del(HTTPResponse& response);
 
-    void                error(HTTPStatus status, HTTPResponse& response);
+    void                error(HTTPStatus::_ status, HTTPResponse& response);
     void                redirect(HTTPResponse& response);
 
     void                getFile(HTTPResponse& response) const;
@@ -51,15 +51,15 @@ private:
     class HTTPError : public std::exception
     {
     public:
-        HTTPError(HTTPStatus status) : status_(status) {}
-        HTTPStatus  status() const {return status_;}
+        HTTPError(HTTPStatus::_ status) : status_(status) {}
+        HTTPStatus::_  status() const {return status_;}
     private:
-        HTTPStatus  status_;
+        HTTPStatus::_  status_;
     };
 
     typedef void (SimpleHandler::*handler)(HTTPResponse&);
     static const std::pair<std::string, handler>    handlers_init_list_[];
     static const std::map<std::string, handler>     handlers_;
-    static const std::map<HTTPStatus, std::string>  http_status_;
+    static const std::map<HTTPStatus::_, std::string>  http_status_;
 };
 #endif
