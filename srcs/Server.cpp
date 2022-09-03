@@ -1,7 +1,7 @@
 
 #include "Server.hpp"
-#include "socket/ListenSocket.hpp"
-#include "socket/SessionSocket.hpp"
+#include "sockets/ListenSocket.hpp"
+#include "sockets/SessionSocket.hpp"
 #include "old_handlers/base/HandlerTask.hpp"
 #include "old_handlers/runner/runner.hpp"
 #include "utils/syntax.hpp"
