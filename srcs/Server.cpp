@@ -2,6 +2,7 @@
 #include "sockets/ListenSocket.hpp"
 #include "handlers/AHandler.hpp"
 #include "handlers/DeleteHandler.hpp"
+#include "handlers/GetHandler.hpp"
 #include "handlers/UndefinedHandler.hpp"
 #include "utils/log.hpp"
 
@@ -52,13 +53,11 @@ void Server::mainLoopRun()
 
     logger::info << "Server: entering main loop..." << logger::end;
 
-    while (!_sockets.empty()) // не запускаем, если нет слушающих сокетов?
+    while (true)
     {
-        // Обернурть всё тело цикла в try, чтобы никогда не выходить из него?
         poll_array_len = eventArrayPrepare(poll_array);
 
         logger::debug << "Server: polling..." << logger::end;
-        // что будет если poll_array_len == 0, ок?
         new_events = poll(&poll_array[0], poll_array_len, poll_timeout);
         logger::debug << "Server: polling done!" << logger::end;
 
@@ -182,8 +181,9 @@ void Server::addProcessTask(ASocket *socket)
 
 AHandler*   Server::getHandler(const Location &location, SessionSocket* session) const
 {
-    // const Location& loc, const HTTPRequest& req, in_addr_t server_ip, in_port_t server_port, const in_addr& remote_addr
     if (session->request().method() == "DELETE")
         return new DeleteHandler(location, session->request());
+    else if (session->request().method() == "GET")
+        return new GetHandler(location, session->request(), session->ip(), session->port(), session->remoteAddr());
     return new UndefinedHandler(location, session->request());
 }

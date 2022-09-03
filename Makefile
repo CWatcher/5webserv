@@ -28,6 +28,8 @@ $(PROJECT_NAME)_SRCS     += srcs/main.cpp					\
 															\
 							srcs/handlers/AHandler.cpp			\
 							srcs/handlers/DeleteHandler.cpp		\
+							srcs/handlers/ACgiHandler.cpp		\
+							srcs/handlers/GetHandler.cpp		\
 																\
 							srcs/old_handlers/runner/runner.cpp		\
 							srcs/old_handlers/base/Handler.cpp		\
