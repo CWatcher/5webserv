@@ -15,7 +15,7 @@ void    HTTPRequest::addData(const char* data, size_t n)
         _body_size = _raw_data.size() - _header_size;
 }
 
-bool    HTTPRequest::hasEndOfMessage()
+bool    HTTPRequest::isRequestReceived()
 {
     const bool          hasHeader = !_header.empty();
     long int            content_length;
