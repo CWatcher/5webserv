@@ -23,7 +23,7 @@ void    GetHandler::getFile(HTTPResponse& response) const
 
     if (!cgi_path_.empty())
     {
-        // cgi(response);
+        cgi(response);
         return;
     }
 

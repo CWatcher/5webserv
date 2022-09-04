@@ -11,7 +11,7 @@ void    PostHandler::handle(HTTPResponse&  response)
             throw HTTPError(HTTPStatus::NOT_FOUND);
         if (!file_info_.isReadble() || !file_info_.isFile())
             throw HTTPError(HTTPStatus::FORBIDDEN);
-        // cgi(response, cgi->second);
+        cgi(response);
     }
     else if (request_.isFormData())
     {
@@ -22,7 +22,7 @@ void    PostHandler::handle(HTTPResponse&  response)
     else
         throw HTTPError(HTTPStatus::BAD_REQUEST);
 }
-#include <iostream>
+
 void    PostHandler::postFile(HTTPResponse& response) const
 {
     std::ofstream   new_file;
