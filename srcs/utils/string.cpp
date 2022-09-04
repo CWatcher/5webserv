@@ -1,21 +1,23 @@
-#include <algorithm>
-#include <string>
+#include "string.hpp"
 
-std::string	&strTrim(std::string &str)
+#include <algorithm>
+#include <sstream>
+
+std::string	&strTrim(std::string &str, const char *s)
 {
-	const size_t	startpos = str.find_first_not_of(" \t\v\r\n");
-	const size_t	endpos = str.find_last_not_of(" \t\v\r\n");
+	const size_t	startpos = str.find_first_not_of(s);
+	const size_t	endpos = str.find_last_not_of(s);
 
 	if (startpos == std::string::npos)
 		str.erase();
 	else
-		str = str.substr(startpos, endpos + 1);
+		str = str.substr(startpos, endpos - startpos + 1);
 	return str;
 }
 
 std::string	&strLowerCase(std::string &str)
 {
-	std::for_each(str.begin(), str.end(), tolower);
+	std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 	return str;
 }
 
@@ -23,7 +25,7 @@ std::string	strLowerCaseCopy(const std::string &str)
 {
 	std::string str_copy = str;
 
-	std::for_each(str_copy.begin(), str_copy.end(), tolower);
+	std::transform(str_copy.begin(), str_copy.end(), str_copy.begin(), ::tolower);
 	return str_copy;
 }
 
@@ -42,7 +44,34 @@ std::string	&strRemoveDoubled(std::string &str, char c)
 
 std::string	&strCompleteWith(std::string &str, char c)
 {
-	if (*--str.end() != c)
+	if (*str.rbegin() != c)
 		str.push_back(c);
 	return str;
+}
+
+bool	strEndsWith(const std::string &str, const std::string &suffix)
+{
+	if (str.length() < suffix.length())
+		return false;
+
+	std::string::const_reverse_iterator	it2 = str.rbegin();
+	for (std::string::const_reverse_iterator it1 = suffix.rbegin(); it1 != suffix.rend(); ++it1, ++it2)
+		if (*it1 != *it2)
+			return false;
+	return true;
+}
+
+std::vector<std::string>	strSplit(const std::string &str, char delim)
+{
+	std::stringstream			ss(str);
+	std::string					word;
+	std::vector<std::string>	splitted;
+
+	while (std::getline(ss, word, delim))
+	{
+		strTrim(word);
+		splitted.push_back(word);
+	}
+
+	return splitted;
 }

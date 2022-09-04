@@ -9,7 +9,7 @@
 # define INDEX_DFL          "index.html"
 # define AUTOINDEX_DFL      false
 # define BODY_SIZE_DFL      0
-# define METHOD_DFL         "GET"
+# define METHOD_DFL         "GET HEAD"
 # define HOST_DFL           "0.0.0.0"
 # define PORT_DFL           80
 
