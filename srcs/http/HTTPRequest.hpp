@@ -11,7 +11,7 @@ public:
 
     void                        addData(const char* data, size_t n);
 
-    bool                        hasEndOfMessage();
+    bool                        isRequestReceived();
     std::string                 getHeaderValue(const std::string &header_key) const;
     std::string                 getHeaderHostName() const;
     std::string                 getHeaderParameter(const std::string& key, const std::string& param) const;
@@ -22,8 +22,6 @@ public:
     const std::string           &http() const {return _http;}
     size_t                      body_size() const {return _body_size;}
     size_t                      body_offset() const {return _header_size;}
-    std::string::const_iterator beginBody() const {return _raw_data.begin() + _header_size;}
-    std::string::const_iterator endBody() const {return _raw_data.end();}
 
     bool                        isFormData() const {return getHeaderValue("Content-Type").find("multipart/form-data") != std::string::npos;}
     bool                        isChuncked() const {return getHeaderValue("Transfer-Encoding").find("chunked") != std::string::npos;;}

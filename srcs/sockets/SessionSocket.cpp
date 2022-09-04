@@ -43,7 +43,7 @@ size_t  SessionSocket::actionRead()
         try
         {
             _request.addData(temp_buffer, bytes_read);
-            if (_request.hasEndOfMessage())
+            if (_request.isRequestReceived())
             {
                 _state = SocketState::Process;
                 logger::info << "Got end of HTTP message from socket " << _fd << logger::end;
