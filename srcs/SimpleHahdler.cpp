@@ -508,7 +508,7 @@ void    SimpleHandler::makeCgiResponse(HTTPResponse& response, const char* cgi_d
         }
     }
     response.setContentLength(n);
-    response.buildResponse(cgi_data, cgi_data + n);
+    response.buildResponse(cgi_data, cgi_data + n, request_.method() != "HEAD", status);
 }
 
 void    SimpleHandler::makeCgiEnv(std::vector<char*>& envp) const
