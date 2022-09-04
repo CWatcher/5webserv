@@ -133,7 +133,12 @@ void    ServerConfig::completeServer(VirtualServer& server)
     if (server.body_size == std::numeric_limits<unsigned>::max())
         server.body_size = BODY_SIZE_DFL;
     if (server.methods.empty())
-        server.methods.insert(METHOD_DFL);
+    {
+        std::vector<std::string>    default_methods = strSplit(METHOD_DFL, ' ');
+
+        for (std::vector<std::string>::const_iterator method = default_methods.begin(); method != default_methods.end(); ++method)
+            server.methods.insert(*method);
+    }
     if (server.listen.empty())
     {
         in_addr_t   host = inet_addr(HOST_DFL);
@@ -272,7 +277,7 @@ void    ServerConfig::parseMethods(Location& parent)
 
     for (std::vector<std::string>::iterator method = methods.begin(); method != methods.end(); method++)
     {
-        if (*method != "GET" && *method != "POST" && *method != "DELETE")
+        if (*method != "GET" && *method != "POST" && *method != "DELETE" && *method != "HEAD")
             throw bad_config(block_ + " methods bad value '" + *method + "'");
         parent.methods.insert(*method);
     }

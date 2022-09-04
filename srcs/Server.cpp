@@ -1,12 +1,11 @@
-
 #include "Server.hpp"
-#include "socket/ListenSocket.hpp"
-#include "socket/SessionSocket.hpp"
-#include "old_handlers/base/HandlerTask.hpp"
-#include "old_handlers/runner/runner.hpp"
-#include "utils/syntax.hpp"
-
-#include "SimpleHandler.hpp"
+#include "sockets/ListenSocket.hpp"
+#include "handlers/AHandler.hpp"
+#include "handlers/DeleteHandler.hpp"
+#include "handlers/GetHandler.hpp"
+#include "handlers/PostHandler.hpp"
+#include "handlers/UndefinedHandler.hpp"
+#include "utils/log.hpp"
 
 int Server::poll_timeout = 30 * 1000;
 
@@ -55,13 +54,11 @@ void Server::mainLoopRun()
 
     logger::info << "Server: entering main loop..." << logger::end;
 
-    while (!_sockets.empty()) // не запускаем, если нет слушающих сокетов?
+    while (true)
     {
-        // Обернурть всё тело цикла в try, чтобы никогда не выходить из него?
         poll_array_len = eventArrayPrepare(poll_array);
 
         logger::debug << "Server: polling..." << logger::end;
-        // что будет если poll_array_len == 0, ок?
         new_events = poll(&poll_array[0], poll_array_len, poll_timeout);
         logger::debug << "Server: polling done!" << logger::end;
 
@@ -149,15 +146,27 @@ void Server::eventAction(ASocket *socket)
 void Server::addProcessTask(ASocket *socket)
 {
     SessionSocket       *session = static_cast<SessionSocket *>(socket);
-    HTTPRequest         &request = session->request();
-    const VirtualServer &v_server = _config.getVirtualServer(session->ip(), session->port(), request.getHeaderHostName());
-    const Location      &location = VirtualServer::getLocation(v_server, request.uri());
-    SimpleHandler       handler(location, session->request(), session->ip(), session->port(), session->remoteAddr());
+    const VirtualServer &v_server = _config.getVirtualServer(session->ip(), session->port(), session->request().getHeaderHostName());
+    const Location      &location = VirtualServer::getLocation(v_server, session->request().uri());
+    AHandler            *handler;
 
-    logger::debug << "I know you came from port: " << ntohs(session->port()) << logger::end;
-    logger::debug << "Your server config:\n" << location << logger::end;
-    handler.makeResponse(session->response());
-    session->setStateToWrite();
+    try
+    {
+        handler = getHandler(location, session);
+        handler->makeResponse(session->response());
+        delete handler;
+        session->setStateToWrite();
+    }
+    catch (std::bad_alloc& ba)
+    {
+        logger::error << "Server: unable create handler: " << ba.what() << logger::end;
+        _sockets.erase(session->fd());
+        delete socket;
+    }
+
+    // logger::debug << "I know you came from port: " << ntohs(session->port()) << logger::end;
+    // logger::debug << "Your server config:\n" << location << logger::end;
+    // handler.makeResponse(session->response());
 
     // try
     // {
@@ -170,4 +179,17 @@ void Server::addProcessTask(ASocket *socket)
     //     return ;
     // }
     // logger::info << "Server: addProcessTask: sent to Task queue, socket " << session->fd() << logger::end;
+}
+
+AHandler*   Server::getHandler(const Location &location, SessionSocket* session) const
+{
+    HTTPRequest&    request = session->request();
+
+    if (request.method() == "DELETE")
+        return new DeleteHandler(location, request);
+    else if (request.method() == "GET" || request.method() == "HEAD")
+        return new GetHandler(location, request, session->ip(), session->port(), session->remoteAddr());
+    else if (request.method() == "POST")
+        return new PostHandler(location, request, session->ip(), session->port(), session->remoteAddr());
+    return new UndefinedHandler(location, request);
 }

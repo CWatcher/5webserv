@@ -15,16 +15,22 @@ BUILD        ?= debug
 $(call add/project,$(PROJECT_NAME))
 $(PROJECT_NAME)_SRCS     += srcs/main.cpp					\
 							srcs/Server.cpp					\
+															\
+							srcs/config/VirtualServer.cpp	\
+							srcs/config/ServerConfig.cpp	\
+															\
+							srcs/sockets/ASocket.cpp		\
+							srcs/sockets/ListenSocket.cpp	\
+							srcs/sockets/SessionSocket.cpp	\
+															\
 							srcs/http/HTTPRequest.cpp		\
 							srcs/http/HTTPResponse.cpp		\
-							srcs/SimpleHahdler.cpp			\
 															\
-							srcs/socket/ASocket.cpp			\
-							srcs/socket/ListenSocket.cpp	\
-							srcs/socket/SessionSocket.cpp	\
-																\
-							srcs/config/VirtualServer.cpp		\
-							srcs/config/ServerConfig.cpp		\
+							srcs/handlers/AHandler.cpp		\
+							srcs/handlers/DeleteHandler.cpp	\
+							srcs/handlers/ACgiHandler.cpp	\
+							srcs/handlers/GetHandler.cpp	\
+							srcs/handlers/PostHandler.cpp	\
 																\
 							srcs/old_handlers/runner/runner.cpp		\
 							srcs/old_handlers/base/Handler.cpp		\

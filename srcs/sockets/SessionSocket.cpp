@@ -1,5 +1,5 @@
 
-#include "socket/SessionSocket.hpp"
+#include "sockets/SessionSocket.hpp"
 #include "utils/log.hpp"
 
 #include <sys/socket.h>
@@ -30,7 +30,7 @@ size_t  SessionSocket::actionRead()
     ssize_t	bytes_read;
 
     logger::debug << "Trying to read from socket " << _fd << logger::end;
-    bytes_read = recv(_fd, temp_buffer, sizeof(temp_buffer) - 1, 0);
+    bytes_read = recv(_fd, temp_buffer, sizeof(temp_buffer) - 1, MSG_NOSIGNAL | MSG_DONTWAIT);
     if (bytes_read)
         logger::debug << "Read from socket (bytes): " << bytes_read << logger::end;
 
