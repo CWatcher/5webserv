@@ -3,6 +3,7 @@
 #include "handlers/AHandler.hpp"
 #include "handlers/DeleteHandler.hpp"
 #include "handlers/GetHandler.hpp"
+#include "handlers/PostHandler.hpp"
 #include "handlers/UndefinedHandler.hpp"
 #include "utils/log.hpp"
 
@@ -153,6 +154,7 @@ void Server::addProcessTask(ASocket *socket)
     {
         handler = getHandler(location, session);
         handler->makeResponse(session->response());
+        delete handler;
         session->setStateToWrite();
     }
     catch (std::bad_alloc& ba)
@@ -181,9 +183,13 @@ void Server::addProcessTask(ASocket *socket)
 
 AHandler*   Server::getHandler(const Location &location, SessionSocket* session) const
 {
-    if (session->request().method() == "DELETE")
-        return new DeleteHandler(location, session->request());
-    else if (session->request().method() == "GET")
-        return new GetHandler(location, session->request(), session->ip(), session->port(), session->remoteAddr());
-    return new UndefinedHandler(location, session->request());
+    HTTPRequest&    request = session->request();
+
+    if (request.method() == "DELETE")
+        return new DeleteHandler(location, request);
+    else if (request.method() == "GET" || request.method() == "HEAD")
+        return new GetHandler(location, request, session->ip(), session->port(), session->remoteAddr());
+    else if (request.method() == "POST")
+        return new PostHandler(location, request, session->ip(), session->port(), session->remoteAddr());
+    return new UndefinedHandler(location, request);
 }

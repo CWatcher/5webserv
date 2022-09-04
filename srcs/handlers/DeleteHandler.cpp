@@ -27,5 +27,5 @@ void    DeleteHandler::handle(HTTPResponse& response)
         throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
     }
 
-    response.buildResponse(NULL, NULL, http_status_.find(HTTPStatus::NO_CONTENT)->second);
+    response.buildResponse(NULL, NULL, false, http_status_.find(HTTPStatus::NO_CONTENT)->second);
 }

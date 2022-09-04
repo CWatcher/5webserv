@@ -21,7 +21,7 @@ void    GetHandler::getFile(HTTPResponse& response) const
 {
     std::ifstream   file;
 
-    if (!cgi_path.empty())
+    if (!cgi_path_.empty())
     {
         // cgi(response);
         return;
@@ -36,9 +36,9 @@ void    GetHandler::getFile(HTTPResponse& response) const
 
     std::noskipws(file);
     if (file_info_.size() == 0)
-        response.buildResponse(std::istream_iterator<char>(file), std::istream_iterator<char>(), http_status_.find(HTTPStatus::NO_CONTENT)->second);
+        response.buildResponse(std::istream_iterator<char>(file), std::istream_iterator<char>(), false, http_status_.find(HTTPStatus::NO_CONTENT)->second);
     else
-        response.buildResponse(std::istream_iterator<char>(file), std::istream_iterator<char>());
+        response.buildResponse(std::istream_iterator<char>(file), std::istream_iterator<char>(), request_.method() == "GET");
 }
 
 void    GetHandler::getDirectory(HTTPResponse& response)
@@ -102,5 +102,5 @@ void    GetHandler::getAutoindex(HTTPResponse& response) const
 
     response.setContentLength(body.length());
     response.setContentType("html");
-    response.buildResponse(body.begin(), body.end());
+    response.buildResponse(body.begin(), body.end(), request_.method() == "GET");
 }

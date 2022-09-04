@@ -25,13 +25,6 @@ HTTPResponse::HTTPResponse() : HTTPMessage()
     _header["Connection"] = "keep-alive";
 }
 
-void    HTTPResponse::buildResponse(const char* body, size_t n, const std::string& status_line)
-{
-    setContentLength(n);
-    buildHeader(status_line);
-    _raw_data.append(body, n);
-}
-
 void    HTTPResponse::buildHeader(const std::string& status_line)
 {
     _raw_data += "HTTP/1.1 " + status_line + "\r\n";

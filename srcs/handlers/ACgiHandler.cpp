@@ -10,5 +10,5 @@ ACgiHandler::ACgiHandler(const Location& loc, const HTTPRequest& req, in_addr_t 
     std::map<std::string, std::string>::const_iterator  cgi = location_.cgi.find(file_info_.type());
 
     if (cgi != location_.cgi.end())
-        cgi_path = cgi->second;
+        cgi_path_ = cgi->second;
 }

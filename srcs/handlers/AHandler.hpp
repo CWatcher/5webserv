@@ -10,6 +10,7 @@ class AHandler
 {
 public:
     AHandler(const Location& loc, const HTTPRequest& req);
+    virtual ~AHandler() {}
     void                makeResponse(HTTPResponse& response);
 
 protected:

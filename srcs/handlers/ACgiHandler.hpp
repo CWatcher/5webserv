@@ -17,7 +17,7 @@ protected:
     const in_port_t     server_port_;
     const in_addr&      remote_addr_;
     FileInfo            file_info_;
-    std::string         cgi_path;
+    std::string         cgi_path_;
 };
 
 #endif

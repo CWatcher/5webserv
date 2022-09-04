@@ -15,15 +15,17 @@ bool HeaderGenerator::generateHeader(const HTTPRequest &request, HTTPResponse &r
     (void)request;
     (void)response;
     // do all work
+    std::string body = "<h1>HELLO WOR!D</h1>\n";
+
     response.addHeader("Date", "Wed, 18 Feb 2021 11:20:59 GMT");
     response.addHeader("Server", "Apache");
     response.addHeader("X-Powered-By", "webserv");
     response.addHeader("Last-Modified", "Wed, 11 Feb 2009 11\", 2\"0\", 5\"9 GMT");
     response.addHeader("Content-Type", "text/html; charset=utf-8");
-    response.addHeader("Content-Length", "14");
+    response.setContentLength(body.length());
     response.addHeader("Connection", "close");
 
-    response.buildResponse("<h1>HELLO WOR!D</h1>\n", 21);
+    response.buildResponse(body.begin(), body.end());
 
     return true;
 }

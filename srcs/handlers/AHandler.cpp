@@ -145,7 +145,7 @@ void    AHandler::error(HTTPStatus::_ status, HTTPResponse& response)
         response.setContentType("html");
     }
     response.setContentLength(body.length());
-    response.buildResponse(body.begin(), body.end(), status_line);
+    response.buildResponse(body.begin(), body.end(), request_.method() != "HEAD", status_line);
 }
 
 void    AHandler::redirect(HTTPResponse& response)
@@ -155,5 +155,5 @@ void    AHandler::redirect(HTTPResponse& response)
 
     response.addHeader("Location", url);
     response.setContentLength(0);
-    response.buildResponse(NULL, NULL, http_status_.find(status)->second);
+    response.buildResponse(NULL, NULL, false, http_status_.find(status)->second);
 }
