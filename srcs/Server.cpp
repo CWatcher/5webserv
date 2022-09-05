@@ -7,6 +7,8 @@
 #include "handlers/UndefinedHandler.hpp"
 #include "utils/log.hpp"
 
+#include <signal.h>
+
 int Server::poll_timeout = 30 * 1000;
 
 Server::Server(const char *filename): _config(filename)
@@ -46,6 +48,13 @@ Server::~Server()
     logger::info << "Server: bye!" << logger::end;
 }
 
+static bool server_on = true;
+
+static void stop_server(int)
+{
+    server_on = false;
+}
+
 void Server::mainLoopRun()
 {
     std::vector<pollfd> poll_array;
@@ -53,8 +62,8 @@ void Server::mainLoopRun()
     size_t              new_events;
 
     logger::info << "Server: entering main loop..." << logger::end;
-
-    while (true)
+    ::signal(SIGINT, stop_server);
+    while (server_on)
     {
         poll_array_len = eventArrayPrepare(poll_array);
 
