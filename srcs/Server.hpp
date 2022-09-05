@@ -31,7 +31,7 @@ private:
 private:
     ServerConfig             _config;
     std::map<int, ASocket *> _sockets;
-    ft::thread_pool          _thread_pool;
+    // ft::thread_pool          _thread_pool;
 };
 
 #endif
