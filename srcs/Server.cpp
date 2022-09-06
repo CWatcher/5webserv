@@ -148,11 +148,11 @@ void Server::eventAction(ASocket *socket)
         _sockets.erase(socket->fd());
         delete socket;
     }
-    else if (socket->state() == SocketState::Process)
-        addProcessTask(socket);
+    else if (socket->state() == SocketState::Handle)
+        handleRequest(socket);
 }
 
-void Server::addProcessTask(ASocket *socket)
+void Server::handleRequest(ASocket *socket)
 {
     SessionSocket       *session = static_cast<SessionSocket *>(socket);
     const VirtualServer &v_server = _config.getVirtualServer(session->ip(), session->port(), session->request().getHeaderHostName());

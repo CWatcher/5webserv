@@ -141,8 +141,17 @@ void    ACgiHandler::waitCgi(pid_t cgi_pid, FILE* cgi_out_file, int cgi_in_pipe[
 
     if (request_.method() == "POST")
     {
-        write(cgi_in_pipe[1], request_.raw_data().data() + request_.body_offset(), request_.body_size());
-        close(cgi_in_pipe[0]);
+        FILE*   cgi_in_file = ::fdopen(cgi_in_pipe[1], "w");
+
+        if (cgi_in_file == NULL)
+        {
+            close(cgi_in_pipe[0]);
+            close(cgi_in_pipe[1]);
+            fclose(cgi_out_file);
+            throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
+        }
+        fwrite(request_.body(), sizeof(char), request_.body_size(), cgi_in_file);
+        fclose(cgi_in_file);
         close(cgi_in_pipe[1]);
     }
 
