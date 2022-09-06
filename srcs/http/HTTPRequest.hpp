@@ -20,6 +20,7 @@ public:
     const std::string           &method() const {return _method;}
     const std::string           &uri() const {return _uri;}
     const std::string           &http() const {return _http;}
+    const char*                 body() const {return _raw_data.data() + _header_size;}
     size_t                      body_size() const {return _body_size;}
     size_t                      body_offset() const {return _header_size;}
 

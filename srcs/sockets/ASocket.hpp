@@ -8,7 +8,7 @@ namespace SocketState {
 enum _ {
     Read,
     Write,
-    Process,
+    Handle,
     Disconnect
 };
 }
