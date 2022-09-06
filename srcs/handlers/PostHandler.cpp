@@ -4,6 +4,8 @@ void    PostHandler::handle(HTTPResponse&  response)
 {
     if (location_.body_size != 0 && request_.body_size() > location_.body_size)
         throw HTTPError(HTTPStatus::PAYLOAD_TOO_LARGE);
+    if (request_.body_size() == 0)
+        throw HTTPError(HTTPStatus::NO_CONTENT);
 
     if (!cgi_path_.empty())
     {
