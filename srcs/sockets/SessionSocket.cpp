@@ -13,9 +13,9 @@ SessionSocket::SessionSocket(int fd, in_addr_t from_listen_ip, in_port_t from_li
 int     SessionSocket::action(in_addr &)
 {
     if (_state == SocketState::Read)
-        actionRead();
+        readRequest();
     else
-        actionWrite();
+        sendResponse();
     return -1;
 }
 
@@ -24,7 +24,7 @@ void    SessionSocket::setStateToWrite()
     _state = SocketState::Write;
 }
 
-size_t  SessionSocket::actionRead()
+size_t  SessionSocket::readRequest()
 {
     char	temp_buffer[8192];
     ssize_t	bytes_read;
@@ -35,7 +35,7 @@ size_t  SessionSocket::actionRead()
         logger::debug << "Read from socket (bytes): " << bytes_read << logger::end;
 
     if (bytes_read == -1)
-        logger::error << "SessionSocket: actionRead: recv: " << logger::cerror << logger::end;
+        logger::error << "SessionSocket: readRequest: recv: " << logger::cerror << logger::end;
     if (bytes_read <= 0)
         _state = SocketState::Disconnect;
     else
@@ -58,7 +58,7 @@ size_t  SessionSocket::actionRead()
     return bytes_read;
 }
 
-size_t  SessionSocket::actionWrite()
+size_t  SessionSocket::sendResponse()
 {
     const char		*start = _response.raw_data().data() + _written_total;
     const size_t	left_to_write = _response.raw_data().size() - _written_total;
@@ -69,27 +69,27 @@ size_t  SessionSocket::actionWrite()
         // где-то в обработчике это должно быть, не должно такого случаться
         const char *error = "HTTP/1.1 500\nContent-Length: 25\n\n500 Internal Server Error";
 
-        logger::warning << "actionWrite: Empty data to write to socket " << _fd << logger::end;
+        logger::warning << "sendResponse: Empty data to write to socket " << _fd << logger::end;
         bytes_written = send(_fd, error, strlen(error), MSG_NOSIGNAL | MSG_DONTWAIT);
         _request = HTTPRequest();
         _state = SocketState::Read;
         return bytes_written;
     }
 
-    logger::debug << "actionWrite: Trying to write to socket " << _fd << logger::end;
+    logger::debug << "sendResponse: Trying to write to socket " << _fd << logger::end;
     bytes_written = send(_fd, start, left_to_write, MSG_NOSIGNAL | MSG_DONTWAIT);
-    logger::debug << "actionWrite: Written to socket (bytes): " << bytes_written << logger::end;
+    logger::debug << "sendResponse: Written to socket (bytes): " << bytes_written << logger::end;
     if (bytes_written == -1)
     {
         _state = SocketState::Disconnect;
-        logger::error << "SessionSocket: actionWrite: send: " << logger::cerror << logger::end;
+        logger::error << "SessionSocket: sendResponse: send: " << logger::cerror << logger::end;
     }
     else if (bytes_written > 0)
     {
         _written_total += bytes_written;
         if (_written_total == _response.raw_data().size())
         {
-            logger::info << "actionWrite: HTTP response sent. Switching to read socket " << _fd << logger::end;
+            logger::info << "sendResponse: HTTP response sent. Switching to read socket " << _fd << logger::end;
             _written_total = 0;
             _request = HTTPRequest();
             _response = HTTPResponse();
@@ -99,7 +99,7 @@ size_t  SessionSocket::actionWrite()
                 _state = SocketState::Read;
         }
         else
-            logger::debug << "actionWrite: Left to write (bytes): " << left_to_write - bytes_written << logger::end;
+            logger::debug << "sendResponse: Left to write (bytes): " << left_to_write - bytes_written << logger::end;
     }
     return bytes_written;
 }
