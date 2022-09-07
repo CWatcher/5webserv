@@ -26,10 +26,6 @@ public:
     in_port_t       port() const;
     SocketState::_  state() const;
 
-private:
-    ASocket();
-    ASocket	&operator=(const ASocket &rhs);
-
 protected:
     const int       _fd;
     const in_addr_t _ip;
