@@ -1,0 +1,10 @@
+server {
+	listen 127.0.0.1 8888;
+	methods GET;
+	index server1.html;
+	root ./www/server1;
+	location /directory {
+		index youpi.bad_extension;
+		root ./www/YoupeBanane;
+	}
+}
