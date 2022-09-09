@@ -113,7 +113,7 @@ void    ACgiHandler::makeCgiEnv(std::vector<char*>& envp) const
     server_addr.s_addr = server_ip_;
     envp_data.push_back(tmp + ::inet_ntoa(server_addr));
 
-    converter << ::ntohs(server_port_);
+    converter << ntohs(server_port_);
     envp_data.push_back("SERVER_PORT=" + converter.str());
 
     envp_data.push_back("SERVER_PROTOCOL=HTTP/1.1");
