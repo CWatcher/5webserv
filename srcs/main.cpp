@@ -1,7 +1,7 @@
-#include <stdlib.h> // EXIT_FAILURE
 #include "utils/log.hpp"
-#include "config/ServerConfig.hpp"
 #include "Server.hpp"
+
+#include <cstdlib>
 
 int main(int, char* argv[])
 {

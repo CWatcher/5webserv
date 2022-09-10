@@ -90,7 +90,7 @@ std::string   timestamp()
 {
     timeval         time_now;
     char            time_str[16];
-    char            msec[3];
+    char            msec[4];
 
     gettimeofday(&time_now, NULL);
     strftime(time_str, sizeof(time_str), "%H:%M:%S.", localtime(&time_now.tv_sec));
@@ -98,7 +98,8 @@ std::string   timestamp()
     msec[0] = static_cast<char>('0' + time_now.tv_usec / 100000 % 10);
     msec[1] = static_cast<char>('0' + time_now.tv_usec / 10000 % 10);
     msec[2] = static_cast<char>('0' + time_now.tv_usec / 1000 % 10);
-    std::strncat(time_str, msec, 3);
+    msec[3] = '\0';
+    std::strncat(time_str, msec, 4);
 
     return time_str;
 }

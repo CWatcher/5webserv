@@ -21,6 +21,7 @@ int     SessionSocket::action(in_addr &)
 
 void    SessionSocket::setStateToWrite()
 {
+    _written_total = 0;
     _state = SocketState::Write;
 }
 
@@ -80,23 +81,22 @@ size_t  SessionSocket::sendResponse()
     bytes_written = send(_fd, start, left_to_write, MSG_NOSIGNAL | MSG_DONTWAIT);
     logger::debug << "sendResponse: Written to socket (bytes): " << bytes_written << logger::end;
     if (bytes_written == -1)
-    {
-        _state = SocketState::Disconnect;
         logger::error << "SessionSocket: sendResponse: send: " << logger::cerror << logger::end;
-    }
-    else if (bytes_written > 0)
+    if (bytes_written <= 0)
+         _state = SocketState::Disconnect;
+    else
     {
         _written_total += bytes_written;
         if (_written_total == _response.raw_data().size())
         {
             logger::info << "sendResponse: HTTP response sent. Switching to read socket " << _fd << logger::end;
-            _written_total = 0;
-            _request = HTTPRequest();
-            _response = HTTPResponse();
+
             if (_request.getHeaderValue("Connection") == "close")
                 _state = SocketState::Disconnect;
             else
                 _state = SocketState::Read;
+            _request = HTTPRequest();
+            _response = HTTPResponse();
         }
         else
             logger::debug << "sendResponse: Left to write (bytes): " << left_to_write - bytes_written << logger::end;

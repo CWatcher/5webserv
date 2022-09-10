@@ -18,26 +18,28 @@ SRCS		= srcs/main.cpp						\
 				srcs/handlers/GetHandler.cpp	\
 				srcs/handlers/PostHandler.cpp	\
 												\
-				srcs/old_handlers/runner/runner.cpp		\
-				srcs/old_handlers/base/Handler.cpp		\
-				srcs/old_handlers/CGIReader.cpp			\
-				srcs/old_handlers/FileReader.cpp		\
-				srcs/old_handlers/HeaderGenerator.cpp	\
-				srcs/old_handlers/HeaderParser.cpp		\
-				srcs/old_handlers/HeaderValidator.cpp	\
-												\
 				srcs/utils/log.cpp				\
 				srcs/utils/string.cpp			\
 				srcs/utils/FileInfo.cpp
-
 OBJS		= $(SRCS:.cpp=.o)
-#CXX			= g++
-CPPFLAGS	= -Wall -Wextra -Werror -MMD -std=c++98 -Isrcs
+CXX			= c++
+CPPFLAGS	= -Wall -Wextra -Werror -pedantic -MMD -std=c++98 -I./srcs
+ifeq 		($(MAKECMDGOALS), debug)
+CPPFLAGS	+= -O0 -g3 -fsanitize=address -fsanitize=undefined
+LDFLAGS		= -fsanitize=address -fsanitize=undefined
+else
+CPPFLAGS	+= -O2
+endif
+
 
 all:		$(NAME)
 
+debug:		$(NAME)
+
 $(NAME):	$(OBJS)
-	 $(CXX) -o $(NAME) $(OBJS)
+	 $(CXX) $(LDFLAGS) -o $(NAME) $(OBJS)
+
+$(OBJS):	Makefile
 
 -include $(SRCS:.cpp=.d)
 

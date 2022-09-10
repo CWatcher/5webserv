@@ -172,22 +172,6 @@ void Server::handleRequest(ASocket *socket)
         _sockets.erase(session->fd());
         delete socket;
     }
-
-    // logger::debug << "I know you came from port: " << ntohs(session->port()) << logger::end;
-    // logger::debug << "Your server config:\n" << location << logger::end;
-    // handler.makeResponse(session->response());
-
-    // try
-    // {
-    //     HandlerTask*    new_task = new HandlerTask(VirtualServer::getLocation(v_server, request.uri()), session);
-    //     _thread_pool.push_task(handlers::run, new_task);
-    // }
-    // catch(const std::bad_alloc& e)
-    // {
-    //     logger::error << "Server: unable add new Task" << e.what() << logger::end;
-    //     return ;
-    // }
-    // logger::info << "Server: addProcessTask: sent to Task queue, socket " << session->fd() << logger::end;
 }
 
 AHandler*   Server::getHandler(const Location &location, SessionSocket* session) const
