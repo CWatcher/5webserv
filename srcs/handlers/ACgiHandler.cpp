@@ -162,6 +162,7 @@ void    ACgiHandler::waitCgi(pid_t cgi_pid, FILE* cgi_out_file, int cgi_in_pipe[
         throw HTTPError(HTTPStatus::BAD_GATEWAY);
     }
 
+    ::fflush(cgi_out_file);
     ::fstat(::fileno(cgi_out_file), &cgi_stat);
     cgi_data = reinterpret_cast<char *>(::mmap(NULL, cgi_stat.st_size, PROT_READ, MAP_SHARED, fileno(cgi_out_file), 0));
     ::fclose(cgi_out_file);
@@ -172,30 +173,38 @@ void    ACgiHandler::waitCgi(pid_t cgi_pid, FILE* cgi_out_file, int cgi_in_pipe[
 }
 
 void    ACgiHandler::makeCgiResponse(const char* cgi_data, size_t n, HTTPResponse& response) const
+
 {
     const std::string   delim = "\n\n";
-    const char*         cgi_header_end = std::search(cgi_data, cgi_data + n, delim.begin(), delim.end());
+    const char*         cgi_body = std::search(cgi_data, cgi_data + n, delim.begin(), delim.end());
+    size_t              content_length;
     std::string         cgi_header;
     size_t              first, last;
     std::string         status = "200 OK";
 
-    if (cgi_header_end == cgi_data + n)
+    if (cgi_body == cgi_data + n)
     {
         ::munmap(const_cast<char*>(cgi_data), n);
         throw (HTTPStatus::BAD_GATEWAY);
     }
 
-    cgi_header.append(cgi_data, cgi_header_end);
+    cgi_body += 2;
+    content_length = cgi_data + n - cgi_body;
+    cgi_header.append(cgi_data, cgi_body);
+
     first = 0;
     last = cgi_header.find(':');
     while (last != std::string::npos)
     {
-        std::string key = cgi_header.substr(first, last);
+        std::string key = cgi_header.substr(first, last - first);
         std::string value;
 
         first = last + 1;
-        last = cgi_header.find(last, '\n');
-        value = cgi_header.substr(first, last);
+        last = cgi_header.find('\n', last);
+        value = cgi_header.substr(first, last - first);
+        first = last + 1;
+        last = cgi_header.find(':', last);
+
         strTrim(key);
         strTrim(value);
         if (strLowerCaseCopy(key) == "status")
@@ -207,9 +216,9 @@ void    ACgiHandler::makeCgiResponse(const char* cgi_data, size_t n, HTTPRespons
             std::stringstream   ss;
 
             ss << value;
-            ss >> n;
+            ss >> content_length;
         }
     }
-    response.setContentLength(n);
-    response.buildResponse(cgi_data, cgi_data + n, request_.method() != "HEAD", status);
+    response.setContentLength(content_length);
+    response.buildResponse(cgi_body, cgi_body + content_length, request_.method() != "HEAD", status);
 }

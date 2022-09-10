@@ -28,7 +28,6 @@ server {
 	location /dir1
 	{
 		autoindex on;
-		location /dir1/cgi {cgi py /usr/bin/python3; methods POST GET;}
 	}
 
 	location /dir2 {}
@@ -47,6 +46,13 @@ server {
 		upload_store ./www/server0/upload;
 		root ./www/server0/upload;
 		#чтобы работал GET нужен корректный root
+	}
+
+	location /cgi
+	{
+		autoindex on;
+		cgi py /usr/bin/python3;
+		methods POST GET;
 	}
 }
 

@@ -14,8 +14,14 @@
 		<a href="delete">dir for DELETE</a> |
 		<a href="Webserv.pdf">subject</a>
 	</nav>
-	<center><h1> webserv index page</h1></center>
+	<center>
+		<h1> webserv index page</h1>
+	</center>
 	<p>need image here</p>
+	<hr>
+	<center>
+		<h3> File upload</h3>
+	</center>
 	<form enctype="multipart/form-data" method="post" action="upload">
 		<p>
 			<input type="file" name="file">
@@ -23,7 +29,23 @@
 		</p>
 	</form>
 	<hr>
+	<center>
+		<h3>CGI</h3>
+	</center>
+	<form method="GET" action="cgi/add.py">
+		<input type="text" name="a" required="required" value="21" size="3">
+		+
+		<input type="text" name="b" required="required" value="42" size="3">
+		<input type="submit" value="GET">
+	</form>
+	<form method="POST" action="cgi/add.py">
+		<p>
+			<input type="text" name="a" required="required" value="21" size="3">
+			+
+			<input type="text" name="b" required="required" value="42" size="3">
+			<input type="submit" value="POST">
+		</p>
+	</form>
+	<hr>
 	<center>webserv</center>
-</body
-
-</html>
+</body </html>

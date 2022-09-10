@@ -13,7 +13,7 @@ static const std::pair<std::string, std::string> types_init_list[] =
     std::make_pair("css", "text/css; charset=utf-8"),
     std::make_pair("csv", "text/csv; charset=utf-8"),
     std::make_pair("html", "text/html; charset=utf-8"),
-    std::make_pair("txt", "text/html; charset=utf-8"),
+    std::make_pair("txt", "text/plain; charset=utf-8"),
     std::make_pair("xml", "text/xml; charset=utf-8"),
 };
 
