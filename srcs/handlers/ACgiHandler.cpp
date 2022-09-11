@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
+#include <climits>
 
 ACgiHandler::ACgiHandler(const Location& loc, const HTTPRequest& req, in_addr_t s_ip, in_port_t s_port, const in_addr& remote_addr) :
     AHandler(loc, req),
@@ -82,6 +83,7 @@ void    ACgiHandler::makeCgiEnv(std::vector<char*>& envp) const
     std::vector<std::string>    envp_data;
     std::stringstream           converter;
     std::string                 tmp;
+    char                        real_path[PATH_MAX];
 
     tmp = request_.getHeaderValue("Content-Length");
     if (!tmp.empty())
@@ -96,7 +98,11 @@ void    ACgiHandler::makeCgiEnv(std::vector<char*>& envp) const
     if (!path_info_.empty())
     {
         envp_data.push_back("PATH_INFO=" + path_info_);
-        envp_data.push_back("PATH_TRANSLATED=" + location_.root + path_info_);
+        if (::realpath((location_.root + path_info_).c_str(), real_path) != NULL)
+        {
+            tmp = real_path;
+            envp_data.push_back("PATH_TRANSLATED=" + tmp);
+        }
     }
 
     if (!query_string_.empty())
@@ -119,7 +125,8 @@ void    ACgiHandler::makeCgiEnv(std::vector<char*>& envp) const
     envp_data.push_back("SERVER_PROTOCOL=HTTP/1.1");
     envp_data.push_back("SERVER_SOFTWARE=webserv");
 
-    envp_data.push_back("SCRIPT_FILENAME=" + file_info_.path());
+    tmp = ::realpath(file_info_.path().c_str(), real_path);
+    envp_data.push_back("SCRIPT_FILENAME=" + tmp);
 
     for (std::map<std::string, std::string>::const_iterator it = request_.header().begin();
         it != request_.header().end(); ++it)
