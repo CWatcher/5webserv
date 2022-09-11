@@ -17,7 +17,7 @@
 
 server {
 	index index.html test_index.html abcd.txt my_index.html;
-	root ./www/server0;
+	root www/server0;
 	error_page 403 custom_error.html;
 
 	location /redirect
@@ -43,8 +43,8 @@ server {
 	{
 		methods POST GET;
 		autoindex on;
-		upload_store ./www/server0/upload;
-		root ./www/server0/upload;
+		upload_store www/server0/upload;
+		root www/server0/upload;
 		#чтобы работал GET нужен корректный root
 	}
 
@@ -52,6 +52,7 @@ server {
 	{
 		autoindex on;
 		cgi py /usr/bin/python3;
+		cgi php /usr/bin/php-cgi;
 		methods POST GET;
 	}
 }

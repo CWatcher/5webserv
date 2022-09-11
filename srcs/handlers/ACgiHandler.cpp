@@ -119,6 +119,8 @@ void    ACgiHandler::makeCgiEnv(std::vector<char*>& envp) const
     envp_data.push_back("SERVER_PROTOCOL=HTTP/1.1");
     envp_data.push_back("SERVER_SOFTWARE=webserv");
 
+    envp_data.push_back("SCRIPT_FILENAME=" + file_info_.path());
+
     for (std::map<std::string, std::string>::const_iterator it = request_.header().begin();
         it != request_.header().end(); ++it)
     {
@@ -172,38 +174,43 @@ void    ACgiHandler::waitCgi(pid_t cgi_pid, FILE* cgi_out_file, int cgi_in_pipe[
     ::munmap(cgi_data, cgi_stat.st_size);
 }
 
-void    ACgiHandler::makeCgiResponse(const char* cgi_data, size_t n, HTTPResponse& response) const
-
+const char*  ACgiHandler::getCgiBody(const char* cgi_data, size_t n)
 {
-    const std::string   delim = "\n\n";
-    const char*         cgi_body = std::search(cgi_data, cgi_data + n, delim.begin(), delim.end());
-    size_t              content_length;
-    std::string         cgi_header;
-    size_t              first, last;
+    std::string   delim = "\n\n";
+    const char*   cgi_body = std::search(cgi_data, cgi_data + n, delim.begin(), delim.end());
+
+    if (cgi_body != cgi_data + n)
+        return cgi_body + 2;
+
+    delim = "\r\n\r\n";
+    cgi_body = std::search(cgi_data, cgi_data + n, delim.begin(), delim.end());
+    if (cgi_body != cgi_data + n)
+        return cgi_body + 4;
+
+    ::munmap(const_cast<char*>(cgi_data), n);
+    throw HTTPError(HTTPStatus::BAD_GATEWAY);
+}
+
+void    ACgiHandler::makeCgiResponse(const char* cgi_data, size_t n, HTTPResponse& response) const
+{
+    const char*         cgi_body = getCgiBody(cgi_data, n);
+    size_t              content_length = cgi_data + n - cgi_body;
+    std::string         cgi_header(cgi_data, cgi_body);
     std::string         status = "200 OK";
 
-    if (cgi_body == cgi_data + n)
+    size_t              first = 0;
+    size_t              middle = cgi_header.find(':');
+    size_t              last = cgi_header.find('\n', middle);
+
+    while (middle != std::string::npos)
     {
-        ::munmap(const_cast<char*>(cgi_data), n);
-        throw (HTTPStatus::BAD_GATEWAY);
-    }
+        std::string key = cgi_header.substr(first, middle - first);
+        ++middle;
+        std::string value = cgi_header.substr(middle, last - middle);
 
-    cgi_body += 2;
-    content_length = cgi_data + n - cgi_body;
-    cgi_header.append(cgi_data, cgi_body);
-
-    first = 0;
-    last = cgi_header.find(':');
-    while (last != std::string::npos)
-    {
-        std::string key = cgi_header.substr(first, last - first);
-        std::string value;
-
-        first = last + 1;
-        last = cgi_header.find('\n', last);
-        value = cgi_header.substr(first, last - first);
-        first = last + 1;
-        last = cgi_header.find(':', last);
+        first = ++last;
+        middle = cgi_header.find(':', last);
+        last = cgi_header.find('\n', middle);
 
         strTrim(key);
         strTrim(value);

@@ -16,6 +16,7 @@ protected:
     void                waitCgi(pid_t cgi_pid, FILE* cgi_out_file, int cgi_in_pipe[2], HTTPResponse& response) const;
     void                makeCgiEnv(std::vector<char*>& envp_data) const;
     void                makeCgiResponse(const char* cgi_data, size_t n, HTTPResponse& response) const;
+    static const char*  getCgiBody(const char* cgi_data, size_t n);
 
 protected:
     const in_addr_t     server_ip_;
