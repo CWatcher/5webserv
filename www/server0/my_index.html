@@ -13,6 +13,7 @@
 		<a href="dir2">autoindex off</a> |
 		<a href="delete">dir for DELETE</a> |
 		<a href="cgi">CGI</a> |
+		<a href="cgi/cookies.php">Cookies</a> |
 		<a href="Webserv.pdf">subject</a>
 	</nav>
 	<center>
@@ -24,10 +25,8 @@
 		<h3> File upload</h3>
 	</center>
 	<form enctype="multipart/form-data" method="post" action="upload">
-		<p>
-			<input type="file" name="file">
-			<input type="submit">
-		</p>
+		<input type="file" name="file">
+		<input type="submit">
 	</form>
 	<hr>
 	<center>
@@ -40,12 +39,10 @@
 		<input type="submit" value="GET">
 	</form>
 	<form method="POST" action="cgi/add.py">
-		<p>
-			<input type="text" name="a" required="required" value="21" size="3">
-			+
-			<input type="text" name="b" required="required" value="42" size="3">
-			<input type="submit" value="POST">
-		</p>
+		<input type="text" name="a" required="required" value="21" size="3">
+		+
+		<input type="text" name="b" required="required" value="42" size="3">
+		<input type="submit" value="POST">
 	</form>
 	<hr>
 	<center>webserv</center>
