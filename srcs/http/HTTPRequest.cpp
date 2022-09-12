@@ -9,21 +9,21 @@ void    HTTPRequest::addData(const char* data, size_t n)
     _raw_data.append(data, n);
 
     if (_header.empty())
-        parseHeader();
+        makeHeaderMap();
 
-    if (!_header.empty())
+    if (!_header.empty()) ///
         _body_size = _raw_data.size() - _header_size;
 }
 
 bool    HTTPRequest::isRequestReceived()
 {
-    const bool          hasHeader = !_header.empty();
+    const bool          header_received = !_header.empty();
     long int            content_length;
     bool                end_found;
 
     if (_raw_data.compare(0, 3, "GET") || _raw_data.compare(0, 6, "DELETE"))
-        end_found = hasHeader;
-    else if (hasHeader && (_raw_data.compare(0, 4, "POST") || _raw_data.compare(0, 3, "PUT")))
+        end_found = header_received;
+    else if (header_received && (_raw_data.compare(0, 4, "POST") || _raw_data.compare(0, 3, "PUT")))
     {
         const std::string   content_length_str = getHeaderValue("Content-Length");
         if (content_length_str.empty())
@@ -57,83 +57,58 @@ std::string HTTPRequest::getHeaderValue(const std::string &header_key) const
         return "";
 }
 
-void	HTTPRequest::parseHeader()
+void	HTTPRequest::makeHeaderMap()
 {
-    const size_t	header_end = _raw_data.find("\r\n\r\n");
+    const size_t    header_end = _raw_data.find("\r\n\r\n");
 
     if (header_end != std::string::npos)
     {
         _header_size = header_end + 4;
-        _header = getHeaderMapFromRaw();
         parseStartLine();
-        logger::debug << __FUNCTION__ << ": " << "HTTP request header found" << logger::end;
+        parseHeader(header_end);
+        logger::debug << "HTTPRequest:" << "HTTP request header found" << logger::end;
     }
     else
-        logger::debug << __FUNCTION__ << ": " << "HTTP request header not found yet" << logger::end;
+        logger::debug << "HTTPRequest:" << "HTTP request header not found yet" << logger::end;
 }
 
 void HTTPRequest::parseStartLine()
 {
-    // добавить в парсинг
-    _http = "HTTP/1.1";
-    // _start_line не нужна как переменная класса?
-    //что будет в uri и method, если в starting line будет не 3 слова???
+    std::string _start_line = _raw_data.substr(0, _raw_data.find('\r'));
+    size_t      delimiter_index = _start_line.find(' ');
 
-    _start_line = _raw_data.substr(0, _raw_data.find('\n'));
-    size_t delimiter_index = _start_line.find(' ');
     _method = _start_line.substr(0, delimiter_index);
-    if (delimiter_index != std::string::npos)
-    {
-        ++delimiter_index;
-        _uri = _start_line.substr(delimiter_index, _start_line.find(' ', delimiter_index) - delimiter_index);
-    }
-
+    ++delimiter_index;
+    _uri = _start_line.substr(delimiter_index, _start_line.rfind(' ') - delimiter_index);
     strRemoveDoubled(_uri, '/');
+    _http = _start_line.substr(_start_line.rfind(' ') + 1);
 }
 
-std::map<std::string, std::string>	HTTPRequest::getHeaderMapFromRaw()
+void    HTTPRequest::parseHeader(size_t header_end)
 {
-    std::map<std::string, std::string>	header_map;
-    size_t		line_start;
-    size_t		line_end;
-    std::string line;
+    size_t  line_start = 0;
+    size_t  line_end = _raw_data.find('\n');
 
-    line_end = _raw_data.find('\n', 0);
-    while (true)
+    while (line_end < header_end)
     {
-        line_start = line_end + (_raw_data[line_end] == '\r') + 1;
-        line_end = _raw_data.find('\n', line_start);
-        if (_raw_data[line_end - 1] == '\r')
-            --line_end;
-        if (line_start == line_end)
-            break ;
+        std::string line = _raw_data.substr(line_start, line_end - line_start);
 
-        line = _raw_data.substr(line_start, line_end - line_start);
-        header_map.insert(getHeaderPairFromLine(line));
+        parseHeaderLine(line);
+        line_start = ++line_end;
+        line_end = _raw_data.find('\n', line_end);
     }
-    return header_map;
 }
 
-std::pair<std::string, std::string>	HTTPRequest::getHeaderPairFromLine(const std::string &line)
+void    HTTPRequest::parseHeaderLine(const std::string &line)
 {
-    const size_t	key_end = line.find(':');
-    std::string		key;
-    std::string		value;
+    const size_t    key_end = line.find(':');
+    std::string     key = line.substr(0, key_end);;
+    std::string     value = line.substr(key_end + 1);
 
-    if (key_end == std::string::npos)
-    {
-        key = line;
-        value = "";
-    }
-    else
-    {
-        key = line.substr(0, key_end);
-        value = line.substr(key_end + 1, std::string::npos);
-    }
-    strTrim(strLowerCase(key));
+    strLowerCase(key);
+    strTrim(key);
     strTrim(value);
-
-    return std::make_pair(key, value);
+    _header[key] = value;
 }
 
 std::string HTTPRequest::getHeaderHostName() const

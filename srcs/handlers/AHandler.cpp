@@ -83,7 +83,7 @@ AHandler::AHandler(const Location& loc, const HTTPRequest& req) : location_(loc)
 
 void    AHandler::makeResponse(HTTPResponse& response)
 {
-    logger::info << "➡️  " << request_.method() << ' ' << request_.uri() << logger::end;
+    logger::info << "➡️  " << request_.method() << ' ' << request_.uri() << ' ' << request_.http() << logger::end;
     try
     {
         if (request_.getHeaderValue("Connection") == "close")
