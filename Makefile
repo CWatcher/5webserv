@@ -24,12 +24,9 @@ SRCS		= srcs/main.cpp						\
 OBJS		= $(SRCS:.cpp=.o)
 CXX			= c++
 CPPFLAGS	= -Wall -Wextra -Werror -pedantic -MMD -std=c++98 -I./srcs
-ifeq 		($(MAKECMDGOALS), debug)
-CPPFLAGS	+= -O0 -g3 -fsanitize=address -fsanitize=undefined
-LDFLAGS		= -fsanitize=address -fsanitize=undefined
-else
-CPPFLAGS	+= -O2
-endif
+debug:		CPPFLAGS += -O0 -g3 -fsanitize=address -fsanitize=undefined
+debug:		LDFLAGS = -fsanitize=address -fsanitize=undefined
+all:		CPPFLAGS += -O2
 
 
 all:		$(NAME)
