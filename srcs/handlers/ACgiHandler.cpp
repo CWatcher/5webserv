@@ -87,7 +87,7 @@ void    ACgiHandler::makeCgiEnv(std::vector<char*>& envp) const
 
     tmp = request_.getHeaderValue("Content-Length");
     if (!tmp.empty())
-        envp_data.push_back(tmp + "CONTENT_LENGTH=");
+        envp_data.push_back("CONTENT_LENGTH=" + tmp);
 
     tmp = request_.getHeaderValue("Content-Type");
     if (!tmp.empty())
