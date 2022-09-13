@@ -44,7 +44,7 @@ server {
 		methods POST GET;
 		autoindex on;
 		upload_store www/server0/upload;
-		root www/server0/upload;
+		root www/server0/;
 		#чтобы работал GET нужен корректный root
 	}
 
