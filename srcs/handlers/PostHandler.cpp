@@ -38,6 +38,9 @@ void    PostHandler::postFile(HTTPResponse& response) const
         throw HTTPError(HTTPStatus::BAD_REQUEST);
 
     filename = getFormFileName(request_.body_offset() + boundary.size() + 2, form_data_start);
+    if (FileInfo(location_.upload_store + "/" + filename).isNotExists() == false)
+        throw HTTPError(HTTPStatus::CONFLICT);
+
     new_file.open((location_.upload_store + "/" + filename).c_str(), std::ios::binary);
     if (!new_file.is_open())
         throw HTTPError(HTTPStatus::FORBIDDEN);
