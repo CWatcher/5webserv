@@ -36,7 +36,7 @@ size_t  SessionSocket::readRequest()
         logger::debug << "Read from socket (bytes): " << bytes_read << logger::end;
 
     if (bytes_read == -1)
-        logger::error << "SessionSocket: readRequest: recv: " << logger::cerror << logger::end;
+        logger::error << "SessionSocket: recv: " << logger::cerror << logger::end;
     if (bytes_read <= 0)
         _state = SocketState::Disconnect;
     else
@@ -47,12 +47,12 @@ size_t  SessionSocket::readRequest()
             if (_request.isRequestReceived())
             {
                 _state = SocketState::Handle;
-                logger::info << "Got end of HTTP message from socket " << _fd << logger::end;
+                logger::debug << "HTTPRequest received on socket " << _fd << logger::end;
             }
         }
-        catch (const std::bad_alloc &e)
+        catch (const std::exception &e)
         {
-            logger::error << "HTTPRequest: addData: " << e.what() << logger::end;
+            logger::error << "HTTPRequest: " << e.what() << logger::end;
             _state = SocketState::Disconnect;
         }
     }
@@ -77,11 +77,12 @@ size_t  SessionSocket::sendResponse()
         return bytes_written;
     }
 
-    logger::debug << "sendResponse: Trying to write to socket " << _fd << logger::end;
+    logger::debug << "Trying to write to socket " << _fd << logger::end;
     bytes_written = send(_fd, start, left_to_write, MSG_NOSIGNAL | MSG_DONTWAIT);
-    logger::debug << "sendResponse: Written to socket (bytes): " << bytes_written << logger::end;
+    logger::debug << "Written to socket (bytes): " << bytes_written << logger::end;
+
     if (bytes_written == -1)
-        logger::error << "SessionSocket: sendResponse: send: " << logger::cerror << logger::end;
+        logger::error << "SessionSocket: send: " << logger::cerror << logger::end;
     if (bytes_written <= 0)
          _state = SocketState::Disconnect;
     else
@@ -89,17 +90,16 @@ size_t  SessionSocket::sendResponse()
         _written_total += bytes_written;
         if (_written_total == _response.raw_data().size())
         {
-            logger::info << "sendResponse: HTTP response sent. Switching to read socket " << _fd << logger::end;
-
             if (_request.getHeaderValue("Connection") == "close")
                 _state = SocketState::Disconnect;
             else
                 _state = SocketState::Read;
             _request = HTTPRequest();
             _response = HTTPResponse();
+            logger::debug << "HTTPResponse sent on socket " << _fd << logger::end;
         }
         else
-            logger::debug << "sendResponse: Left to write (bytes): " << left_to_write - bytes_written << logger::end;
+            logger::debug << "HTTPResponse left to write (bytes): " << left_to_write - bytes_written << logger::end;
     }
     return bytes_written;
 }

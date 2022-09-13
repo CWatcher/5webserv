@@ -24,10 +24,9 @@ public:
     size_t              body_offset() const {return _header_size;}
 
     bool                isFormData() const {return getHeaderValue("Content-Type").find("multipart/form-data") != std::string::npos;}
-    bool                isChuncked() const {return getHeaderValue("Transfer-Encoding").find("chunked") != std::string::npos;;}
 
 private:
-    void                makeHeaderMap();
+    void                fillHeaderMap();
     void                parseStartLine();
     void                parseHeader(size_t header_end);
     void                parseHeaderLine(const std::string &line);

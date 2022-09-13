@@ -2,48 +2,52 @@
 #include "utils/log.hpp"
 #include "utils/string.hpp"
 
-#include <cstdlib>
+#include <sstream>
 
 void    HTTPRequest::addData(const char* data, size_t n)
 {
     _raw_data.append(data, n);
 
     if (_header.empty())
-        makeHeaderMap();
+        fillHeaderMap();
 
-    if (!_header.empty()) ///
+    if (!_header.empty())
         _body_size = _raw_data.size() - _header_size;
 }
 
 bool    HTTPRequest::isRequestReceived()
 {
-    const bool          header_received = !_header.empty();
-    long int            content_length;
-    bool                end_found;
+    if (_header.empty())
+        return false;
 
-    if (_raw_data.compare(0, 3, "GET") || _raw_data.compare(0, 6, "DELETE"))
-        end_found = header_received;
-    else if (header_received && (_raw_data.compare(0, 4, "POST") || _raw_data.compare(0, 3, "PUT")))
+    std::string content_length = getHeaderValue("Content-Length");
+    std::string transfer_encoding = getHeaderValue("Transfer-Encoding");
+    if (transfer_encoding.find("chunked") != std::string::npos)
     {
-        const std::string   content_length_str = getHeaderValue("Content-Length");
-        if (content_length_str.empty())
-            end_found = true;
-        else
-        {
-            content_length = std::strtol(content_length_str.c_str(), NULL, 10);
-            if (errno || content_length < 0)
-            {
-                logger::error << __FUNCTION__ << ": " << strerror(errno) << logger::end;
-                errno = 0;
-                end_found = true;
-            }
-            else
-                end_found = (_body_size >= static_cast<size_t>(content_length));
-        }
+        /**
+        собрать запрос из чанков
+        собранный запрос поместить в _raw_data после заголовка
+        обновить body_size - размер собранного запроса
+        убрать chuncked из заголовка добавить Content-Length = body_size
+        **/
     }
-    else // method unknown, validator will deal with it
-        end_found = true;
-    return end_found;
+    else if (!content_length.empty())
+    {
+        std::stringstream converter(content_length);
+        size_t  length;
+
+        converter >> length;
+        if (!converter.eof())
+        {
+            logger::error << "HTTPRequest: Content-Length bad value" << logger::end;
+            throw std::exception();
+        }
+        if (length > _body_size)
+            return false;
+        return true;
+    }
+
+    return true;
 }
 
 std::string HTTPRequest::getHeaderValue(const std::string &header_key) const
@@ -57,7 +61,7 @@ std::string HTTPRequest::getHeaderValue(const std::string &header_key) const
         return "";
 }
 
-void	HTTPRequest::makeHeaderMap()
+void	HTTPRequest::fillHeaderMap()
 {
     const size_t    header_end = _raw_data.find("\r\n\r\n");
 
@@ -74,22 +78,27 @@ void	HTTPRequest::makeHeaderMap()
 
 void HTTPRequest::parseStartLine()
 {
-    std::string _start_line = _raw_data.substr(0, _raw_data.find('\r'));
-    size_t      delimiter_index = _start_line.find(' ');
+    std::string _start_line = _raw_data.substr(0, _raw_data.find("\n"));
+    size_t      delimiter_idx = _start_line.find(' ');
 
-    _method = _start_line.substr(0, delimiter_index);
-    ++delimiter_index;
-    _uri = _start_line.substr(delimiter_index, _start_line.rfind(' ') - delimiter_index);
+    if (*_start_line.rbegin() == '\r')
+        _start_line.erase(_start_line.end() - 1);
+
+    _method = _start_line.substr(0, delimiter_idx);
+
+    ++delimiter_idx;
+    _uri = _start_line.substr(delimiter_idx, _start_line.rfind(' ') - delimiter_idx);
     strRemoveDoubled(_uri, '/');
+
     _http = _start_line.substr(_start_line.rfind(' ') + 1);
 }
 
 void    HTTPRequest::parseHeader(size_t header_end)
 {
-    size_t  line_start = 0;
-    size_t  line_end = _raw_data.find('\n');
+    size_t  line_start = _raw_data.find('\n') + 1;
+    size_t  line_end = _raw_data.find('\n', line_start);
 
-    while (line_end < header_end)
+    while (line_start < header_end)
     {
         std::string line = _raw_data.substr(line_start, line_end - line_start);
 
