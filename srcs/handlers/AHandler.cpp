@@ -2,6 +2,8 @@
 #include "utils/FileInfo.hpp"
 #include "utils/log.hpp"
 
+#include <sstream>
+
 static const std::pair<HTTPStatus::_, std::string>    http_status_init_list[] =
 {
     std::make_pair(HTTPStatus::SWITCHING_PROTOCOL, "101 Switching Protocol"),
@@ -75,10 +77,28 @@ AHandler::AHandler(const Location& loc, const HTTPRequest& req) : location_(loc)
             break;
         }
     }
+    normalizeUri(path_info_);
+    normalizeUri(pure_uri_);
 
     logger::debug << "Handler: pure_uri=" << pure_uri_ <<\
         " query_string=" << query_string_ <<\
         " path_info=" << path_info_ << logger::end;
+}
+
+void    AHandler::normalizeUri(std::string &uri)
+{
+    size_t  percent = uri.find('%');
+
+    while (percent != std::string::npos)
+    {
+        std::string         hex_value = uri.substr(percent + 1, 2);
+        std::stringstream   converter(hex_value);
+        int                 code;
+
+        converter >> std::hex >> code;
+        uri.replace(percent, 3, 1, code);
+        percent = uri.find('%');
+    }
 }
 
 void    AHandler::makeResponse(HTTPResponse& response)

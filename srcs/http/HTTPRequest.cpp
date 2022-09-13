@@ -88,25 +88,8 @@ void HTTPRequest::parseStartLine()
 
     ++delimiter_idx;
     _uri = _start_line.substr(delimiter_idx, _start_line.rfind(' ') - delimiter_idx);
-    normalizeUri(_uri);
+    strRemoveDoubled(_uri, '/');
     _http = _start_line.substr(_start_line.rfind(' ') + 1);
-}
-
-void    HTTPRequest::normalizeUri(std::string &uri)
-{
-    size_t  percent = uri.find('%');
-
-    strRemoveDoubled(uri, '/');
-    while (percent != std::string::npos)
-    {
-        std::string         hex_value = uri.substr(percent + 1, 2);
-        std::stringstream   converter(hex_value);
-        int                 code;
-
-        converter >> std::hex >> code;
-        uri.replace(percent, 3, 1, code);
-        percent = uri.find('%');
-    }
 }
 
 void    HTTPRequest::parseHeader(size_t header_end)

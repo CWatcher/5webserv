@@ -28,7 +28,6 @@ public:
 private:
     void                fillHeaderMap();
     void                parseStartLine();
-    static void         normalizeUri(std::string &uri);
     void                parseHeader(size_t header_end);
     void                parseHeaderLine(const std::string &line);
 

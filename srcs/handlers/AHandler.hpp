@@ -18,6 +18,9 @@ protected:
     void                error(HTTPStatus::_ status, HTTPResponse& response);
     void                redirect(HTTPResponse& response);
 
+private:
+    static void         normalizeUri(std::string& uri);
+
 protected:
     const Location&     location_;
     const HTTPRequest&  request_;
