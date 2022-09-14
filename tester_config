@@ -1,10 +1,12 @@
 server {
 	listen 127.0.0.1 8888;
 	methods GET;
-	index server1.html;
-	root www/server1;
-	location /directory {
+	root www/tester_server;
+	location /directory/ {
 		index youpi.bad_extension;
-		root www;
+	}
+
+	location /put_test/ {
+		methods PUT;
 	}
 }

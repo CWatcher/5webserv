@@ -78,17 +78,15 @@ void	HTTPRequest::fillHeaderMap()
 
 void HTTPRequest::parseStartLine()
 {
-    std::string _start_line = _raw_data.substr(0, _raw_data.find("\n"));
+    std::string _start_line = _raw_data.substr(0, _raw_data.find("\r\n"));
     size_t      delimiter_idx = _start_line.find(' ');
-
-    if (*_start_line.rbegin() == '\r')
-        _start_line.erase(_start_line.end() - 1);
 
     _method = _start_line.substr(0, delimiter_idx);
 
     ++delimiter_idx;
     _uri = _start_line.substr(delimiter_idx, _start_line.rfind(' ') - delimiter_idx);
     strRemoveDoubled(_uri, '/');
+
     _http = _start_line.substr(_start_line.rfind(' ') + 1);
 }
 

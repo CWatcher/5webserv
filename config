@@ -41,7 +41,7 @@ server {
 
 	location /upload
 	{
-		methods POST GET;
+		methods POST GET PUT;
 		autoindex on;
 		upload_store www/server0/upload;
 		root www/server0/;
