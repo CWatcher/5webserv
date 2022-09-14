@@ -23,8 +23,8 @@ SRCS		= srcs/main.cpp						\
 				srcs/utils/FileInfo.cpp
 OBJS		= $(SRCS:.cpp=.o)
 CXX			= c++
-CPPFLAGS	= -Wall -Wextra -Werror -pedantic -MMD -std=c++98 -I./srcs
-debug:		CPPFLAGS += -O0 -g3 -fsanitize=address -fsanitize=undefined
+CPPFLAGS	= -Wall -Wextra -Werror -pedantic -MMD -std=c++98 -Isrcs
+debug:		CPPFLAGS += -g3 -fsanitize=address -fsanitize=undefined
 debug:		LDFLAGS = -fsanitize=address -fsanitize=undefined
 all:		CPPFLAGS += -O2
 
@@ -33,19 +33,19 @@ all:		$(NAME)
 
 debug:		$(NAME)
 
-$(NAME):	$(OBJS)
-	 $(CXX) $(LDFLAGS) -o $(NAME) $(OBJS)
+$(NAME):	$(OBJS) Makefile
+	$(CXX) $(LDFLAGS) -o $@ $(OBJS)
 
 $(OBJS):	Makefile
 
 -include $(SRCS:.cpp=.d)
 
 clean:
-	 $(RM) $(OBJS) $(SRCS:.cpp=.d)
+	$(RM) $(OBJS) $(SRCS:.cpp=.d)
 
 fclean:		clean
-	 $(RM) $(NAME)
+	$(RM) $(NAME)
 
-re:	 fclean all
+re:			fclean all
 
-.PHONY:	all clean fclean re
+.PHONY:	all debug clean fclean re
