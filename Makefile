@@ -29,9 +29,9 @@ debug:		LDFLAGS = -fsanitize=address -fsanitize=undefined
 all:		CPPFLAGS += -O2
 
 
-all:		$(NAME)
-
 debug:		$(NAME)
+
+all:		$(NAME)
 
 $(NAME):	$(OBJS) Makefile
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS)
