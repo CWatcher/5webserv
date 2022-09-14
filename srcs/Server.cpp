@@ -4,6 +4,7 @@
 #include "handlers/DeleteHandler.hpp"
 #include "handlers/GetHandler.hpp"
 #include "handlers/PostHandler.hpp"
+#include "handlers/PutHandler.hpp"
 #include "handlers/UndefinedHandler.hpp"
 #include "utils/log.hpp"
 
@@ -184,5 +185,7 @@ AHandler*   Server::getHandler(const Location &location, SessionSocket* session)
         return new GetHandler(location, request, session->ip(), session->port(), session->remoteAddr());
     else if (request.method() == "POST")
         return new PostHandler(location, request, session->ip(), session->port(), session->remoteAddr());
+    else if (request.method() == "PUT")
+        return new PutHandler(location, request);
     return new UndefinedHandler(location, request);
 }

@@ -17,6 +17,7 @@ SRCS		= srcs/main.cpp						\
 				srcs/handlers/ACgiHandler.cpp	\
 				srcs/handlers/GetHandler.cpp	\
 				srcs/handlers/PostHandler.cpp	\
+				srcs/handlers/PutHandler.cpp	\
 												\
 				srcs/utils/log.cpp				\
 				srcs/utils/string.cpp			\
