@@ -277,7 +277,7 @@ void    ServerConfig::parseMethods(Location& parent)
 
     for (std::vector<std::string>::iterator method = methods.begin(); method != methods.end(); method++)
     {
-        if (*method != "GET" && *method != "POST" && *method != "DELETE" && *method != "HEAD")
+        if (*method != "GET" && *method != "POST" && *method != "DELETE" && *method != "HEAD" && *method != "PUT")
             throw bad_config(block_ + " methods bad value '" + *method + "'");
         parent.methods.insert(*method);
     }
