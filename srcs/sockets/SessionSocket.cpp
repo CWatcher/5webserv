@@ -32,15 +32,9 @@ size_t  SessionSocket::readRequest()
 
     logger::debug << "Trying to read from socket " << _fd << logger::end;
     bytes_read = recv(_fd, temp_buffer, sizeof(temp_buffer) - 1, MSG_NOSIGNAL | MSG_DONTWAIT);
-    if (bytes_read)
-        logger::debug << "Read from socket (bytes): " << bytes_read << logger::end;
-
-    if (bytes_read == -1)
-        logger::error << "SessionSocket: recv: " << logger::cerror << logger::end;
-    if (bytes_read <= 0)
-        _state = SocketState::Disconnect;
-    else
+    if (bytes_read > 0)
     {
+        logger::debug << "Read from socket (bytes): " << bytes_read << logger::end;
         try
         {
             _request.addData(temp_buffer, bytes_read);
@@ -56,6 +50,12 @@ size_t  SessionSocket::readRequest()
             _state = SocketState::Disconnect;
         }
     }
+	else
+	{
+		if (bytes_read == -1)
+			logger::error << "SessionSocket: recv: " << logger::cerror << logger::end;
+        _state = SocketState::Disconnect;
+	}
     return bytes_read;
 }
 
