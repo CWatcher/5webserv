@@ -14,13 +14,7 @@ std::string FileInfo::dateStr() const
 
     if (ret_ == -1)
         return "?";
-#ifdef __APPLE__
-//TO_TEST
-    ::strftime(date, 21, "%d-%b-%Y %H:%M", ::gmtime(&stat_.st_mtimespec.tv_sec));
-#else
-// stat_.st_mtime;
-    ::strftime(date, 21, "%d-%b-%Y %H:%M", ::gmtime(&stat_.st_mtim.tv_sec));
-#endif
+    ::strftime(date, 21, "%d-%b-%Y %H:%M", ::gmtime(&stat_.st_mtime));
     return date;
 }
 

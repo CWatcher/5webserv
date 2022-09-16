@@ -10,7 +10,7 @@
 
 #include <signal.h>
 
-int Server::poll_timeout = 30 * 1000;
+int Server::poll_timeout = -1;
 
 Server::Server(const char *filename): _config(filename)
 {
