@@ -72,7 +72,7 @@ void Server::mainLoopRun()
 
         if (new_events == -1UL)
         {
-            logger::error << "Server: poll: " << logger::cerror << logger::end;
+            logger::info << "Server: poll: " << logger::cerror << logger::end;
             continue ;
         }
 
