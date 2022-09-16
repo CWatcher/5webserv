@@ -4,6 +4,8 @@
 
 # include <netinet/in.h>
 
+# define BUFER_SIZE 8192
+
 namespace SocketState {
 enum _ {
     Read,

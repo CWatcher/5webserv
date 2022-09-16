@@ -27,7 +27,7 @@ void    SessionSocket::setStateToWrite()
 
 size_t  SessionSocket::readRequest()
 {
-    char	temp_buffer[8192];
+    char	temp_buffer[BUFER_SIZE];
     ssize_t	bytes_read;
 
     logger::debug << "Trying to read from socket " << _fd << logger::end;
