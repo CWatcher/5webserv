@@ -1,7 +1,6 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-// # include "utils/thread_pool.hpp"
 # include "config/ServerConfig.hpp"
 # include "sockets/ASocket.hpp"
 # include "sockets/SessionSocket.hpp"
@@ -17,9 +16,7 @@ public:
     explicit Server(const char *filename);
     ~Server();
 
-    void    mainLoopRun();
-
-    static int poll_timeout;
+    void        mainLoopRun();
 
 private:
     size_t      eventArrayPrepare(std::vector<pollfd> &poll_array) const;
@@ -31,7 +28,6 @@ private:
 private:
     ServerConfig             _config;
     std::map<int, ASocket *> _sockets;
-    // ft::thread_pool          _thread_pool;
 };
 
 #endif

@@ -10,8 +10,6 @@
 
 #include <signal.h>
 
-int Server::poll_timeout = -1;
-
 Server::Server(const char *filename): _config(filename)
 {
     std::map<in_addr_t, std::set<in_port_t> > listened = _config.getListened();
@@ -69,16 +67,12 @@ void Server::mainLoopRun()
         poll_array_len = eventArrayPrepare(poll_array);
 
         logger::debug << "Server: polling..." << logger::end;
-        new_events = poll(&poll_array[0], poll_array_len, poll_timeout);
+        new_events = poll(&poll_array[0], poll_array_len, -1);
         logger::debug << "Server: polling done!" << logger::end;
 
-        if (new_events <= 0)
+        if (new_events == -1UL)
         {
-            if (new_events == -1ul)
-                logger::error << "Server: poll: " << logger::cerror << logger::end;
-            else
-                logger::debug << "Server: no new events. Reached poll timeout (seconds): "
-                              << poll_timeout / 1000 << logger::end;
+            logger::error << "Server: poll: " << logger::cerror << logger::end;
             continue ;
         }
 
