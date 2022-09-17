@@ -30,6 +30,9 @@ bool    HTTPRequest::isRequestReceived()
         обновить body_size - размер собранного запроса
         убрать chuncked из заголовка добавить Content-Length = body_size
         **/
+        if (_raw_data.rfind("0\r\n\r\n") != std::string::npos)
+            return true;
+        return false;
     }
     else if (!content_length.empty())
     {
