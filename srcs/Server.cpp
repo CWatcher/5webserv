@@ -62,6 +62,7 @@ void Server::mainLoopRun()
 
     logger::info << "Server: entering main loop..." << logger::end;
     ::signal(SIGINT, stop_server);
+    ::signal(SIGPIPE, SIG_IGN);
     while (server_on)
     {
         poll_array_len = eventArrayPrepare(poll_array);
