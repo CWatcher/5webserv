@@ -6,13 +6,13 @@
 
 void    HTTPRequest::addData(const char* data, size_t n)
 {
-    _raw_data.append(data, n);
+    _buffer.append(data, n);
 
     if (_header.empty())
         fillHeaderMap();
 
     if (!_header.empty())
-        _body_size = _raw_data.size() - _header_size;
+        _body_size = _buffer.size() - _header_size;
 }
 
 bool    HTTPRequest::isRequestReceived()
@@ -26,11 +26,11 @@ bool    HTTPRequest::isRequestReceived()
     {
         /**
         собрать запрос из чанков
-        собранный запрос поместить в _raw_data после заголовка
+        собранный запрос поместить в _buffer после заголовка
         обновить body_size - размер собранного запроса
         убрать chuncked из заголовка добавить Content-Length = body_size
         **/
-        if (_raw_data.rfind("0\r\n\r\n") != std::string::npos)
+        if (_buffer.rfind("0\r\n\r\n") != std::string::npos)
             return true;
         return false;
     }
@@ -66,7 +66,7 @@ std::string HTTPRequest::getHeaderValue(const std::string &header_key) const
 
 void	HTTPRequest::fillHeaderMap()
 {
-    const size_t    header_end = _raw_data.find("\r\n\r\n");
+    const size_t    header_end = _buffer.find("\r\n\r\n");
 
     if (header_end != std::string::npos)
     {
@@ -81,7 +81,7 @@ void	HTTPRequest::fillHeaderMap()
 
 void HTTPRequest::parseStartLine()
 {
-    std::string _start_line = _raw_data.substr(0, _raw_data.find("\r\n"));
+    std::string _start_line = _buffer.substr(0, _buffer.find("\r\n"));
     size_t      delimiter_idx = _start_line.find(' ');
 
     _method = _start_line.substr(0, delimiter_idx);
@@ -95,16 +95,16 @@ void HTTPRequest::parseStartLine()
 
 void    HTTPRequest::parseHeader(size_t header_end)
 {
-    size_t  line_start = _raw_data.find('\n') + 1;
-    size_t  line_end = _raw_data.find('\n', line_start);
+    size_t  line_start = _buffer.find('\n') + 1;
+    size_t  line_end = _buffer.find('\n', line_start);
 
     while (line_start < header_end)
     {
-        std::string line = _raw_data.substr(line_start, line_end - line_start);
+        std::string line = _buffer.substr(line_start, line_end - line_start);
 
         parseHeaderLine(line);
         line_start = ++line_end;
-        line_end = _raw_data.find('\n', line_end);
+        line_end = _buffer.find('\n', line_end);
     }
 }
 

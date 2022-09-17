@@ -19,7 +19,7 @@ public:
     {
         buildHeader(status_line);
         if (body)
-            _raw_data.append(first, last);
+            _buffer.append(first, last);
     }
 
 private:

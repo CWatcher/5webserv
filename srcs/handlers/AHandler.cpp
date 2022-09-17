@@ -130,7 +130,7 @@ void    AHandler::makeResponse(HTTPResponse& response)
     }
 
     logger::info << "⬅️  "
-        << response.raw_data().substr(0, response.raw_data().find("\r\n")) \
+        << response.buffer().substr(0, response.buffer().find("\r\n")) \
         << logger::end;
 }
 

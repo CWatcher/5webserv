@@ -61,8 +61,8 @@ size_t  SessionSocket::readRequest()
 
 size_t  SessionSocket::sendResponse()
 {
-    const char		*start = _response.raw_data().data() + _written_total;
-    const size_t	left_to_write = _response.raw_data().size() - _written_total;
+    const char		*start = _response.buffer().data() + _written_total;
+    const size_t	left_to_write = _response.buffer().size() - _written_total;
     ssize_t			bytes_written;
 
     if (left_to_write == 0)
@@ -88,7 +88,7 @@ size_t  SessionSocket::sendResponse()
     else
     {
         _written_total += bytes_written;
-        if (_written_total == _response.raw_data().size())
+        if (_written_total == _response.buffer().size())
         {
             if (_request.getHeaderValue("Connection") == "close")
                 _state = SocketState::Disconnect;
