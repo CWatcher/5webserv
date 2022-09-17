@@ -4,6 +4,8 @@
 # include <string>
 # include <map>
 
+# define BUFER_SIZE 8192UL
+
 class HTTPMessage
 {
 public:

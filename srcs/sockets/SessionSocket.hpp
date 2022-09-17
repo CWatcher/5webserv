@@ -18,8 +18,8 @@ public:
     HTTPResponse    &response() {return _response;}
 
 private:
-    size_t          readRequest();
-    size_t          sendResponse();
+    void            read();
+    void            write();
 
 private:
     in_addr          _remote_addr;

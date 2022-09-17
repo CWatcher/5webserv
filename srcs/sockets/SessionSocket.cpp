@@ -1,4 +1,3 @@
-
 #include "sockets/SessionSocket.hpp"
 #include "utils/log.hpp"
 
@@ -13,9 +12,9 @@ SessionSocket::SessionSocket(int fd, in_addr_t from_listen_ip, in_port_t from_li
 int     SessionSocket::action(in_addr &)
 {
     if (_state == SocketState::Read)
-        readRequest();
+        read();
     else
-        sendResponse();
+        write();
     return -1;
 }
 
@@ -25,70 +24,31 @@ void    SessionSocket::setStateToWrite()
     _state = SocketState::Write;
 }
 
-size_t  SessionSocket::readRequest()
+void    SessionSocket::read()
 {
-    char	temp_buffer[BUFER_SIZE];
-    ssize_t	bytes_read;
-
     logger::debug << "Trying to read from socket " << _fd << logger::end;
-    bytes_read = recv(_fd, temp_buffer, sizeof(temp_buffer) - 1, MSG_NOSIGNAL | MSG_DONTWAIT);
-    if (bytes_read > 0)
+
+    try
     {
-        logger::debug << "Read from socket (bytes): " << bytes_read << logger::end;
-        try
+        if (_request.read(_fd))
         {
-            _request.addData(temp_buffer, bytes_read);
-            if (_request.isRequestReceived())
-            {
-                _state = SocketState::Handle;
-                logger::debug << "HTTPRequest received on socket " << _fd << logger::end;
-            }
-        }
-        catch (const std::exception &e)
-        {
-            logger::error << "HTTPRequest: " << e.what() << logger::end;
-            _state = SocketState::Disconnect;
+            _state = SocketState::Handle;
+            logger::debug << "HTTPRequest received on socket " << _fd << logger::end;
         }
     }
-	else
-	{
-		if (bytes_read == -1)
-			logger::error << "SessionSocket: recv: " << logger::cerror << logger::end;
+    catch (const std::exception& e)
+    {
         _state = SocketState::Disconnect;
-	}
-    return bytes_read;
+    }
 }
 
-size_t  SessionSocket::sendResponse()
+void    SessionSocket::write()
 {
-    const char		*start = _response.buffer().data() + _written_total;
-    const size_t	left_to_write = _response.buffer().size() - _written_total;
-    ssize_t			bytes_written;
+    logger::debug << "Trying to write to fd " << _fd << logger::end;
 
-    if (left_to_write == 0)
+    try
     {
-        // где-то в обработчике это должно быть, не должно такого случаться
-        const char *error = "HTTP/1.1 500\nContent-Length: 25\n\n500 Internal Server Error";
-
-        logger::warning << "sendResponse: Empty data to write to socket " << _fd << logger::end;
-        bytes_written = send(_fd, error, strlen(error), MSG_NOSIGNAL | MSG_DONTWAIT);
-        _request = HTTPRequest();
-        _state = SocketState::Read;
-        return bytes_written;
-    }
-
-    logger::debug << "Trying to write to socket " << _fd << logger::end;
-    bytes_written = send(_fd, start, left_to_write, MSG_NOSIGNAL | MSG_DONTWAIT);
-    logger::debug << "Written to socket (bytes): " << bytes_written << logger::end;
-
-    if (bytes_written == -1)
-        logger::error << "SessionSocket: send: " << logger::cerror << logger::end;
-    if (bytes_written <= 0)
-         _state = SocketState::Disconnect;
-    else
-    {
-        _written_total += bytes_written;
-        if (_written_total == _response.buffer().size())
+        if (_response.send(_fd))
         {
             if (_request.getHeaderValue("Connection") == "close")
                 _state = SocketState::Disconnect;
@@ -98,8 +58,9 @@ size_t  SessionSocket::sendResponse()
             _response = HTTPResponse();
             logger::debug << "HTTPResponse sent on socket " << _fd << logger::end;
         }
-        else
-            logger::debug << "HTTPResponse left to write (bytes): " << left_to_write - bytes_written << logger::end;
     }
-    return bytes_written;
+    catch(const std::exception& e)
+    {
+        _state = SocketState::Disconnect;
+    }
 }

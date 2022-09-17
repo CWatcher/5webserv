@@ -3,16 +3,31 @@
 #include "utils/string.hpp"
 
 #include <sstream>
+#include <sys/socket.h>
 
-void    HTTPRequest::addData(const char* data, size_t n)
+bool    HTTPRequest::read(int fd)
 {
-    _buffer.append(data, n);
+    char    data_buffer[BUFER_SIZE];
+    ssize_t r;
 
+    r = recv(fd, data_buffer, sizeof(data_buffer), MSG_NOSIGNAL | MSG_DONTWAIT);
+
+    if (r == 0)
+        throw std::exception();
+    if (r == -1)
+    {
+        logger::error << "fd=" << fd << " recv: " << logger::cerror << logger::end;
+        throw std::exception();
+    }
+
+    logger::debug << "Read " << r << " bytes from " << fd << logger::end;
+    _buffer.append(data_buffer, r);
     if (_header.empty())
         fillHeaderMap();
-
     if (!_header.empty())
         _body_size = _buffer.size() - _header_size;
+
+    return isRequestReceived();
 }
 
 bool    HTTPRequest::isRequestReceived()
@@ -73,10 +88,10 @@ void	HTTPRequest::fillHeaderMap()
         _header_size = header_end + 4;
         parseStartLine();
         parseHeader(header_end);
-        logger::debug << "HTTPRequest:" << "HTTP request header found" << logger::end;
+        logger::debug << "HTTPRequest: request header found" << logger::end;
     }
     else
-        logger::debug << "HTTPRequest:" << "HTTP request header not found yet" << logger::end;
+        logger::debug << "HTTPRequest: request header not found yet" << logger::end;
 }
 
 void HTTPRequest::parseStartLine()

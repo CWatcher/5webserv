@@ -1,5 +1,6 @@
 #include "handlers/GetHandler.hpp"
 
+#include <iterator>
 #include <dirent.h>
 
 void GetHandler::handle(HTTPResponse &response)

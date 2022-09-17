@@ -1,6 +1,9 @@
 #include "HTTPResponse.hpp"
+#include "utils/log.hpp"
 
 #include <sstream>
+#include <sys/socket.h>
+#include <algorithm>
 
 static const std::pair<std::string, std::string> types_init_list[] =
 {
@@ -19,10 +22,34 @@ static const std::pair<std::string, std::string> types_init_list[] =
 
 const std::map<std::string, std::string>    HTTPResponse::_mime_type(types_init_list, types_init_list + sizeof(types_init_list) / sizeof(types_init_list[0]));
 
-HTTPResponse::HTTPResponse() : HTTPMessage()
+HTTPResponse::HTTPResponse() : HTTPMessage(), _bytes_sent(0)
 {
     _header["Server"] = "webserv";
     _header["Connection"] = "keep-alive";
+}
+
+bool    HTTPResponse::send(int fd)
+{
+    const char		*start = _buffer.data() + _bytes_sent;
+    const size_t	left_to_write = _buffer.size() - _bytes_sent;
+    ssize_t			s;
+
+    s = ::send(fd, start, std::min(BUFER_SIZE, left_to_write), MSG_NOSIGNAL | MSG_DONTWAIT);
+
+    if (s == 0)
+        throw std::exception();
+    if (s == -1)
+    {
+        logger::error << "fd=" << fd << " send: " << logger::cerror << logger::end;
+        throw std::exception();
+    }
+
+    logger::debug << "Bytes written: " << s << logger::end;
+    _bytes_sent += s;
+    if (_bytes_sent == _buffer.size())
+        return true;
+    logger::debug << "Left to write: " << _buffer.size() - _bytes_sent << logger::end;
+    return false;
 }
 
 void    HTTPResponse::buildHeader(const std::string& status_line)

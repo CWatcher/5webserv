@@ -3,6 +3,7 @@
 #include "utils/log.hpp"
 
 #include <sstream>
+#include <iterator>
 
 static const std::pair<HTTPStatus::_, std::string>    http_status_init_list[] =
 {
