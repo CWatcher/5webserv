@@ -31,7 +31,7 @@ private:
     void                parseStartLine();
     void                parseHeader(size_t header_end);
     void                parseHeaderLine(const std::string &line);
-    bool                unchunk();
+    bool                dechunk();
 
 private:
     static const std::string    terminator;

@@ -25,7 +25,7 @@ bool    HTTPRequest::isRequestReceived()
     std::string content_length = getHeaderValue("Content-Length");
     std::string transfer_encoding = getHeaderValue("Transfer-Encoding");
     if (transfer_encoding.find("chunked") != std::string::npos)
-        return unchunk();
+        return dechunk();
         /**
         обновить body_size - размер собранного запроса
         убрать chuncked из заголовка добавить Content-Length = body_size
@@ -150,9 +150,8 @@ std::string HTTPRequest::getHeaderParameter(const std::string& key, const std::s
     return "";
 }
 
-bool HTTPRequest::unchunk()
+bool    HTTPRequest::dechunk()
 {
-
     while (_chunk_pos < _raw_data.size())
     {
         if (_chunk_size == std::numeric_limits<std::size_t>::max())
