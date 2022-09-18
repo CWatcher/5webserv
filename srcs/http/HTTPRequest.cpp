@@ -16,11 +16,11 @@ bool    HTTPRequest::read(int fd)
         throw std::exception();
     if (r == -1)
     {
-        logger::error << "fd=" << fd << " recv: " << logger::cerror << logger::end;
+        logger::error << "HTTPRequest: recv: " << logger::cerror << logger::end;
         throw std::exception();
     }
 
-    logger::debug << "Read " << r << " bytes from " << fd << logger::end;
+    logger::debug << "HTTPRequest: read " << r << " bytes from " << fd << logger::end;
     _buffer.append(data_buffer, r);
     if (_header.empty())
         fillHeaderMap();

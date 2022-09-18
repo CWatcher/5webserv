@@ -9,6 +9,7 @@ public:
     HTTPResponse();
 
     bool    send(int fd);
+    bool    isReady() const {return _bytes_sent;}
     void    addHeader(const std::string &key, const std::string &value) {_header[key] = value;}
     void    setContentType(const std::string &file_type);
     void    setContentLength(size_t n);
@@ -26,6 +27,7 @@ private:
 
 private:
     size_t  _bytes_sent;
+    bool    _ready;
 
 private:
     static const std::map<std::string, std::string> _mime_type;

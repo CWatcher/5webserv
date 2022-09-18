@@ -22,7 +22,7 @@ static const std::pair<std::string, std::string> types_init_list[] =
 
 const std::map<std::string, std::string>    HTTPResponse::_mime_type(types_init_list, types_init_list + sizeof(types_init_list) / sizeof(types_init_list[0]));
 
-HTTPResponse::HTTPResponse() : HTTPMessage(), _bytes_sent(0)
+HTTPResponse::HTTPResponse() : HTTPMessage(), _bytes_sent(0), _ready(false)
 {
     _header["Server"] = "webserv";
     _header["Connection"] = "keep-alive";
@@ -40,15 +40,15 @@ bool    HTTPResponse::send(int fd)
         throw std::exception();
     if (s == -1)
     {
-        logger::error << "fd=" << fd << " send: " << logger::cerror << logger::end;
+        logger::error << "HTTPResponse: send: " << logger::cerror << logger::end;
         throw std::exception();
     }
 
-    logger::debug << "Bytes written: " << s << logger::end;
+    logger::debug << "HTTPResponse: bytes written: " << s << " to " << fd << logger::end;
     _bytes_sent += s;
     if (_bytes_sent == _buffer.size())
         return true;
-    logger::debug << "Left to write: " << _buffer.size() - _bytes_sent << logger::end;
+    logger::debug << "HTTPResponse: left to write: " << _buffer.size() - _bytes_sent << logger::end;
     return false;
 }
 
