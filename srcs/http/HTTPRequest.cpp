@@ -177,11 +177,9 @@ bool HTTPRequest::unchunk()
         }
         else
         {
-            if (_raw_data.size() - _chunk_pos < _chunk_size)
+            if (_raw_data.size() < _chunk_pos + _chunk_size + terminator.size())
                 return false;
             _chunk_pos += _chunk_size;
-            if (_raw_data.size() - _chunk_pos < terminator.size())
-                return false;
             if (_raw_data.substr(_chunk_pos, terminator.size()) != terminator)
                 //TODO check where it is caught
                 throw (std::runtime_error(std::string("bad chunk terminator")));
