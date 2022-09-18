@@ -161,8 +161,7 @@ bool    HTTPRequest::dechunk()
                 return false;
             std::stringstream converter(_raw_data.substr(_chunk_pos, end - _chunk_pos));
             converter >> std::hex >> _chunk_size;
-            if (converter.fail())
-                //TODO check where it is caught
+            if (!converter || !converter.eof())
                 throw (std::runtime_error(std::string("bad chunk size")));
             _raw_data.erase(_chunk_pos, end + terminator.size() - _chunk_pos);
         }
@@ -172,7 +171,6 @@ bool    HTTPRequest::dechunk()
                 return false;
             _chunk_pos += _chunk_size;
             if (_raw_data.substr(_chunk_pos, terminator.size()) != terminator)
-                //TODO check where it is caught
                 throw (std::runtime_error(std::string("bad chunk terminator")));
             _raw_data.erase(_chunk_pos, terminator.size());
             _chunk_size = std::numeric_limits<std::size_t>::max();
