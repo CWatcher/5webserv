@@ -4,7 +4,7 @@
 
 #include <sstream>
 
-const std::string	HTTPRequest::terminator("\r\n");
+const std::string    HTTPRequest::terminator("\r\n");
 
 void    HTTPRequest::addData(const char* data, size_t n)
 {
@@ -25,15 +25,11 @@ bool    HTTPRequest::isRequestReceived()
     std::string content_length = getHeaderValue("Content-Length");
     std::string transfer_encoding = getHeaderValue("Transfer-Encoding");
     if (transfer_encoding.find("chunked") != std::string::npos)
-    {
+        return unchunk();
         /**
-        собрать запрос из чанков
-        собранный запрос поместить в _raw_data после заголовка
         обновить body_size - размер собранного запроса
         убрать chuncked из заголовка добавить Content-Length = body_size
         **/
-		return unchunk();
-    }
     else if (!content_length.empty())
     {
         std::stringstream converter(content_length);
@@ -64,14 +60,14 @@ std::string HTTPRequest::getHeaderValue(const std::string &header_key) const
         return "";
 }
 
-void	HTTPRequest::fillHeaderMap()
+void    HTTPRequest::fillHeaderMap()
 {
     const size_t    header_end = _raw_data.find("\r\n\r\n");
 
     if (header_end != std::string::npos)
     {
         _header_size = header_end + 4;
-		_chunk_pos = _header_size;
+        _chunk_pos = _header_size;
         parseStartLine();
         parseHeader(header_end);
         logger::debug << "HTTPRequest:" << "HTTP request header found" << logger::end;
@@ -80,7 +76,7 @@ void	HTTPRequest::fillHeaderMap()
         logger::debug << "HTTPRequest:" << "HTTP request header not found yet" << logger::end;
 }
 
-void HTTPRequest::parseStartLine()
+void    HTTPRequest::parseStartLine()
 {
     std::string _start_line = _raw_data.substr(0, _raw_data.find("\r\n"));
     size_t      delimiter_idx = _start_line.find(' ');
@@ -157,41 +153,41 @@ std::string HTTPRequest::getHeaderParameter(const std::string& key, const std::s
 bool HTTPRequest::unchunk()
 {
 
-	while (_chunk_pos < _raw_data.size())
-	{
-	   	if (_chunk_size == std::numeric_limits<std::size_t>::max())
-		{
-			size_t end  = _raw_data.find(terminator, _chunk_pos);
-			if (end == std::string::npos)
-				return false;
-			std::stringstream converter(_raw_data.substr(_chunk_pos, end - _chunk_pos));
-			converter >> std::hex >> _chunk_size;
-			if (converter.fail())
-			//TODO check where it is caught
-				throw (std::runtime_error(std::string("bad chunk size")));
-			_raw_data.erase(_chunk_pos, end + terminator.size() - _chunk_pos);
-		}
-		else if(_chunk_size == 0)
-		{
-			size_t end  = _raw_data.find(terminator, _chunk_pos);
-			if (end == std::string::npos)
-				return false;
-			_raw_data.erase(_chunk_pos);
-			return true;
-		}
-		else
-		{
-			if (_raw_data.size() - _chunk_pos < _chunk_size)
-				return false;
-			_chunk_pos += _chunk_size;
-			if (_raw_data.size() - _chunk_pos < terminator.size())
-				return false;
-			if (_raw_data.substr(_chunk_pos, terminator.size()) != terminator)
-				//TODO check where it is caught
-				throw (std::runtime_error(std::string("bad chunk terminator")));
-			_raw_data.erase(_chunk_pos, terminator.size());
-			_chunk_size = std::numeric_limits<std::size_t>::max();
-		}
-	}
-	return false;
+    while (_chunk_pos < _raw_data.size())
+    {
+        if (_chunk_size == std::numeric_limits<std::size_t>::max())
+        {
+            size_t end  = _raw_data.find(terminator, _chunk_pos);
+            if (end == std::string::npos)
+                return false;
+            std::stringstream converter(_raw_data.substr(_chunk_pos, end - _chunk_pos));
+            converter >> std::hex >> _chunk_size;
+            if (converter.fail())
+            //TODO check where it is caught
+                throw (std::runtime_error(std::string("bad chunk size")));
+            _raw_data.erase(_chunk_pos, end + terminator.size() - _chunk_pos);
+        }
+        else if(_chunk_size == 0)
+        {
+            size_t end  = _raw_data.find(terminator, _chunk_pos);
+            if (end == std::string::npos)
+                return false;
+            _raw_data.erase(_chunk_pos);
+            return true;
+        }
+        else
+        {
+            if (_raw_data.size() - _chunk_pos < _chunk_size)
+                return false;
+            _chunk_pos += _chunk_size;
+            if (_raw_data.size() - _chunk_pos < terminator.size())
+                return false;
+            if (_raw_data.substr(_chunk_pos, terminator.size()) != terminator)
+                //TODO check where it is caught
+                throw (std::runtime_error(std::string("bad chunk terminator")));
+            _raw_data.erase(_chunk_pos, terminator.size());
+            _chunk_size = std::numeric_limits<std::size_t>::max();
+        }
+    }
+    return false;
 }
