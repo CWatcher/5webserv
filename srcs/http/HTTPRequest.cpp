@@ -163,19 +163,11 @@ bool HTTPRequest::unchunk()
             std::stringstream converter(_raw_data.substr(_chunk_pos, end - _chunk_pos));
             converter >> std::hex >> _chunk_size;
             if (converter.fail())
-            //TODO check where it is caught
+                //TODO check where it is caught
                 throw (std::runtime_error(std::string("bad chunk size")));
             _raw_data.erase(_chunk_pos, end + terminator.size() - _chunk_pos);
         }
-        else if(_chunk_size == 0)
-        {
-            size_t end  = _raw_data.find(terminator, _chunk_pos);
-            if (end == std::string::npos)
-                return false;
-            _raw_data.erase(_chunk_pos);
-            return true;
-        }
-        else
+        if (_chunk_size > 0)
         {
             if (_raw_data.size() < _chunk_pos + _chunk_size + terminator.size())
                 return false;
@@ -185,6 +177,14 @@ bool HTTPRequest::unchunk()
                 throw (std::runtime_error(std::string("bad chunk terminator")));
             _raw_data.erase(_chunk_pos, terminator.size());
             _chunk_size = std::numeric_limits<std::size_t>::max();
+        }
+        else if (_chunk_size == 0)
+        {
+            size_t end  = _raw_data.find(terminator, _chunk_pos);
+            if (end == std::string::npos)
+                return false;
+            _raw_data.erase(_chunk_pos);
+            return true;
         }
     }
     return false;
