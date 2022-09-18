@@ -159,44 +159,39 @@ bool HTTPRequest::unchunk()
 
 	while (_chunk_pos < _raw_data.size())
 	{
-	   switch (_chunk_size)
-	   {
-			case SIZE_MAX:
-			{
-				size_t end  = _raw_data.find(terminator, _chunk_pos);
-				if (end == std::string::npos)
-					return false;
-				std::stringstream converter(_raw_data.substr(_chunk_pos, end - _chunk_pos));
-				converter >> std::hex >> _chunk_size;
-				if (converter.fail())
+	   	if (_chunk_size == std::numeric_limits<std::size_t>::max())
+		{
+			size_t end  = _raw_data.find(terminator, _chunk_pos);
+			if (end == std::string::npos)
+				return false;
+			std::stringstream converter(_raw_data.substr(_chunk_pos, end - _chunk_pos));
+			converter >> std::hex >> _chunk_size;
+			if (converter.fail())
+			//TODO check where it is caught
+				throw (std::runtime_error(std::string("bad chunk size")));
+			_raw_data.erase(_chunk_pos, end + terminator.size() - _chunk_pos);
+		}
+		else if(_chunk_size == 0)
+		{
+			size_t end  = _raw_data.find(terminator, _chunk_pos);
+			if (end == std::string::npos)
+				return false;
+			_raw_data.erase(_chunk_pos);
+			return true;
+		}
+		else
+		{
+			if (_raw_data.size() - _chunk_pos < _chunk_size)
+				return false;
+			_chunk_pos += _chunk_size;
+			if (_raw_data.size() - _chunk_pos < terminator.size())
+				return false;
+			if (_raw_data.substr(_chunk_pos, terminator.size()) != terminator)
 				//TODO check where it is caught
-					throw (std::runtime_error(std::string("bad chunk size")));
-				_raw_data.erase(_chunk_pos, end + terminator.size() - _chunk_pos);
-				break;
-			}
-			case 0:
-			{
-				size_t end  = _raw_data.find(terminator, _chunk_pos);
-				if (end == std::string::npos)
-					return false;
-				_raw_data.erase(_chunk_pos);
-				return true;
-				break;
-			}
-			default:
-			{
-				if (_raw_data.size() - _chunk_pos < _chunk_size)
-					return false;
-				_chunk_pos += _chunk_size;
-				if (_raw_data.size() - _chunk_pos < terminator.size())
-					return false;
-				if (_raw_data.substr(_chunk_pos, terminator.size()) != terminator)
-					//TODO check where it is caught
-					throw (std::runtime_error(std::string("bad chunk terminator")));
-				_raw_data.erase(_chunk_pos, terminator.size());
-				_chunk_size = std::numeric_limits<std::size_t>::max();
-			}
-	   }
+				throw (std::runtime_error(std::string("bad chunk terminator")));
+			_raw_data.erase(_chunk_pos, terminator.size());
+			_chunk_size = std::numeric_limits<std::size_t>::max();
+		}
 	}
 	return false;
 }

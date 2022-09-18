@@ -4,14 +4,13 @@
 # include "HTTPMessage.hpp"
 # include "config/VirtualServer.hpp"
 
-# include <stdint.h> // SIZE_MAX
-
 class HTTPRequest : public HTTPMessage
 {
 	enum ChunkPart {chunk_size, chunk_data};
 public:
     // HTTPRequest() : _method(), _uri(), _header_size(0), _body_size(0), _chunk_size(SIZE_MAX), _chunk_part(chunk_size) {}
-    HTTPRequest() : _method(), _uri(), _header_size(0), _body_size(0), _chunk_size(SIZE_MAX) {}
+    HTTPRequest() : _method(), _uri(), _header_size(0), _body_size(0),
+	_chunk_size(std::numeric_limits<std::size_t>::max()) {}
 
     void                addData(const char* data, size_t n);
 
