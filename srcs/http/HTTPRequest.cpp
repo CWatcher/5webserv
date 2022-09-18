@@ -37,10 +37,7 @@ bool    HTTPRequest::isRequestReceived()
 
         converter >> length;
         if (!converter.eof())
-        {
-            logger::error << "HTTPRequest: Content-Length bad value" << logger::end;
-            throw std::exception();
-        }
+            throw std::runtime_error(std::string("HTTPRequest: Content-Length bad value"));
         if (length > _body_size)
             return false;
         return true;
