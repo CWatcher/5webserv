@@ -24,12 +24,21 @@ bool    HTTPRequest::isRequestReceived()
 
     std::string content_length = getHeaderValue("Content-Length");
     std::string transfer_encoding = getHeaderValue("Transfer-Encoding");
-    if (transfer_encoding.find("chunked") != std::string::npos)
-        return dechunk();
-        /**
-        обновить body_size - размер собранного запроса
-        убрать chuncked из заголовка добавить Content-Length = body_size
-        **/
+    std::string chanked_encoding = "chunked";
+    if (transfer_encoding.find(chanked_encoding) != std::string::npos)
+    {
+        if (!dechunk())
+            return false;
+        _body_size = _raw_data.size() - _header_size;
+        transfer_encoding.erase(transfer_encoding.find(chanked_encoding), chanked_encoding.size());
+        strRemoveDoubled(transfer_encoding, ' ');
+        if (transfer_encoding.size() == 0)
+            _header.erase("Transfer-Encoding");
+        else
+            _header["Transfer-Encoding"] = transfer_encoding;
+        _header["Content-Length"] = _body_size; //TO_TEST
+        return true;
+    }
     else if (!content_length.empty())
     {
         std::stringstream converter(content_length);
