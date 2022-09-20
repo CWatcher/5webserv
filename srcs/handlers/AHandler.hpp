@@ -12,9 +12,9 @@ public:
     AHandler(const Location& loc, const HTTPRequest& req);
     virtual ~AHandler() {}
     void                makeResponse(HTTPResponse& response);
+    virtual void        handle(HTTPResponse& response) = 0;
 
 protected:
-    virtual void        handle(HTTPResponse& response) = 0;
     void                error(HTTPStatus::_ status, HTTPResponse& response);
     void                redirect(HTTPResponse& response);
 

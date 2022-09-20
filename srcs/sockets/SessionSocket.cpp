@@ -6,7 +6,7 @@
 SessionSocket::SessionSocket(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port, const in_addr &remote_addr) :
     ASocket(fd, from_listen_ip, from_listen_port),
     _remote_addr(remote_addr),
-    _written_total(0)
+    _handler(NULL)
 {}
 
 int     SessionSocket::action(in_addr &)
@@ -16,12 +16,6 @@ int     SessionSocket::action(in_addr &)
     else
         write();
     return -1;
-}
-
-void    SessionSocket::setStateToWrite()
-{
-    _written_total = 0;
-    _state = SocketState::Write;
 }
 
 void    SessionSocket::read()
@@ -44,8 +38,13 @@ void    SessionSocket::read()
 
 void    SessionSocket::write()
 {
-    logger::debug << "Trying to write to fd " << _fd << logger::end;
+    if (!_response.isReady())
+    {
+        _handler->handle(_response);
+        return;
+    }
 
+    logger::debug << "Trying to write to fd " << _fd << logger::end;
     try
     {
         if (_response.send(_fd))
@@ -56,6 +55,8 @@ void    SessionSocket::write()
                 _state = SocketState::Read;
             _request = HTTPRequest();
             _response = HTTPResponse();
+            delete _handler;
+            _handler = NULL;
             logger::debug << "HTTPResponse sent on socket " << _fd << logger::end;
         }
     }

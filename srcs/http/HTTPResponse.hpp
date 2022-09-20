@@ -9,7 +9,7 @@ public:
     HTTPResponse();
 
     bool    send(int fd);
-    bool    isReady() const {return _bytes_sent;}
+    bool    isReady() const {return _ready;}
     void    addHeader(const std::string &key, const std::string &value) {_header[key] = value;}
     void    setContentType(const std::string &file_type);
     void    setContentLength(size_t n);
@@ -20,6 +20,7 @@ public:
         buildHeader(status_line);
         if (body)
             _buffer.append(first, last);
+        _ready = true;
     }
 
 private:

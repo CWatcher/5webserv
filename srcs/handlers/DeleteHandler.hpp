@@ -8,7 +8,6 @@ class DeleteHandler : public AHandler
 public:
     DeleteHandler(const Location& loc, const HTTPRequest& req) : AHandler(loc, req) {}
 
-private:
     virtual void    handle(HTTPResponse& response);
 };
 

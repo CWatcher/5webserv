@@ -14,15 +14,26 @@
 
 ACgiHandler::ACgiHandler(const Location& loc, const HTTPRequest& req, in_addr_t s_ip, in_port_t s_port, const in_addr& remote_addr) :
     AHandler(loc, req),
+    file_info_(location_.root + pure_uri_),
     server_ip_(s_ip),
     server_port_(s_port),
     remote_addr_(remote_addr),
-    file_info_(location_.root + pure_uri_)
+    cgi_pid_(0)
 {
     std::map<std::string, std::string>::const_iterator  cgi = location_.cgi.find(file_info_.type());
 
     if (cgi != location_.cgi.end())
         cgi_path_ = cgi->second;
+}
+
+ACgiHandler::~ACgiHandler()
+{
+    if (cgi_pid_ == 0)
+        return;
+    ::close(cgi_in_pipe_[0]);
+    ::close(cgi_in_pipe_[1]);
+    ::kill(cgi_pid_, SIGKILL);
+    ::waitpid(cgi_pid_, NULL, 0);
 }
 
 void    ACgiHandler::cgi(HTTPResponse& response) const
