@@ -158,8 +158,7 @@ std::string HTTPRequest::getHeaderParameter(const std::string& key, const std::s
 
 bool    HTTPRequest::dechunk()
 {
-    while (_chunk_pos < _raw_data.size())
-    {
+    while (_chunk_size != 0)
         if (_chunk_size == std::numeric_limits<std::size_t>::max())
         {
             size_t end  = _raw_data.find(terminator, _chunk_pos);
@@ -171,7 +170,7 @@ bool    HTTPRequest::dechunk()
                 throw (std::runtime_error(std::string("bad chunk size")));
             _raw_data.erase(_chunk_pos, end + terminator.size() - _chunk_pos);
         }
-        if (_chunk_size > 0)
+        else
         {
             if (_raw_data.size() < _chunk_pos + _chunk_size + terminator.size())
                 return false;
@@ -181,14 +180,8 @@ bool    HTTPRequest::dechunk()
             _raw_data.erase(_chunk_pos, terminator.size());
             _chunk_size = std::numeric_limits<std::size_t>::max();
         }
-        else if (_chunk_size == 0)
-        {
-            size_t end  = _raw_data.find(terminator, _chunk_pos);
-            if (end == std::string::npos)
-                return false;
-            _raw_data.erase(_chunk_pos);
-            return true;
-        }
-    }
-    return false;
+    if (_raw_data.find(terminator, _chunk_pos) == std::string::npos)
+        return false;
+    _raw_data.erase(_chunk_pos);
+    return true;
 }
