@@ -33,7 +33,7 @@ size_t  SessionSocket::readRequest()
     ssize_t	bytes_read;
 
     logger::debug << "Trying to read from socket " << _fd << logger::end;
-    bytes_read = recv(_fd, temp_buffer, sizeof(temp_buffer) - 1, MSG_NOSIGNAL | MSG_DONTWAIT);
+    bytes_read = recv(_fd, temp_buffer, sizeof(temp_buffer), MSG_NOSIGNAL | MSG_DONTWAIT);
     if (bytes_read > 0)
     {
         logger::debug << "Read from socket (bytes): " << bytes_read << logger::end;
