@@ -7,7 +7,8 @@
 class HTTPRequest : public HTTPMessage
 {
 public:
-    HTTPRequest() : _method(), _uri(), _header_size(0), _body_size(0) {}
+    HTTPRequest() : _method(), _uri(), _header_size(0), _body_size(0),
+                    _chunk_size(std::numeric_limits<std::size_t>::max()) {}
 
     void                addData(const char* data, size_t n);
 
@@ -30,12 +31,18 @@ private:
     void                parseStartLine();
     void                parseHeader(size_t header_end);
     void                parseHeaderLine(const std::string &line);
+    bool                dechunk();
 
 private:
+    static const std::string    terminator;
+
     std::string     _method;
     std::string     _uri;
     std::string     _http;
     size_t          _header_size;
     size_t          _body_size;
+    size_t          _chunk_size;
+    size_t          _chunk_pos;
 };
+
 # endif
