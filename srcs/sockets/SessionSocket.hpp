@@ -22,6 +22,8 @@ private:
     size_t          sendResponse();
 
 private:
+    static const unsigned   BUFFER_SIZE;
+
     in_addr          _remote_addr;
     size_t           _written_total;
     HTTPRequest      _request;

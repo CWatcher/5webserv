@@ -4,6 +4,8 @@
 
 #include <sys/socket.h>
 
+const unsigned SessionSocket::BUFFER_SIZE = 8192;
+
 SessionSocket::SessionSocket(int fd, in_addr_t from_listen_ip, in_port_t from_listen_port, const in_addr &remote_addr) :
     ASocket(fd, from_listen_ip, from_listen_port),
     _remote_addr(remote_addr),
@@ -27,7 +29,7 @@ void    SessionSocket::setStateToWrite()
 
 size_t  SessionSocket::readRequest()
 {
-    char	temp_buffer[BUFER_SIZE];
+    char	temp_buffer[BUFFER_SIZE];
     ssize_t	bytes_read;
 
     logger::debug << "Trying to read from socket " << _fd << logger::end;
