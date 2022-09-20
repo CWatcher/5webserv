@@ -11,6 +11,7 @@ class AHandler
 public:
     AHandler(const Location& loc, const HTTPRequest& req);
     virtual ~AHandler() {}
+
     void                makeResponse(HTTPResponse& response);
     virtual void        handle(HTTPResponse& response) = 0;
 

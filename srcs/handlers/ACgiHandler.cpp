@@ -11,72 +11,67 @@
 #include <sys/wait.h>
 #include <sys/mman.h>
 #include <climits>
+#include <fcntl.h>
 
 ACgiHandler::ACgiHandler(const Location& loc, const HTTPRequest& req, in_addr_t s_ip, in_port_t s_port, const in_addr& remote_addr) :
     AHandler(loc, req),
     file_info_(location_.root + pure_uri_),
+    cgi_pid_(0),
     server_ip_(s_ip),
     server_port_(s_port),
     remote_addr_(remote_addr),
-    cgi_pid_(0)
+    cgi_out_file_(NULL)
 {
     std::map<std::string, std::string>::const_iterator  cgi = location_.cgi.find(file_info_.type());
 
     if (cgi != location_.cgi.end())
         cgi_path_ = cgi->second;
+    cgi_in_pipe_[0] = cgi_in_pipe_[1] = -1;
 }
 
 ACgiHandler::~ACgiHandler()
 {
-    if (cgi_pid_ == 0)
-        return;
     ::close(cgi_in_pipe_[0]);
     ::close(cgi_in_pipe_[1]);
-    ::kill(cgi_pid_, SIGKILL);
-    ::waitpid(cgi_pid_, NULL, 0);
+    if (cgi_out_file_ != NULL)
+        ::fclose(cgi_out_file_);
+    if (cgi_pid_ != 0)
+    {
+        ::kill(cgi_pid_, SIGKILL);
+        ::waitpid(cgi_pid_, NULL, 0);
+    }
 }
 
-void    ACgiHandler::cgi(HTTPResponse& response) const
+void    ACgiHandler::runCgi(HTTPResponse& response)
 {
-    pid_t                       cgi_pid;
-    FILE*                       cgi_out_file = ::tmpfile();
-    int                         cgi_in_pipe[2];
-
-    if (cgi_out_file == NULL)
+    cgi_out_file_ = ::tmpfile();
+    if (cgi_out_file_ == NULL)
         throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
 
-    if (request_.method() == "POST" && ::pipe(cgi_in_pipe))
-    {
-        fclose(cgi_out_file);
+    if (request_.method() == "POST" && (::pipe(cgi_in_pipe_) || ::fcntl(cgi_in_pipe_[1], F_SETFL, O_NONBLOCK) == -1))
         throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
-    }
 
-    cgi_pid = ::fork();
-    if (cgi_pid == -1)
-    {
-        ::fclose(cgi_out_file);
-        ::close(cgi_in_pipe[0]);
-        ::close(cgi_in_pipe[1]);
+    cgi_pid_ = ::fork();
+    if (cgi_pid_ == -1)
         throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
-    }
-    else if (cgi_pid == 0)
-        runCgi(cgi_out_file, cgi_in_pipe);
+    else if (cgi_pid_ == 0)
+        forkCgi();
     else
-        waitCgi(cgi_pid, cgi_out_file, cgi_in_pipe, response);
+        parentCgi(response);
 }
 
-void    ACgiHandler::runCgi(FILE* cgi_out_file, int cgi_in_pipe[2]) const
+void    ACgiHandler::forkCgi() const
 {
     std::vector<char*>  envp;
     std::vector<char*>  argv;
 
-    if (::dup2(::fileno(cgi_out_file), STDOUT_FILENO) == -1)
+    if (::dup2(::fileno(cgi_out_file_), STDOUT_FILENO) == -1)
         ::raise(SIGKILL);
-    ::fclose(cgi_out_file);
-    if (request_.method() == "POST" && ::dup2(cgi_in_pipe[0], STDIN_FILENO))
+    ::fclose(cgi_out_file_);
+    if (request_.method() == "POST" && ::dup2(cgi_in_pipe_[0], STDIN_FILENO))
         ::raise(SIGKILL);
-    ::close(cgi_in_pipe[0]);
-    ::close(cgi_in_pipe[1]);
+    ::close(cgi_in_pipe_[0]);
+    ::close(cgi_in_pipe_[1]);
 
     makeCgiEnv(envp);
     argv.push_back(::strdup(cgi_path_.c_str()));
@@ -153,7 +148,7 @@ void    ACgiHandler::makeCgiEnv(std::vector<char*>& envp) const
     envp.push_back(NULL);
 }
 
-void    ACgiHandler::waitCgi(pid_t cgi_pid, FILE* cgi_out_file, int cgi_in_pipe[2], HTTPResponse& response) const
+void    ACgiHandler::parentCgi(HTTPResponse& response) const
 {
     int         status;
     char        *cgi_data;
@@ -161,31 +156,27 @@ void    ACgiHandler::waitCgi(pid_t cgi_pid, FILE* cgi_out_file, int cgi_in_pipe[
 
     if (request_.method() == "POST")
     {
-        FILE*   cgi_in_file = ::fdopen(cgi_in_pipe[1], "w");
+        static size_t   bytes_sent = 0;
+        ssize_t         w;
 
-        if (cgi_in_file == NULL)
-        {
-            close(cgi_in_pipe[0]);
-            close(cgi_in_pipe[1]);
-            fclose(cgi_out_file);
-            throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
-        }
-        fwrite(request_.body(), sizeof(char), request_.body_size(), cgi_in_file);
-        fclose(cgi_in_file);
-        close(cgi_in_pipe[1]);
+        w = ::write(cgi_in_pipe_[1], request_.body() + bytes_sent, std::min(BUFER_SIZE, request_.body_size() - bytes_sent));
+        if (w == -1)
+            throw HTTPError(HTTPStatus::BAD_GATEWAY);
+        bytes_sent += w;
+        if (bytes_sent != request_.body_size())
+            return;
     }
+    ::close(cgi_in_pipe_[1]);
 
-    ::waitpid(cgi_pid, &status, 0);
+    ::waitpid(cgi_pid_, &status, 0);
     if (!WIFEXITED(status))
     {
-        fclose(cgi_out_file);
+        ::fclose(cgi_out_file_);
         throw HTTPError(HTTPStatus::BAD_GATEWAY);
     }
 
-    ::fflush(cgi_out_file);
-    ::fstat(::fileno(cgi_out_file), &cgi_stat);
-    cgi_data = reinterpret_cast<char *>(::mmap(NULL, cgi_stat.st_size, PROT_READ, MAP_SHARED, fileno(cgi_out_file), 0));
-    ::fclose(cgi_out_file);
+    ::fstat(::fileno(cgi_out_file_), &cgi_stat);
+    cgi_data = reinterpret_cast<char *>(::mmap(NULL, cgi_stat.st_size, PROT_READ, MAP_SHARED, fileno(cgi_out_file_), 0));
     if (cgi_data == NULL)
         throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
     makeCgiResponse(cgi_data, cgi_stat.st_size, response);
