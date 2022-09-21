@@ -22,11 +22,6 @@ public:
 
     friend std::ostream&                                operator<<(std::ostream& o, const ServerConfig& config);
 
-    class bad_config : public std::runtime_error
-    {
-    public:
-        bad_config(const std::string& msg) : std::runtime_error(msg) {}
-    };
 private:
     void                        parseConfig();
     void                        parseServer();
@@ -51,6 +46,7 @@ private:
 
     static void                 completeServer(VirtualServer& server);
     static void                 completeLocation(const Location& parent, Location& location);
+
 private:
     std::vector<VirtualServer>                   servers_;
 

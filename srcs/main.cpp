@@ -13,12 +13,12 @@ int main(int, char* argv[])
 
         server.mainLoopRun();
     }
-    catch (const ServerConfig::bad_config &e)
+    catch (const std::runtime_error &re)
     {
-        logger::error << e.what() << logger::end;
+        logger::error << re.what() << logger::end;
         return EXIT_FAILURE;
     }
-    catch (std::exception &e)
+    catch (const std::exception&)
     {
         logger::error << logger::cerror << logger::end;
         return EXIT_FAILURE;

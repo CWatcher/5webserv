@@ -32,7 +32,7 @@ ServerConfig::ServerConfig(const char *filename) : block_("server:")
         filename = "config";
     f_.open(filename);
     if (f_.fail())
-        throw bad_config(std::string("unable to open file '") + filename + "'");
+        throw std::runtime_error(std::string("unable to open file '") + filename + "'");
     logger::info << "configuration file '" << filename << "' opened" << logger::end;
     try{
         parseConfig();
@@ -91,7 +91,7 @@ void    ServerConfig::parseConfig()
         if (directive == "server")
             parseServer();
         else
-            throw bad_config("unknown directive '" + directive + "'");
+            throw std::runtime_error("unknown directive '" + directive + "'");
     }
 }
 
@@ -106,14 +106,14 @@ void    ServerConfig::parseServer()
     {
         std::getline(f_ >> std::ws, str, '{');
         if (!str.empty())
-            throw bad_config("server: unexpected '" + str + "'");
+            throw std::runtime_error("server: unexpected '" + str + "'");
         server.path = '/';
         parseBlock(server);
     }
     catch (const std::ifstream::failure& e)
     {
         if (f_.eof())
-            throw bad_config(block_ + " unexpected end of file");
+            throw std::runtime_error(block_ + " unexpected end of file");
         throw;
     }
     f_.exceptions(std::ifstream::badbit);
@@ -170,7 +170,7 @@ void    ServerConfig::completeLocation(const Location& parent, Location& locatio
         if (find == location.cgi.end())
             location.cgi[it->first] = it->second;
         else if (it->second != find->second)
-            throw bad_config("location '" + location.path + "': cgi '" + find->first + "' path mismathc '" + it->second + "' and '" + find->second + "'");
+            throw std::runtime_error("location '" + location.path + "': cgi '" + find->first + "' path mismathc '" + it->second + "' and '" + find->second + "'");
     }
     for (std::map<unsigned, std::string>::const_iterator it = parent.error_page.begin(); it != parent.error_page.end(); ++it)
         if (location.error_page.find(it->first) == location.error_page.end())
@@ -194,7 +194,7 @@ void    ServerConfig::parseBlock(Location& block)
         if (parser != parsers_.end())
             (this->*parser->second)(block);
         else
-            throw bad_config(block_ + " unknown directive '" + directive + "'");
+            throw std::runtime_error(block_ + " unknown directive '" + directive + "'");
     }
     f_.get();
 }
@@ -208,18 +208,18 @@ void    ServerConfig::parseLocation(Location& parent)
     strRemoveDoubled(location.path, '/');
     block_ = "location '" + location.path + "':";
     if (location.path.compare(0, parent.path.size(), parent.path) != 0)
-            throw bad_config(block_ + " is outside location '" + parent.path + "'");
+            throw std::runtime_error(block_ + " is outside location '" + parent.path + "'");
     location.parent = parent.path;
     parseBlock(location);
     block_ = block_save;
     if (!server_locations_->insert(std::make_pair(location.path, location)).second)
-        throw bad_config(block_ + " duplicate");
+        throw std::runtime_error(block_ + " duplicate");
 }
 
 void    ServerConfig::parseRoot(Location& parent)
 {
     if (!parent.root.empty())
-        throw bad_config(block_ + " root duplicate");
+        throw std::runtime_error(block_ + " root duplicate");
     parent.root = getValue("root");
     strRemoveDoubled(parent.root, '/');
 }
@@ -236,13 +236,13 @@ void    ServerConfig::parseAutoindex(Location& parent)
     std::string value = getValue("autoindex", ';');
 
     if (parent.autoindex != -1)
-        throw bad_config(block_ + " autoindex duplicate");
+        throw std::runtime_error(block_ + " autoindex duplicate");
     if (value == "on")
         parent.autoindex = true;
     else if (value == "off")
         parent.autoindex = false;
     else
-        throw bad_config(block_ + " autoindex bad value '" + value + "'");
+        throw std::runtime_error(block_ + " autoindex bad value '" + value + "'");
 }
 
 void    ServerConfig::parseErrorPage(Location& parent)
@@ -251,12 +251,12 @@ void    ServerConfig::parseErrorPage(Location& parent)
     unsigned                    code;
 
     if (values.size() < 2)
-        throw bad_config(block_ + " error_page not enough values");
+        throw std::runtime_error(block_ + " error_page not enough values");
     for (std::vector<std::string>::iterator it = values.begin(); it != values.end() - 1; it++)
     {
         code = strToUInt(*it, "error_page");
         if (code < 400 || code > 599)
-             throw bad_config(block_ + " error_page bad value '" + *it + "'");
+             throw std::runtime_error(block_ + " error_page bad value '" + *it + "'");
         parent.error_page[code] = strRemoveDoubled(values.back(), '/');
     }
 }
@@ -267,7 +267,7 @@ void    ServerConfig::parseBodySize(Location& parent)
     unsigned    size = strToUInt(str, "body_size");
 
     if (parent.body_size != std::numeric_limits<unsigned>::max())
-        throw bad_config(block_ + " body_size duplicate");
+        throw std::runtime_error(block_ + " body_size duplicate");
     parent.body_size = size;
 }
 
@@ -278,7 +278,7 @@ void    ServerConfig::parseMethods(Location& parent)
     for (std::vector<std::string>::iterator method = methods.begin(); method != methods.end(); method++)
     {
         if (*method != "GET" && *method != "POST" && *method != "DELETE" && *method != "HEAD" && *method != "PUT")
-            throw bad_config(block_ + " methods bad value '" + *method + "'");
+            throw std::runtime_error(block_ + " methods bad value '" + *method + "'");
         parent.methods.insert(*method);
     }
 }
@@ -286,7 +286,7 @@ void    ServerConfig::parseMethods(Location& parent)
 void    ServerConfig::parseUploadStore(Location& parent)
 {
     if (!parent.upload_store.empty())
-        throw bad_config(block_ + " upload_store duplicate");
+        throw std::runtime_error(block_ + " upload_store duplicate");
     parent.upload_store = getValue("upload_store");
     strRemoveDoubled(parent.upload_store, '/');
 }
@@ -296,9 +296,9 @@ void    ServerConfig::parseCgi(Location& parent)
     std::vector<std::string>    values = getValues("cgi");
 
     if (values.size() != 2)
-        throw bad_config(block_ + " cgi need two values");
+        throw std::runtime_error(block_ + " cgi need two values");
     if (!parent.cgi.insert(std::make_pair(values[0], strRemoveDoubled(values[1], '/'))).second)
-        throw bad_config(block_ + " cgi '" + values[0] + "' duplicate");
+        throw std::runtime_error(block_ + " cgi '" + values[0] + "' duplicate");
 }
 
 void    ServerConfig::parseReturn(Location& parent)
@@ -307,11 +307,11 @@ void    ServerConfig::parseReturn(Location& parent)
     unsigned                    code = 302;
 
     if (values.size() > 2)
-        throw bad_config(block_ + " return too many values");
+        throw std::runtime_error(block_ + " return too many values");
     if (values.size() == 2)
         code = strToUInt(values[0], "return");
     if (code < 301 || (code > 303 && code != 307 && code != 308))
-        throw bad_config(block_ + " return bad code '" + values[0] +"'");
+        throw std::runtime_error(block_ + " return bad code '" + values[0] +"'");
     if (parent.redirect.second.empty())
     {
         parent.redirect.first = code;
@@ -322,28 +322,28 @@ void    ServerConfig::parseReturn(Location& parent)
 void    ServerConfig::parseListen(Location& parent)
 {
     if (block_ != "server:")
-        throw bad_config(block_ + " unexpected 'listen'");
+        throw std::runtime_error(block_ + " unexpected 'listen'");
 
     VirtualServer&              server = static_cast<VirtualServer&>(parent);
     std::vector<std::string>    values = getValues("listen");
     std::string                 host = HOST_DFL, port = values.back();
 
     if (values.size() > 2)
-        throw bad_config("server: listen too many values");
+        throw std::runtime_error("server: listen too many values");
     if (values.size() == 2)
         host = values[0];
     in_addr_t in_host = inet_addr(host.c_str());
     if (in_host == INADDR_NONE)
-        throw bad_config("server: listen bad value '" + host + "'");
+        throw std::runtime_error("server: listen bad value '" + host + "'");
     in_port_t in_port = htons(strToUInt(port, "server: listen:"));
     if (!server.listen[in_host].insert(in_port).second)
-        throw bad_config("server: duplicate listen " + host + ':' + port);
+        throw std::runtime_error("server: duplicate listen " + host + ':' + port);
 }
 
 void    ServerConfig::parseServerName(Location& parent)
 {
     if (block_ != "server:")
-        throw bad_config(block_ + " unexpected 'server_name'");
+        throw std::runtime_error(block_ + " unexpected 'server_name'");
 
     VirtualServer&              server = static_cast<VirtualServer&>(parent);
     std::vector<std::string>    server_names = getValues("server_name");
@@ -359,7 +359,7 @@ std::vector<std::string>    ServerConfig::getValues(const char* directive, char 
     std::vector<std::string>    values((std::istream_iterator<std::string>(ss)), std::istream_iterator<std::string>());
 
     if (values.empty())
-        throw bad_config(block_ + " " + directive + " no values");
+        throw std::runtime_error(block_ + " " + directive + " no values");
     return values;
 }
 
@@ -370,11 +370,11 @@ std::string ServerConfig::getValue(const char* directive, char delim)
     std::stringstream   ss(str);
 
     if (str.empty())
-        throw bad_config(block_ + " " + directive + " no value");
+        throw std::runtime_error(block_ + " " + directive + " no value");
     ss >> str;
     ss >> std::ws;
     if (!ss.eof())
-        throw bad_config(block_ + " " + directive + " too many values");
+        throw std::runtime_error(block_ + " " + directive + " too many values");
     return str;
 }
 
@@ -384,7 +384,7 @@ unsigned    ServerConfig::strToUInt(const std::string& str, const char* directiv
     std::stringstream   ss(str);
 
     if (str.find_first_not_of("0123456789") != std::string::npos)
-        throw bad_config(block_ + " " + directive + " bad value '" + str + "'");
+        throw std::runtime_error(block_ + " " + directive + " bad value '" + str + "'");
     ss >> number;
     return number;
 }
