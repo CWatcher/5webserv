@@ -22,7 +22,7 @@ private:
     size_t      eventArrayPrepare(std::vector<pollfd> &poll_array) const;
     bool        eventCheck(const pollfd *poll_fd);
     void        eventAction(ASocket *socket);
-    void        handleRequest(ASocket *session);
+    void        handleRequest(ASocket *socket);
     AHandler*   getHandler(const Location &location, SessionSocket *session) const;
 
 private:

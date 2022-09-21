@@ -1,6 +1,9 @@
 #include "HTTPResponse.hpp"
+#include "utils/log.hpp"
 
 #include <sstream>
+#include <sys/socket.h>
+#include <algorithm>
 
 static const std::pair<std::string, std::string> types_init_list[] =
 {
@@ -19,23 +22,47 @@ static const std::pair<std::string, std::string> types_init_list[] =
 
 const std::map<std::string, std::string>    HTTPResponse::_mime_type(types_init_list, types_init_list + sizeof(types_init_list) / sizeof(types_init_list[0]));
 
-HTTPResponse::HTTPResponse() : HTTPMessage()
+HTTPResponse::HTTPResponse() : HTTPMessage(), _bytes_sent(0), _ready(false)
 {
     _header["Server"] = "webserv";
     _header["Connection"] = "keep-alive";
 }
 
+bool    HTTPResponse::send(int fd)
+{
+    const char		*start = _buffer.data() + _bytes_sent;
+    const size_t	left_to_write = _buffer.size() - _bytes_sent;
+    ssize_t			s;
+
+    s = ::send(fd, start, std::min(BUFFER_SIZE, left_to_write), MSG_NOSIGNAL | MSG_DONTWAIT);
+
+    if (s == 0)
+        throw std::exception();
+    if (s == -1)
+    {
+        logger::error << "HTTPResponse: send: " << logger::cerror << logger::end;
+        throw std::exception();
+    }
+
+    logger::debug << "HTTPResponse: bytes written: " << s << " to " << fd << logger::end;
+    _bytes_sent += s;
+    if (_bytes_sent == _buffer.size())
+        return true;
+    logger::debug << "HTTPResponse: left to write: " << _buffer.size() - _bytes_sent << logger::end;
+    return false;
+}
+
 void    HTTPResponse::buildHeader(const std::string& status_line)
 {
-    _raw_data += "HTTP/1.1 " + status_line + "\r\n";
+    _buffer += "HTTP/1.1 " + status_line + "\r\n";
     for (std::map<std::string, std::string>::const_iterator it = _header.begin(); it != _header.end(); ++it)
     {
-        _raw_data += it->first;
-        _raw_data += ": ";
-        _raw_data += it->second;
-        _raw_data += "\r\n";
+        _buffer += it->first;
+        _buffer += ": ";
+        _buffer += it->second;
+        _buffer += "\r\n";
     }
-    _raw_data += "\r\n";
+    _buffer += "\r\n";
 }
 
 void    HTTPResponse::setContentType(const std::string &file_type)

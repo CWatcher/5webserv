@@ -4,15 +4,17 @@
 # include <string>
 # include <map>
 
+# define BUFFER_SIZE 8192UL
+
 class HTTPMessage
 {
 public:
-    HTTPMessage() : _raw_data(), _header() {}
+    HTTPMessage() : _buffer(), _header() {}
 
-    const std::string                           &raw_data() const {return _raw_data;}
+    const std::string                           &buffer() const {return _buffer;}
     const std::map<std::string, std::string>    &header() const {return _header;}
 protected:
-    std::string                                 _raw_data;
+    std::string                                 _buffer;
     std::map<std::string, std::string>          _header;
 };
 #endif

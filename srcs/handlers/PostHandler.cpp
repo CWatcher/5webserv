@@ -2,6 +2,12 @@
 
 void    PostHandler::handle(HTTPResponse&  response)
 {
+    if (cgi_pid_ !=0)
+    {
+        parentCgi(response);
+        return;
+    }
+
     if (location_.body_size != 0 && request_.body_size() > location_.body_size)
         throw HTTPError(HTTPStatus::PAYLOAD_TOO_LARGE);
     if (request_.body_size() == 0)
@@ -13,7 +19,7 @@ void    PostHandler::handle(HTTPResponse&  response)
             throw HTTPError(HTTPStatus::NOT_FOUND);
         if (!file_info_.isReadble() || !file_info_.isFile())
             throw HTTPError(HTTPStatus::FORBIDDEN);
-        cgi(response);
+        runCgi(response);
     }
     else if (request_.isFormData())
     {
@@ -31,8 +37,8 @@ void    PostHandler::postFile(HTTPResponse& response) const
     std::string     filename;
     std::string     message;
     std::string     boundary = request_.getHeaderParameter("Content-Type", "boundary").insert(0, "--");
-    size_t          form_data_start = request_.raw_data().find("\r\n\r\n", request_.body_offset());
-    size_t          form_data_end = request_.raw_data().find(boundary, form_data_start);
+    size_t          form_data_start = request_.buffer().find("\r\n\r\n", request_.body_offset());
+    size_t          form_data_end = request_.buffer().find(boundary, form_data_start);
 
     if (boundary.length() == 2 || form_data_start == std::string::npos || form_data_end == std::string::npos)
         throw HTTPError(HTTPStatus::BAD_REQUEST);
@@ -47,7 +53,7 @@ void    PostHandler::postFile(HTTPResponse& response) const
 
     form_data_start += 4;
     form_data_end -= 2;
-    new_file.write(request_.raw_data().data() + form_data_start, form_data_end - form_data_start);
+    new_file.write(request_.buffer().data() + form_data_start, form_data_end - form_data_start);
     if (!new_file.good())
     {
         new_file.close();
@@ -69,7 +75,7 @@ void    PostHandler::postFile(HTTPResponse& response) const
 
 std::string     PostHandler::getFormFileName(size_t form_header_first, size_t form_header_last) const
 {
-    const std::string   form_header = request_.raw_data().substr(form_header_first, form_header_last - form_header_first);
+    const std::string   form_header = request_.buffer().substr(form_header_first, form_header_last - form_header_first);
     size_t              f = form_header.find("filename=\"");
     std::string         filename;
 

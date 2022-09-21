@@ -1,9 +1,16 @@
 #include "handlers/GetHandler.hpp"
 
+#include <iterator>
 #include <dirent.h>
 
 void GetHandler::handle(HTTPResponse &response)
 {
+    if (cgi_pid_ !=0)
+    {
+        parentCgi(response);
+        return;
+    }
+
     if (file_info_.isNotExists())
         throw HTTPError(HTTPStatus::NOT_FOUND);
     if (!file_info_.isReadble())
@@ -17,13 +24,13 @@ void GetHandler::handle(HTTPResponse &response)
         throw HTTPError(HTTPStatus::FORBIDDEN);
 }
 
-void    GetHandler::getFile(HTTPResponse& response) const
+void    GetHandler::getFile(HTTPResponse& response)
 {
     std::ifstream   file;
 
     if (!cgi_path_.empty())
     {
-        cgi(response);
+        runCgi(response);
         return;
     }
 

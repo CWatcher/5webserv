@@ -10,23 +10,23 @@ public:
     HTTPRequest() : _method(), _uri(), _header_size(0), _body_size(0),
                     _chunk_size(std::numeric_limits<std::size_t>::max()) {}
 
-    void                addData(const char* data, size_t n);
-
-    bool                isRequestReceived();
-    std::string         getHeaderValue(const std::string &header_key) const;
-    std::string         getHeaderHostName() const;
-    std::string         getHeaderParameter(const std::string& key, const std::string& param) const;
+    bool                read(int fd);
 
     const std::string   &method() const {return _method;}
     const std::string   &uri() const {return _uri;}
     const std::string   &http() const {return _http;}
-    const char*         body() const {return _raw_data.data() + _header_size;}
+    const char*         body() const {return _buffer.data() + _header_size;}
     size_t              body_size() const {return _body_size;}
     size_t              body_offset() const {return _header_size;}
+
+    std::string         getHeaderValue(const std::string &header_key) const;
+    std::string         getHeaderHostName() const;
+    std::string         getHeaderParameter(const std::string& key, const std::string& param) const;
 
     bool                isFormData() const {return getHeaderValue("Content-Type").find("multipart/form-data") != std::string::npos;}
 
 private:
+    bool                isRequestReceived();
     void                fillHeaderMap();
     void                parseStartLine();
     void                parseHeader(size_t header_end);

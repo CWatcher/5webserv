@@ -3,6 +3,7 @@
 #include "utils/log.hpp"
 
 #include <sstream>
+#include <iterator>
 
 static const std::pair<HTTPStatus::_, std::string>    http_status_init_list[] =
 {
@@ -130,7 +131,7 @@ void    AHandler::makeResponse(HTTPResponse& response)
     }
 
     logger::info << "⬅️  "
-        << response.raw_data().substr(0, response.raw_data().find("\r\n")) \
+        << response.buffer().substr(0, response.buffer().find("\r\n")) \
         << logger::end;
 }
 
