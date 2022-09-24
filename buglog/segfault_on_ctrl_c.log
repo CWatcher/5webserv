@@ -1,0 +1,54 @@
+% m -j16 && webserv tester_config
+make: Nothing to be done for `debug'.
+[15:06:50.461] - INFO - configuration file 'tester_config' opened
+[15:06:50.463] - INFO - configuration file 'tester_config' loaded
+[15:06:50.463] - DEBUG - Created listen socket 3
+[15:06:50.463] - DEBUG - Enabled SO_REUSEADDR for socket 3
+[15:06:50.463] - DEBUG - Trying to bind to network interface: 127.0.0.1:8888
+[15:06:50.463] - INFO - Enabled listen on: 127.0.0.1:8888
+----------Server 0----------
+sever_name:
+listen:
+- 127.0.0.1: 8888
+root: www/tester_server
+index: index.html
+autoindex: 0
+error_page:
+body_size: 0
+methods: GET
+upload_store:
+redirect:
+cgi:
+locations:
+path: /                                          parent:
+path: /directory/                                parent: /
+path: /put_test/                                 parent: /
+Listened: 127.0.0.1:8888
+[15:06:50.464] - INFO - Server: entering main loop...
+[15:06:50.464] - DEBUG - Server: polling...
+^C[15:07:14.857] - DEBUG - Server: polling done!
+[15:07:14.857] - INFO - Server: poll: Interrupted system call
+[15:07:14.857] - INFO - Server: shutting down...
+[15:07:14.857] - INFO - Disconnected socket 3
+[15:07:14.857] - INFO - Server: bye!
+AddressSanitizer:DEADLYSIGNAL
+=================================================================
+==28431==ERROR: AddressSanitizer: SEGV on unknown address 0x000000000008 (pc 0x7fff207851d9 bp 0x7ffee31a85d0 sp 0x7ffee31a85d0 T0)
+==28431==The signal is caused by a WRITE memory access.
+==28431==Hint: address points to the zero page.
+    #0 0x7fff207851d9 in std::__1::__shared_count::__release_shared()+0xb (libc++.1.dylib:x86_64+0x391d9)
+    #1 0x7fff20759629 in std::__1::ios_base::~ios_base()+0x3f (libc++.1.dylib:x86_64+0xd629)
+    #2 0x10cc69351 in logger::DevnullStream::~DevnullStream() log.hpp:42
+    #3 0x7fff2071dd24 in __cxa_finalize_ranges+0x13b (libsystem_c.dylib:x86_64+0x5ad24)
+    #4 0x7fff2071e00f in exit+0x34 (libsystem_c.dylib:x86_64+0x5b00f)
+    #5 0x7fff20809f43 in start+0x7 (libdyld.dylib:x86_64+0x15f43)
+
+==28431==Register values:
+rax = 0xffffffffffffffff  rbx = 0x0000000000000000  rcx = 0x0000000000000001  rdx = 0x0000000000000000
+rdi = 0x0000000000000000  rsi = 0x000000010cd41398  rbp = 0x00007ffee31a85d0  rsp = 0x00007ffee31a85d0
+ r8 = 0x000000000059df47   r9 = 0xffffffff00000000  r10 = 0x0000000000000001  r11 = 0x00007fff2075f66a
+r12 = 0x0000000000000002  r13 = 0x0000000000000000  r14 = 0x000000010ce41ae8  r15 = 0x000000000000001a
+AddressSanitizer can not provide additional info.
+SUMMARY: AddressSanitizer: SEGV (libc++.1.dylib:x86_64+0x391d9) in std::__1::__shared_count::__release_shared()+0xb
+==28431==ABORTING
+zsh: abort      webserv tester_config
