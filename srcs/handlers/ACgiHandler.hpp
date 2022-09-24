@@ -17,6 +17,7 @@ protected:
     void                forkCgi() const;
     void                makeCgiEnv(std::vector<char*>& envp_data) const;
     void                parentCgi(HTTPResponse& response) const;
+    bool                waitCgi() const;
     void                makeCgiResponse(const char* cgi_data, size_t n, HTTPResponse& response) const;
     static const char*  getCgiBody(const char* cgi_data, size_t n);
 

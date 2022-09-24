@@ -54,6 +54,12 @@ void    ACgiHandler::runCgi(HTTPResponse& response)
     {
         if (::pipe(cgi_in_pipe_))
             throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
+
+        int flags = ::fcntl(cgi_in_pipe_[1], F_GETFL);
+        if (flags == -1)
+            throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
+        if (::fcntl(cgi_in_pipe_[1], F_SETFL, flags | O_NONBLOCK) == -1)
+            throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
     }
 
     cgi_pid_ = ::fork();
@@ -62,7 +68,10 @@ void    ACgiHandler::runCgi(HTTPResponse& response)
     else if (cgi_pid_ == 0)
         forkCgi();
     else
+    {
+        ::close(cgi_in_pipe_[0]);
         parentCgi(response);
+    }
 }
 
 void    ACgiHandler::forkCgi() const
@@ -140,8 +149,11 @@ void    ACgiHandler::makeCgiEnv(std::vector<char*>& envp) const
     envp_data.push_back("SERVER_PROTOCOL=HTTP/1.1");
     envp_data.push_back("SERVER_SOFTWARE=webserv");
 
-    tmp = ::realpath(file_info_.path().c_str(), real_path);
-    envp_data.push_back("SCRIPT_FILENAME=" + tmp);
+    if (::realpath(file_info_.path().c_str(), real_path) != NULL)
+    {
+        tmp = real_path;
+        envp_data.push_back("SCRIPT_FILENAME=" + tmp);
+    }
 
     for (std::map<std::string, std::string>::const_iterator it = request_.header().begin();
         it != request_.header().end(); ++it)
@@ -159,36 +171,48 @@ void    ACgiHandler::makeCgiEnv(std::vector<char*>& envp) const
 
 void    ACgiHandler::parentCgi(HTTPResponse& response) const
 {
-    int         status;
     char        *cgi_data;
     struct stat cgi_stat;
 
+    if (waitCgi())
+    {
+        ::fstat(::fileno(cgi_out_file_), &cgi_stat);
+        cgi_data = reinterpret_cast<char *>(::mmap(NULL, cgi_stat.st_size, PROT_READ, MAP_SHARED, fileno(cgi_out_file_), 0));
+        if (cgi_data == NULL)
+            throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
+        makeCgiResponse(cgi_data, cgi_stat.st_size, response);
+        ::munmap(cgi_data, cgi_stat.st_size);
+    }
+}
+
+bool    ACgiHandler::waitCgi() const
+{
+    int status;
+
     if (request_.method() == "POST")
     {
-        // static size_t   bytes_sent = 0;
-        // ssize_t         w;
+        static size_t   bytes_sent = 0;
+        ssize_t         w;
 
-        ::close(cgi_in_pipe_[0]);
-        ::write(cgi_in_pipe_[1], request_.body(), request_.body_size());
-        // if (w == -1)
-        //     throw HTTPError(HTTPStatus::BAD_GATEWAY);
-        // bytes_sent += w;
-        // if (bytes_sent != request_.body_size())
-        //     return;
-        ::close(cgi_in_pipe_[1]);
+        w = ::write(cgi_in_pipe_[1], request_.body() + bytes_sent, request_.body_size() - bytes_sent);
+        if (w != -1)
+        {
+            bytes_sent += w;
+            if (bytes_sent == request_.body_size())
+            {
+                bytes_sent = 0;
+                ::close(cgi_in_pipe_[1]);
+            }
+        }
     }
 
-
-    ::waitpid(cgi_pid_, &status, 0);
-    if (!WIFEXITED(status))
-        throw HTTPError(HTTPStatus::BAD_GATEWAY);
-
-    ::fstat(::fileno(cgi_out_file_), &cgi_stat);
-    cgi_data = reinterpret_cast<char *>(::mmap(NULL, cgi_stat.st_size, PROT_READ, MAP_SHARED, fileno(cgi_out_file_), 0));
-    if (cgi_data == NULL)
-        throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
-    makeCgiResponse(cgi_data, cgi_stat.st_size, response);
-    ::munmap(cgi_data, cgi_stat.st_size);
+    if (::waitpid(cgi_pid_, &status, WNOHANG))
+    {
+        if (!WIFEXITED(status))
+            throw HTTPError(HTTPStatus::BAD_GATEWAY);
+        return true;
+    }
+    return false;
 }
 
 const char*  ACgiHandler::getCgiBody(const char* cgi_data, size_t n)
