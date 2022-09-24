@@ -135,8 +135,12 @@ void    ACgiHandler::makeCgiEnv(std::vector<char*>& envp) const
     envp_data.push_back("SERVER_PROTOCOL=HTTP/1.1");
     envp_data.push_back("SERVER_SOFTWARE=webserv");
 
-    tmp = ::realpath(file_info_.path().c_str(), real_path);
-    envp_data.push_back("SCRIPT_FILENAME=" + tmp);
+
+    if (::realpath(file_info_.path().c_str(), real_path) != NULL)
+    {
+        tmp = real_path;
+        envp_data.push_back("SCRIPT_FILENAME=" + tmp);
+    }
 
     for (std::map<std::string, std::string>::const_iterator it = request_.header().begin();
         it != request_.header().end(); ++it)
