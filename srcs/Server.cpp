@@ -159,8 +159,8 @@ void Server::handleRequest(ASocket *socket)
     {
         handler = getHandler(location, session);
         handler->makeResponse(session->response());
-        session->setStateToWrite();
         session->setHandler(handler);
+        session->setStateToWrite();
     }
     catch (std::bad_alloc& ba)
     {

@@ -31,8 +31,10 @@ ACgiHandler::ACgiHandler(const Location& loc, const HTTPRequest& req, in_addr_t 
 
 ACgiHandler::~ACgiHandler()
 {
-    ::close(cgi_in_pipe_[0]);
-    ::close(cgi_in_pipe_[1]);
+    if (cgi_in_pipe_[0] != -1)
+        ::close(cgi_in_pipe_[0]);
+    if (cgi_in_pipe_[1] != -1)
+        ::close(cgi_in_pipe_[1]);
     if (cgi_out_file_ != NULL)
         ::fclose(cgi_out_file_);
     if (cgi_pid_ != 0)
@@ -48,8 +50,11 @@ void    ACgiHandler::runCgi(HTTPResponse& response)
     if (cgi_out_file_ == NULL)
         throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
 
-    if (request_.method() == "POST" && ::pipe(cgi_in_pipe_))
-        throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
+    if (request_.method() == "POST")
+    {
+        if (::pipe(cgi_in_pipe_))
+            throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
+    }
 
     cgi_pid_ = ::fork();
     if (cgi_pid_ == -1)

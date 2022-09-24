@@ -44,10 +44,10 @@ void    SessionSocket::read()
 void    SessionSocket::write()
 {
     if (!_response.isReady())
-    {
         _handler->handle(_response);
+
+    if (!_response.isReady())
         return;
-    }
 
     logger::debug << "Trying to write to fd " << _fd << logger::end;
     try

@@ -74,10 +74,13 @@ AHandler::AHandler(const Location& loc, const HTTPRequest& req) : location_(loc)
             while (pure_uri_[f] != '/')
                 ++f;
             path_info_ = pure_uri_.substr(f);
+            if (path_info_ == "/")
+                path_info_.erase();
             pure_uri_.erase(f);
             break;
         }
     }
+
     normalizeUri(path_info_);
     normalizeUri(pure_uri_);
 
