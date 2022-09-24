@@ -74,10 +74,13 @@ AHandler::AHandler(const Location& loc, const HTTPRequest& req) : location_(loc)
             while (pure_uri_[f] != '/')
                 ++f;
             path_info_ = pure_uri_.substr(f);
+            if (path_info_ == "/")
+                path_info_.erase();
             pure_uri_.erase(f);
             break;
         }
     }
+
     normalizeUri(path_info_);
     normalizeUri(pure_uri_);
 
@@ -142,12 +145,6 @@ void    AHandler::error(HTTPStatus::_ status, HTTPResponse& response)
     std::string                                     body;
     const std::string&                              status_line = http_status_.find(status)->second;
     std::map<unsigned, std::string>::const_iterator it = location_.error_page.find(status);
-
-    if (status == HTTPStatus::NO_CONTENT)
-    {
-        response.buildResponse(NULL, NULL, false, http_status_.find(HTTPStatus::NO_CONTENT)->second);
-        return;
-    }
 
     if (it != location_.error_page.end())
     {
