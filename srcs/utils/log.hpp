@@ -41,7 +41,10 @@ public:
     std::ostream&   devnull() const { return devnullStream(); }
 };
 
-class DevnullStream : public std::ostream { };
+class DevnullStream : private std::streambuf, public std::ostream {
+public:
+    DevnullStream() : std::ostream(this) {}
+};
 
 extern LogStream<logger::Level::kInfo>     info;
 extern LogStream<logger::Level::kDebug>    debug;
