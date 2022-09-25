@@ -12,7 +12,7 @@ public:
     AHandler(const Location& loc, const HTTPRequest& req);
     virtual ~AHandler() {}
 
-    void                makeResponse(HTTPResponse& response);
+    virtual void        makeResponse(HTTPResponse& response);
 
 protected:
     void                error(HTTPStatus::_ status, HTTPResponse& response);

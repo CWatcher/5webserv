@@ -8,8 +8,9 @@ class UndefinedHandler : public AHandler
 public:
     UndefinedHandler(const Location& loc, const HTTPRequest& req) : AHandler(loc, req) {}
 
+    virtual void    makeResponse(HTTPResponse& request);
 private:
-    virtual void    handle(HTTPResponse&) {throw HTTPError(HTTPStatus::NOT_IMPLEMENTED);}
+    void            handle(HTTPResponse&) {}
 };
 
 #endif

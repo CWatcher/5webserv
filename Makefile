@@ -6,35 +6,36 @@ NAME          = webserv
 CXX           = c++
 LD            = c++
 CXXFLAGS      = -Wall -Wextra -Werror -pedantic -std=c++98
-LDFLAGS       = 
+LDFLAGS       =
 DEP           = ./Makefile
 INC           = ./srcs
 
 BUILD        ?= release
 
 $(call add/project,$(PROJECT_NAME))
-$(PROJECT_NAME)_SRCS =	srcs/main.cpp					\
-						srcs/Server.cpp					\
-														\
-						srcs/config/VirtualServer.cpp	\
-						srcs/config/ServerConfig.cpp	\
-														\
-						srcs/sockets/ASocket.cpp		\
-						srcs/sockets/ListenSocket.cpp	\
-						srcs/sockets/SessionSocket.cpp	\
-														\
-						srcs/http/HTTPRequest.cpp		\
-						srcs/http/HTTPResponse.cpp		\
-														\
-						srcs/handlers/AHandler.cpp		\
-						srcs/handlers/DeleteHandler.cpp	\
-						srcs/handlers/ACgiHandler.cpp	\
-						srcs/handlers/GetHandler.cpp	\
-						srcs/handlers/PostHandler.cpp	\
-						srcs/handlers/PutHandler.cpp	\
-														\
-						srcs/utils/log.cpp				\
-						srcs/utils/string.cpp			\
+$(PROJECT_NAME)_SRCS =	srcs/main.cpp						\
+						srcs/Server.cpp						\
+															\
+						srcs/config/VirtualServer.cpp		\
+						srcs/config/ServerConfig.cpp		\
+															\
+						srcs/sockets/ASocket.cpp			\
+						srcs/sockets/ListenSocket.cpp		\
+						srcs/sockets/SessionSocket.cpp		\
+															\
+						srcs/http/HTTPRequest.cpp			\
+						srcs/http/HTTPResponse.cpp			\
+															\
+						srcs/handlers/AHandler.cpp			\
+						srcs/handlers/DeleteHandler.cpp		\
+						srcs/handlers/ACgiHandler.cpp		\
+						srcs/handlers/GetHandler.cpp		\
+						srcs/handlers/PostHandler.cpp		\
+						srcs/handlers/PutHandler.cpp		\
+						srcs/handlers/UndefinedHandler.cpp	\
+															\
+						srcs/utils/log.cpp					\
+						srcs/utils/string.cpp				\
 						srcs/utils/FileInfo.cpp
 
 $(call add/subproj,$(PROJECT_NAME),debugbase)
