@@ -110,8 +110,6 @@ void    AHandler::makeResponse(HTTPResponse& response)
     logger::info << "➡️  " << request_.method() << ' ' << request_.uri() << ' ' << request_.http() << logger::end;
     try
     {
-        if (request_.getHeaderValue("Connection") == "close")
-            response.addHeader("Connection", "close");
         if (location_.redirect.second.empty())
         {
             if (request_.http() != "HTTP/1.1")
@@ -132,7 +130,8 @@ void    AHandler::makeResponse(HTTPResponse& response)
     {
         error(HTTPStatus::INTERNAL_SERVER_ERROR, response);
     }
-
+    if (request_.getHeaderValue("Connection") == "close")
+        response.addHeader("Connection", "close");
     logger::info << "⬅️  "
         << response.buffer().substr(0, response.buffer().find("\r\n")) \
         << logger::end;

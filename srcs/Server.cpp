@@ -158,7 +158,6 @@ void Server::handleRequest(ASocket *socket)
     try
     {
         handler = getHandler(location, session);
-        handler->makeResponse(session->response());
         session->setHandler(handler);
         session->setStateToWrite();
     }
