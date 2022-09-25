@@ -25,12 +25,12 @@ server {
 		return 301 https://ya.ru;
 	}
 
-	location /dir1
+	location /autoindex
 	{
 		autoindex on;
+		location /autoindex/off { autoindex off;}
+		location /autoindex/on {}
 	}
-
-	location /dir2 {}
 
 	location /delete
 	{
