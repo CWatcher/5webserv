@@ -1,68 +1,73 @@
-.DEFAULT_GOAL  := all
-.SECONDEXPANSION:
+include make/tm.mk
 
-NAME		= webserv
-SRCS		= srcs/main.cpp						\
-				srcs/Server.cpp					\
-												\
-				srcs/config/VirtualServer.cpp	\
-				srcs/config/ServerConfig.cpp	\
-												\
-				srcs/sockets/ASocket.cpp		\
-				srcs/sockets/ListenSocket.cpp	\
-				srcs/sockets/SessionSocket.cpp	\
-												\
-				srcs/http/HTTPRequest.cpp		\
-				srcs/http/HTTPResponse.cpp		\
-												\
-				srcs/handlers/AHandler.cpp		\
-				srcs/handlers/DeleteHandler.cpp	\
-				srcs/handlers/ACgiHandler.cpp	\
-				srcs/handlers/GetHandler.cpp	\
-				srcs/handlers/PostHandler.cpp	\
-				srcs/handlers/PutHandler.cpp	\
-												\
-				srcs/utils/log.cpp				\
-				srcs/utils/string.cpp			\
-				srcs/utils/FileInfo.cpp
+PROJECT_NAME  = webserv
+NAME          = webserv
 
-BDIR       = .objs/
-OBJS       = $(SRCS:%.cpp=$(BDIR)%.o)
-DFILES     = $(SRCS:%.cpp=$(BDIR)%.d)
+CXX           = c++
+LD            = c++
+CXXFLAGS      = -Wall -Wextra -Werror -pedantic -std=c++98
+LDFLAGS       = 
+DEP           = ./Makefile
+INC           = ./srcs
 
-CXX			= c++
-CPPFLAGS	= -Wall -Wextra -Werror -pedantic -MMD -std=c++98 -Isrcs
-debug:		CPPFLAGS += -g3 -fsanitize=address -fsanitize=undefined -DLOG_LEVEL=\"debug\"
-debug:		LDFLAGS = -fsanitize=address -fsanitize=undefined
-all:		CPPFLAGS += -O2 -DLOG_LEVEL=\"info\"
+BUILD        ?= debug
 
-# ----- Directory create magic --------
-.PRECIOUS: $(BDIR)/. $(BDIR)%/.
-$(BDIR)/.:
-	mkdir -p $@
-$(BDIR)%/.:
-	mkdir -p $@
-# ----- ---------------------- --------
+$(call add/project,$(PROJECT_NAME))
+$(PROJECT_NAME)_SRCS =	srcs/main.cpp					\
+						srcs/Server.cpp					\
+														\
+						srcs/config/VirtualServer.cpp	\
+						srcs/config/ServerConfig.cpp	\
+														\
+						srcs/sockets/ASocket.cpp		\
+						srcs/sockets/ListenSocket.cpp	\
+						srcs/sockets/SessionSocket.cpp	\
+														\
+						srcs/http/HTTPRequest.cpp		\
+						srcs/http/HTTPResponse.cpp		\
+														\
+						srcs/handlers/AHandler.cpp		\
+						srcs/handlers/DeleteHandler.cpp	\
+						srcs/handlers/ACgiHandler.cpp	\
+						srcs/handlers/GetHandler.cpp	\
+						srcs/handlers/PostHandler.cpp	\
+						srcs/handlers/PutHandler.cpp	\
+														\
+						srcs/utils/log.cpp				\
+						srcs/utils/string.cpp			\
+						srcs/utils/FileInfo.cpp
 
-debug:		$(NAME)
-all:		$(NAME)
+$(call add/subproj,$(PROJECT_NAME),debugbase)
+debugbase_CXXFLAGS       += -O0 -g3 -DLOG_LEVEL=\"debug\"
 
-$(BDIR)%.o:	%.cpp | $$(@D)/.
-	$(CXX) $(CPPFLAGS) -c $< -o $@
+# ------- debug build ---------
+$(call add/subproj,debugbase,debug)
+DEBUG_SANS =    -fsanitize=address \
+                -fsanitize=undefined
+debug_CXXFLAGS       += $(DEBUG_SANS)
+debug_LDFLAGS        += $(DEBUG_SANS)
+$(call add/exe,debug,$(NAME))
+# ------- ----------- ---------
 
-$(NAME):	$(OBJS) Makefile
-	$(CXX) $(LDFLAGS) -o $@ $(OBJS)
+# ------- release build ---------
+$(call add/subproj,$(PROJECT_NAME),release)
+release_CXXFLAGS     += -O2 -DLOG_LEVEL=\"info\"
+$(call add/exe,release,$(NAME))
+# ------- ------------- ---------
 
-$(OBJS):	Makefile
+.PHONY: all clean fclean re
 
--include $(DFILES)
+$(NAME): $($(BUILD)_EXE)
+	$(silent)cp $($(BUILD)_EXE) $(NAME)
+all: $(NAME)
+$(BUILD)_BUILD  += $(NAME)
+$(BUILD)_FCLEAN += $(NAME)
 
-clean:
-	$(RM) $(OBJS) $(DFILES)
+clean_exe:
+	-$(silent)$(RM) $(NAME)
 
-fclean:		clean
-	$(RM) $(NAME)
+clean: debug/clean release/clean
+fclean: debug/fclean release/fclean
+re: $(BUILD)/re
 
-re:			fclean all
-
-.PHONY:	all debug clean fclean re
+$(call add/header_dep)
