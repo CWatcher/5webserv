@@ -8,6 +8,7 @@ class PutHandler : public AHandler
 public:
     PutHandler(const Location& loc, const HTTPRequest& req) : AHandler(loc, req) {}
 
+private:
     virtual void	handle(HTTPResponse& response);
 };
 

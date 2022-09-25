@@ -5,12 +5,6 @@
 
 void GetHandler::handle(HTTPResponse &response)
 {
-    if (cgi_pid_ !=0)
-    {
-        parentCgi(response);
-        return;
-    }
-
     if (file_info_.isNotExists())
         throw HTTPError(HTTPStatus::NOT_FOUND);
     if (!file_info_.isReadble())

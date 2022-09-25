@@ -13,13 +13,13 @@ public:
     virtual ~AHandler() {}
 
     void                makeResponse(HTTPResponse& response);
-    virtual void        handle(HTTPResponse& response) = 0;
 
 protected:
     void                error(HTTPStatus::_ status, HTTPResponse& response);
     void                redirect(HTTPResponse& response);
 
 private:
+    virtual void        handle(HTTPResponse& response) = 0;
     static void         normalizeUri(std::string& uri);
 
 protected:

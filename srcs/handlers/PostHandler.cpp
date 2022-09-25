@@ -2,12 +2,6 @@
 
 void    PostHandler::handle(HTTPResponse&  response)
 {
-    if (cgi_pid_ !=0)
-    {
-        parentCgi(response);
-        return;
-    }
-
     if (location_.body_size != 0 && request_.body_size() > location_.body_size)
         throw HTTPError(HTTPStatus::PAYLOAD_TOO_LARGE);
     if (request_.body_size() == 0)
