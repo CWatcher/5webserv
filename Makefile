@@ -32,9 +32,9 @@ DFILES     = $(SRCS:%.cpp=$(BDIR)%.d)
 
 CXX			= c++
 CPPFLAGS	= -Wall -Wextra -Werror -pedantic -MMD -std=c++98 -Isrcs
-debug:		CPPFLAGS += -g3 -fsanitize=address -fsanitize=undefined
+debug:		CPPFLAGS += -g3 -fsanitize=address -fsanitize=undefined -DLOG_LEVEL=\"debug\"
 debug:		LDFLAGS = -fsanitize=address -fsanitize=undefined
-all:		CPPFLAGS += -O2
+all:		CPPFLAGS += -O2 -DLOG_LEVEL=\"info\"
 
 # ----- Directory create magic --------
 .PRECIOUS: $(BDIR)/. $(BDIR)%/.
@@ -48,7 +48,7 @@ debug:		$(NAME)
 all:		$(NAME)
 
 $(BDIR)%.o:	%.cpp | $$(@D)/.
-	$(CXX) $(CPPFLAGS) -c $< -o $@ -MD
+	$(CXX) $(CPPFLAGS) -c $< -o $@
 
 $(NAME):	$(OBJS) Makefile
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS)

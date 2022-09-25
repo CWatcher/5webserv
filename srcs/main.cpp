@@ -5,7 +5,7 @@
 
 int main(int, char* argv[])
 {
-    logger::setLevel(logger::Level::kDebug);
+    logger::setLevel(LOG_LEVEL);
 
     try
     {
