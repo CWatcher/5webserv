@@ -20,21 +20,19 @@ ACgiHandler::ACgiHandler(const Location& loc, const HTTPRequest& req, in_addr_t 
     server_ip_(s_ip),
     server_port_(s_port),
     remote_addr_(remote_addr),
+    cgi_in_file_(NULL),
     cgi_out_file_(NULL)
 {
     std::map<std::string, std::string>::const_iterator  cgi = location_.cgi.find(file_info_.type());
 
     if (cgi != location_.cgi.end())
         cgi_path_ = cgi->second;
-    cgi_in_pipe_[0] = cgi_in_pipe_[1] = -1;
 }
 
 ACgiHandler::~ACgiHandler()
 {
-    if (cgi_in_pipe_[0] != -1)
-        ::close(cgi_in_pipe_[0]);
-    if (cgi_in_pipe_[1] != -1)
-        ::close(cgi_in_pipe_[1]);
+    if (cgi_in_file_ != NULL)
+        ::fclose(cgi_in_file_);
     if (cgi_out_file_ != NULL)
         ::fclose(cgi_out_file_);
     if (cgi_pid_ != 0)
@@ -52,14 +50,13 @@ void    ACgiHandler::runCgi(HTTPResponse& response)
 
     if (request_.method() == "POST")
     {
-        if (::pipe(cgi_in_pipe_))
+        cgi_in_file_ = ::tmpfile();
+        if (cgi_in_file_ == NULL)
             throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
 
-        // int flags = ::fcntl(cgi_in_pipe_[1], F_GETFL);
-        // if (flags == -1)
-        //     throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
-        // if (::fcntl(cgi_in_pipe_[1], F_SETFL, flags | O_NONBLOCK) == -1)
-        //     throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
+        int w = ::fwrite(request_.body(), sizeof(char), request_.body_size(), cgi_in_file_);
+        if (w == -1 || ::fflush(cgi_in_file_) == EOF || ::fseek(cgi_in_file_, 0, SEEK_SET))
+            throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
     }
 
     cgi_pid_ = ::fork();
@@ -78,10 +75,9 @@ void    ACgiHandler::forkCgi() const
 
     if (request_.method() == "POST")
     {
-        ::close(cgi_in_pipe_[1]);
-        if (dup2(cgi_in_pipe_[0], STDIN_FILENO) == -1)
+        if (::dup2(::fileno(cgi_in_file_), STDIN_FILENO) == -1)
             ::raise(SIGKILL);
-        ::close(cgi_in_pipe_[0]);
+        ::fclose(cgi_in_file_);
     }
 
     if (::dup2(::fileno(cgi_out_file_), STDOUT_FILENO) == -1)
@@ -169,16 +165,8 @@ void    ACgiHandler::makeCgiEnv(std::vector<char*>& envp) const
 void    ACgiHandler::parentCgi(HTTPResponse& response) const
 {
     int         status;
-    int         w;
     char        *cgi_data;
     struct stat cgi_stat;
-
-    if (request_.method() == "POST")
-    {
-        w = ::write(cgi_in_pipe_[1], request_.body(), request_.body_size());
-        if (w == -1)
-            throw HTTPError(HTTPStatus::BAD_GATEWAY);
-    }
     
     ::waitpid(cgi_pid_, &status, 0);
 
@@ -188,13 +176,6 @@ void    ACgiHandler::parentCgi(HTTPResponse& response) const
         throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
     makeCgiResponse(cgi_data, cgi_stat.st_size, response);
     ::munmap(cgi_data, cgi_stat.st_size);
-}
-
-bool    ACgiHandler::waitCgi() const
-{
-   return true;
-
-
 }
 
 const char*  ACgiHandler::getCgiBody(const char* cgi_data, size_t n)
@@ -210,7 +191,6 @@ const char*  ACgiHandler::getCgiBody(const char* cgi_data, size_t n)
     if (cgi_body != cgi_data + n)
         return cgi_body + 4;
 
-    ::munmap(const_cast<char*>(cgi_data), n);
     throw HTTPError(HTTPStatus::BAD_GATEWAY);
 }
 

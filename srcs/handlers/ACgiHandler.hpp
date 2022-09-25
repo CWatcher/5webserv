@@ -17,7 +17,6 @@ protected:
     void                forkCgi() const;
     void                makeCgiEnv(std::vector<char*>& envp_data) const;
     void                parentCgi(HTTPResponse& response) const;
-    bool                waitCgi() const;
     void                makeCgiResponse(const char* cgi_data, size_t n, HTTPResponse& response) const;
     static const char*  getCgiBody(const char* cgi_data, size_t n);
 
@@ -31,7 +30,7 @@ private:
     const in_port_t     server_port_;
     const in_addr&      remote_addr_;
 
-    int                 cgi_in_pipe_[2];
+    FILE*               cgi_in_file_;
     FILE*               cgi_out_file_;
 };
 
