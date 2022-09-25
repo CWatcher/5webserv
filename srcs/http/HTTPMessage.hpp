@@ -4,7 +4,7 @@
 # include <string>
 # include <map>
 
-# define BUFFER_SIZE 8192UL
+# define BUFFER_SIZE (16*1024UL)
 
 class HTTPMessage
 {
