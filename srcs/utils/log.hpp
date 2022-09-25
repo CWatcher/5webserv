@@ -28,9 +28,11 @@ void lockOut();
 void unlockOut();
 
 template<logger::Level::_ Lvl>
-class LogStream : public std::ostream
+class LogStream : private std::streambuf, public std::ostream
 {
 public:
+    LogStream() : std::ostream(this) {}
+
     template<typename Any>
     basic_ostream&    operator<<(Any);
 
@@ -39,7 +41,10 @@ public:
     std::ostream&   devnull() const { return devnullStream(); }
 };
 
-class DevnullStream : public std::ostream { };
+class DevnullStream : private std::streambuf, public std::ostream {
+public:
+    DevnullStream() : std::ostream(this) {}
+};
 
 extern LogStream<logger::Level::kInfo>     info;
 extern LogStream<logger::Level::kDebug>    debug;

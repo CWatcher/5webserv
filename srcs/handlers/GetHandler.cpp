@@ -43,9 +43,8 @@ void    GetHandler::getFile(HTTPResponse& response)
 
     std::noskipws(file);
     if (file_info_.size() == 0)
-        response.buildResponse(std::istream_iterator<char>(file), std::istream_iterator<char>(), false, http_status_.find(HTTPStatus::NO_CONTENT)->second);
-    else
-        response.buildResponse(std::istream_iterator<char>(file), std::istream_iterator<char>(), request_.method() == "GET");
+        throw HTTPError(HTTPStatus::NO_CONTENT);
+    response.buildResponse(std::istream_iterator<char>(file), std::istream_iterator<char>(), request_.method() == "GET");
 }
 
 void    GetHandler::getDirectory(HTTPResponse& response)
