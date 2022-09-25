@@ -4,8 +4,6 @@
 
 #include <arpa/inet.h>
 
-int ListenSocket::ConnectionsLimit = 1024;
-
 ListenSocket::ListenSocket(in_addr_t ip, in_port_t port, int connections_limit)
     : ASocket(socket(AF_INET, SOCK_STREAM, IPPROTO_IP), ip, port)
 {
