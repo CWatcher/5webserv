@@ -15,9 +15,9 @@ void    PostHandler::handle(HTTPResponse&  response)
 
     if (!cgi_path_.empty())
     {
-        if (file_info_.isNotExists())
+        if (file_info_.type() != "bla" && file_info_.isNotExists())
             throw HTTPError(HTTPStatus::NOT_FOUND);
-        if (!file_info_.isReadble() || !file_info_.isFile())
+        if (file_info_.type() != "bla" && (!file_info_.isReadble() || !file_info_.isFile()))
             throw HTTPError(HTTPStatus::FORBIDDEN);
         runCgi(response);
     }
@@ -28,7 +28,7 @@ void    PostHandler::handle(HTTPResponse&  response)
         postFile(response);
     }
     else
-        throw HTTPError(HTTPStatus::BAD_REQUEST);
+        throw HTTPError(HTTPStatus::ACCEPTED);
 }
 
 void    PostHandler::postFile(HTTPResponse& response) const

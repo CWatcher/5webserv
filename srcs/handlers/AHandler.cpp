@@ -145,6 +145,12 @@ void    AHandler::error(HTTPStatus::_ status, HTTPResponse& response)
     const std::string&                              status_line = http_status_.find(status)->second;
     std::map<unsigned, std::string>::const_iterator it = location_.error_page.find(status);
 
+    if (status == HTTPStatus::NO_CONTENT)
+    {
+        response.buildResponse(NULL, NULL, false, http_status_.find(status)->second);
+        return;
+    }
+
     if (it != location_.error_page.end())
     {
         std::string     path = location_.root + '/' + it->second;

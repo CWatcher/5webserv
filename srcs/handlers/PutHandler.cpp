@@ -15,6 +15,8 @@ void    PutHandler::handle(HTTPResponse&)
         throw HTTPError(HTTPStatus::INTERNAL_SERVER_ERROR);
 
     if (new_file_created)
+        // throw HTTPError(HTTPStatus::CREATED);
+        // TESTER FIX
         throw HTTPError(HTTPStatus::CREATED);
     else
         throw HTTPError(HTTPStatus::OK);

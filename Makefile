@@ -10,7 +10,7 @@ LDFLAGS       =
 DEP           = ./Makefile
 INC           = ./srcs
 
-BUILD        ?= debug
+BUILD        ?= release
 
 $(call add/project,$(PROJECT_NAME))
 $(PROJECT_NAME)_SRCS =	srcs/main.cpp					\

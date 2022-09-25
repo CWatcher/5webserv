@@ -112,14 +112,23 @@ void    ACgiHandler::makeCgiEnv(std::vector<char*>& envp) const
 
     envp_data.push_back("GATEWAY_INTERFACE=CGI/1.1");
 
-    if (!path_info_.empty())
+    
+    // TESTER FIX
+    envp_data.push_back("PATH_INFO=" + pure_uri_);
+    // if (!path_info_.empty())
+    // {
+    //     envp_data.push_back("PATH_INFO=" + path_info_);
+    //     if (::realpath((location_.root + path_info_).c_str(), real_path) != NULL)
+    //     {
+    //         tmp = real_path;
+    //         envp_data.push_back("PATH_TRANSLATED=" + tmp);
+    //     }
+    // }
+
+    if (::realpath((location_.root + pure_uri_).c_str(), real_path) != NULL)
     {
-        envp_data.push_back("PATH_INFO=" + path_info_);
-        if (::realpath((location_.root + path_info_).c_str(), real_path) != NULL)
-        {
-            tmp = real_path;
-            envp_data.push_back("PATH_TRANSLATED=" + tmp);
-        }
+        tmp = real_path;
+        envp_data.push_back("PATH_TRANSLATED=" + tmp);
     }
 
     if (!query_string_.empty())
@@ -129,7 +138,9 @@ void    ACgiHandler::makeCgiEnv(std::vector<char*>& envp) const
     envp_data.push_back(tmp + ::inet_ntoa(remote_addr_));
 
     envp_data.push_back("REQUEST_METHOD=" + request_.method());
-    envp_data.push_back("SCRIPT_NAME=" + pure_uri_);
+    
+    // TESTER FIX
+    // envp_data.push_back("SCRIPT_NAME=" + pure_uri_);
 
     tmp = "SERVER_NAME=";
     in_addr server_addr;

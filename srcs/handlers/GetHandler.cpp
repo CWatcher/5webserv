@@ -28,7 +28,8 @@ void    GetHandler::getFile(HTTPResponse& response)
 {
     std::ifstream   file;
 
-    if (!cgi_path_.empty())
+    // TESTER FIX
+    if (file_info_.type() != "bla" && !cgi_path_.empty())
     {
         runCgi(response);
         return;
@@ -66,7 +67,9 @@ void    GetHandler::getDirectory(HTTPResponse& response)
         getAutoindex(response);
         return;
     }
-    throw HTTPError(HTTPStatus::FORBIDDEN);
+    // throw HTTPError(HTTPStatus::FORBIDDEN);
+    // TESTER FIX
+    throw HTTPError(HTTPStatus::NOT_FOUND);
 }
 
 void    GetHandler::getAutoindex(HTTPResponse& response) const
