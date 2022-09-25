@@ -41,6 +41,8 @@ server {
 
 	location /upload
 	{
+		location /upload/limited
+		{ body_size 10; }
 		methods POST GET PUT;
 		autoindex on;
 		upload_store www/server0/upload;
