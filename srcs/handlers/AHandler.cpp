@@ -137,7 +137,7 @@ void    AHandler::makeResponse(HTTPResponse& response)
         << logger::end;
 }
 
-void    AHandler::error(HTTPStatus::_ status, HTTPResponse& response)
+void    AHandler::error(HTTPStatus::_ status, HTTPResponse& response) const
 {
     response = HTTPResponse();
 
@@ -177,7 +177,7 @@ void    AHandler::error(HTTPStatus::_ status, HTTPResponse& response)
     response.buildResponse(body.begin(), body.end(), request_.method() != "HEAD", status_line);
 }
 
-void    AHandler::redirect(HTTPResponse& response)
+void    AHandler::redirect(HTTPResponse& response) const
 {
     HTTPStatus::_       status = static_cast<HTTPStatus::_>(location_.redirect.first);
     const std::string   url = location_.redirect.second;

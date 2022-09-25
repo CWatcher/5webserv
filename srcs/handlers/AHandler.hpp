@@ -15,8 +15,8 @@ public:
     virtual void        makeResponse(HTTPResponse& response);
 
 protected:
-    void                error(HTTPStatus::_ status, HTTPResponse& response);
-    void                redirect(HTTPResponse& response);
+    void                error(HTTPStatus::_ status, HTTPResponse& response) const;
+    void                redirect(HTTPResponse& response) const;
 
 private:
     virtual void        handle(HTTPResponse& response) = 0;
