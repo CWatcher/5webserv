@@ -1,3 +1,6 @@
+.DEFAULT_GOAL  := all
+.SECONDEXPANSION:
+
 NAME		= webserv
 SRCS		= srcs/main.cpp						\
 				srcs/Server.cpp					\
@@ -22,27 +25,40 @@ SRCS		= srcs/main.cpp						\
 				srcs/utils/log.cpp				\
 				srcs/utils/string.cpp			\
 				srcs/utils/FileInfo.cpp
-OBJS		= $(SRCS:.cpp=.o)
+
+BDIR       = .objs/
+OBJS       = $(SRCS:%.cpp=$(BDIR)%.o)
+DFILES     = $(SRCS:%.cpp=$(BDIR)%.d)
+
 CXX			= c++
 CPPFLAGS	= -Wall -Wextra -Werror -pedantic -MMD -std=c++98 -Isrcs
 debug:		CPPFLAGS += -g3 -fsanitize=address -fsanitize=undefined
 debug:		LDFLAGS = -fsanitize=address -fsanitize=undefined
 all:		CPPFLAGS += -O2
 
+# ----- Directory create magic --------
+.PRECIOUS: $(BDIR)/. $(BDIR)%/.
+$(BDIR)/.:
+	mkdir -p $@
+$(BDIR)%/.:
+	mkdir -p $@
+# ----- ---------------------- --------
 
 debug:		$(NAME)
-
 all:		$(NAME)
+
+$(BDIR)%.o:	%.cpp | $$(@D)/.
+	$(CXX) $(CPPFLAGS) -c $< -o $@ -MD
 
 $(NAME):	$(OBJS) Makefile
 	$(CXX) $(LDFLAGS) -o $@ $(OBJS)
 
 $(OBJS):	Makefile
 
--include $(SRCS:.cpp=.d)
+-include $(DFILES)
 
 clean:
-	$(RM) $(OBJS) $(SRCS:.cpp=.d)
+	$(RM) $(OBJS) $(DFILES)
 
 fclean:		clean
 	$(RM) $(NAME)
