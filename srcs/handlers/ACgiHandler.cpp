@@ -169,6 +169,8 @@ void    ACgiHandler::parentCgi(HTTPResponse& response) const
     struct stat cgi_stat;
     
     ::waitpid(cgi_pid_, &status, 0);
+    if (!WIFEXITED(status))
+        throw HTTPError(HTTPStatus::BAD_GATEWAY);
 
     ::fstat(::fileno(cgi_out_file_), &cgi_stat);
     cgi_data = reinterpret_cast<char *>(::mmap(NULL, cgi_stat.st_size, PROT_READ, MAP_SHARED, fileno(cgi_out_file_), 0));
