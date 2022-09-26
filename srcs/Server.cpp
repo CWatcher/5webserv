@@ -115,9 +115,15 @@ size_t Server::eventArrayPrepare(std::vector<pollfd> &poll_array) const
 
 bool Server::eventCheck(const pollfd *poll_fd)
 {
+    if (poll_fd->revents & (POLLNVAL))
+        logger::error << "Server: fd "<< poll_fd->fd << " is not not open" << poll_fd->fd << logger::end;
+    else if (poll_fd->revents & POLLERR)
+        logger::warning << "⬅️  TCP RST" << poll_fd->fd << logger::end;
+    else if (poll_fd->revents & (POLLHUP))
+        logger::info << "⬅️  TCP FIN" << poll_fd->fd << logger::end;
+
     if (poll_fd->revents & (POLLERR | POLLHUP | POLLNVAL))
     {
-        logger::warning << "Server: got terminating event on socket " << poll_fd->fd << logger::end;
         delete _sockets[poll_fd->fd];
         _sockets.erase(poll_fd->fd);
     }
