@@ -43,12 +43,12 @@ void    SessionSocket::read()
 
 void    SessionSocket::write()
 {
-    if (!_response.isReady())
-        _handler->makeResponse(_response);
-
-    logger::debug << "Trying to write to fd " << _fd << logger::end;
     try
     {
+        if (!_response.isReady())
+            _handler->makeResponse(_response);
+
+        logger::debug << "Trying to write to fd " << _fd << logger::end;
         if (_response.send(_fd))
         {
             if (_request.getHeaderValue("Connection") == "close")

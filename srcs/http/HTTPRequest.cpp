@@ -12,7 +12,7 @@ bool    HTTPRequest::read(int fd)
     char    data_buffer[BUFFER_SIZE];
     ssize_t r;
 
-    r = ::recv(fd, data_buffer, sizeof(data_buffer), MSG_NOSIGNAL | MSG_DONTWAIT);
+    r = ::recv(fd, data_buffer, BUFFER_SIZE, MSG_NOSIGNAL | MSG_DONTWAIT);
 
     if (r == 0)
         throw std::exception();
